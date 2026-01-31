@@ -1,0 +1,261 @@
+@{
+    ViewData["Title"] = Html.T("Admin.CategoryRequests.Title", "Kategori Talepleri").ToString();
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid" data-bind="with: vm">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">@Html.T("Admin.CategoryRequests.Title", "Kategori Talepleri")</h4>
+            <p class="text-muted mb-0">@Html.T("Admin.CategoryRequests.Subtitle", "Kullanicilarin kategori taleplerini inceleyin")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning text-dark fs-6" data-bind="visible: pendingCount() > 0">
+                <i class="bi bi-clock me-1"></i>
+                <span data-bind="text: pendingCount"></span> @Html.T("Admin.CategoryRequests.Pending", "Bekleyen")
+            </span>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="card mb-4">
+        <div class="card-body py-2">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm" data-bind="value: statusFilter">
+                        <option value="">@Html.T("Common.AllStatuses", "Tum Durumlar")</option>
+                        <option value="1">@Html.T("CategoryRequest.Status.Pending", "Beklemede")</option>
+                        <option value="2">@Html.T("CategoryRequest.Status.Approved", "Onaylandi")</option>
+                        <option value="3">@Html.T("CategoryRequest.Status.Rejected", "Reddedildi")</option>
+                        <option value="4">@Html.T("CategoryRequest.Status.Duplicate", "Mevcut")</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control form-control-sm"
+                           placeholder="@Html.T("Common.Search", "Ara...")"
+                           data-bind="value: searchQuery, valueUpdate: 'afterkeydown'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="text-center p-4" data-bind="visible: isLoading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="text-center p-4" data-bind="visible: !isLoading() && filteredRequests().length === 0">
+        <i class="bi bi-inbox display-4 text-muted"></i>
+        <p class="text-muted mt-2">@Html.T("Admin.CategoryRequests.NoRequests", "Kategori talebi bulunamadi")</p>
+    </div>
+
+    <!-- Request List -->
+    <div class="card" data-bind="visible: !isLoading() && filteredRequests().length > 0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>@Html.T("CategoryRequest.RequestedName", "Talep Edilen")</th>
+                        <th>@Html.T("CategoryRequest.Vendor", "Firma")</th>
+                        <th>@Html.T("CategoryRequest.RequestedBy", "Talep Eden")</th>
+                        <th>@Html.T("CategoryRequest.SuggestedParent", "Onerilen Ust")</th>
+                        <th>@Html.T("Common.Status", "Durum")</th>
+                        <th>@Html.T("Common.Date", "Tarih")</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: filteredRequests">
+                    <tr>
+                        <td>
+                            <span data-bind="text: requestedName" class="fw-medium"></span>
+                            <small class="text-muted d-block" data-bind="text: description, visible: description"></small>
+                        </td>
+                        <td data-bind="text: vendorName"></td>
+                        <td data-bind="text: requestedByUserName"></td>
+                        <td data-bind="text: suggestedParentCategoryName || '-'"></td>
+                        <td>
+                            <span class="badge" data-bind="css: statusBadgeClass, text: statusName"></span>
+                        </td>
+                        <td>
+                            <small data-bind="text: formattedDate"></small>
+                        </td>
+                        <td class="text-end">
+                            <!-- Beklemedeyse inceleme butonu -->
+                            <button class="btn btn-sm btn-primary"
+                                    data-bind="visible: statusId === 1, click: $parent.showReviewModal"
+                                    title="@Html.T("Admin.CategoryRequests.Review", "Incele")">
+                                <i class="bi bi-check2-square"></i> @Html.T("Admin.CategoryRequests.Review", "Incele")
+                            </button>
+                            <!-- Detay butonu -->
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    data-bind="visible: statusId !== 1, click: $parent.showDetailModal"
+                                    title="@Html.T("Common.Detail", "Detay")">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Html.T("Admin.CategoryRequests.ReviewTitle", "Kategori Talebi Inceleme")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" data-bind="with: selectedRequest">
+                    <!-- Talep Bilgileri -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">@Html.T("Admin.CategoryRequests.RequestInfo", "Talep Bilgileri")</h6>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-3">@Html.T("CategoryRequest.RequestedName", "Talep Edilen")</dt>
+                                <dd class="col-sm-9 fw-medium" data-bind="text: requestedName"></dd>
+
+                                <dt class="col-sm-3">@Html.T("CategoryRequest.Description", "Aciklama")</dt>
+                                <dd class="col-sm-9" data-bind="text: description || '-'"></dd>
+
+                                <dt class="col-sm-3">@Html.T("CategoryRequest.SuggestedParent", "Onerilen Ust")</dt>
+                                <dd class="col-sm-9" data-bind="text: suggestedParentCategoryName || '-'"></dd>
+
+                                <dt class="col-sm-3">@Html.T("CategoryRequest.Vendor", "Firma")</dt>
+                                <dd class="col-sm-9" data-bind="text: vendorName"></dd>
+
+                                <dt class="col-sm-3">@Html.T("CategoryRequest.RequestedBy", "Talep Eden")</dt>
+                                <dd class="col-sm-9" data-bind="text: requestedByUserName"></dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Benzer Kategoriler -->
+                    <div class="card mb-3" data-bind="visible: $parent.similarCategories().length > 0">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>@Html.T("Admin.CategoryRequests.SimilarCategories", "Benzer Kategoriler")</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0" data-bind="foreach: $parent.similarCategories">
+                                <li><span data-bind="text: fullPath"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Karar Formu -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">@Html.T("Admin.CategoryRequests.Decision", "Karar")</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Common.Status", "Durum") <span class="text-danger">*</span></label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="reviewStatus" id="statusApprove" value="2"
+                                           data-bind="checked: $parent.reviewForm.statusId">
+                                    <label class="btn btn-outline-success" for="statusApprove">
+                                        <i class="bi bi-check-lg me-1"></i> @Html.T("Admin.CategoryRequests.Approve", "Onayla")
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="reviewStatus" id="statusReject" value="3"
+                                           data-bind="checked: $parent.reviewForm.statusId">
+                                    <label class="btn btn-outline-danger" for="statusReject">
+                                        <i class="bi bi-x-lg me-1"></i> @Html.T("Admin.CategoryRequests.Reject", "Reddet")
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="reviewStatus" id="statusDuplicate" value="4"
+                                           data-bind="checked: $parent.reviewForm.statusId">
+                                    <label class="btn btn-outline-info" for="statusDuplicate">
+                                        <i class="bi bi-files me-1"></i> @Html.T("Admin.CategoryRequests.Duplicate", "Mevcut")
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Onay secenekleri -->
+                            <div data-bind="visible: $parent.reviewForm.statusId() === '2'">
+                                <div class="mb-3">
+                                    <label class="form-label">@Html.T("Admin.CategoryRequests.ApprovedName", "Kategori Adi")</label>
+                                    <input type="text" class="form-control" data-bind="value: $parent.reviewForm.approvedName">
+                                    <small class="text-muted">@Html.T("Admin.CategoryRequests.ApprovedNameHint", "Farkli bir isimle eklemek isterseniz degistirin")</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">@Html.T("Admin.CategoryRequests.ParentCategory", "Ust Kategori")</label>
+                                    <select class="form-select" data-bind="value: $parent.reviewForm.parentCategoryId, options: $parent.parentCategoryOptions, optionsText: 'fullPath', optionsValue: 'id', optionsCaption: '@Html.T("Admin.CategoryRequests.RootCategory", "Ana Kategori (Kok)")'"></select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Admin.CategoryRequests.ReviewNote", "Not")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: $parent.reviewForm.reviewNote"
+                                          placeholder="@Html.T("Admin.CategoryRequests.ReviewNotePlaceholder", "Ozellikle red durumunda aciklama yazin...")"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: submitReview, disable: isSaving">
+                        <span data-bind="visible: isSaving"><span class="spinner-border spinner-border-sm me-1"></span></span>
+                        @Html.T("Common.Save", "Kaydet")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Html.T("CategoryRequest.Detail", "Talep Detayi")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" data-bind="with: selectedRequest">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.RequestedName", "Talep Edilen")</dt>
+                        <dd class="col-sm-8" data-bind="text: requestedName"></dd>
+
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.Description", "Aciklama")</dt>
+                        <dd class="col-sm-8" data-bind="text: description || '-'"></dd>
+
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.Vendor", "Firma")</dt>
+                        <dd class="col-sm-8" data-bind="text: vendorName"></dd>
+
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.RequestedBy", "Talep Eden")</dt>
+                        <dd class="col-sm-8" data-bind="text: requestedByUserName"></dd>
+
+                        <dt class="col-sm-4">@Html.T("Common.Status", "Durum")</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge" data-bind="css: statusBadgeClass, text: statusName"></span>
+                        </dd>
+
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.ReviewedBy", "Inceleyen")</dt>
+                        <dd class="col-sm-8" data-bind="text: reviewedByUserName || '-'"></dd>
+
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.ReviewedAt", "Inceleme Tarihi")</dt>
+                        <dd class="col-sm-8" data-bind="text: formattedReviewDate || '-'"></dd>
+
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.ReviewNote", "Admin Notu")</dt>
+                        <dd class="col-sm-8" data-bind="text: reviewNote || '-'"></dd>
+                    </dl>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Admin/CategoryRequests.js"></script>
+}

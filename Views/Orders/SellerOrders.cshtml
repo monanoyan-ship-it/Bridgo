@@ -1,0 +1,471 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("SellerOrders.Title", "Gelen Siparisler").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="seller-orders-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-inbox text-primary me-2"></i>
+                @Html.T("SellerOrders.Title", "Gelen Siparisler")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("SellerOrders.Subtitle", "Gelen siparisleri yonetin ve kargo bilgilerini girin.")</p>
+        </div>
+        <!-- Stats -->
+        <div class="d-flex gap-3">
+            <div class="text-center px-3 border-end">
+                <div class="fs-4 fw-bold text-warning" data-bind="text: stats.pendingCount">0</div>
+                <small class="text-muted">@Html.T("SellerOrders.Stat.Pending", "Onay Bekleyen")</small>
+            </div>
+            <div class="text-center px-3 border-end">
+                <div class="fs-4 fw-bold text-primary" data-bind="text: stats.activeCount">0</div>
+                <small class="text-muted">@Html.T("Common.Active", "Aktif")</small>
+            </div>
+            <div class="text-center px-3">
+                <div class="fs-4 fw-bold text-success" data-bind="text: formatCurrency(stats.totalRevenue)">0</div>
+                <small class="text-muted">@Html.T("SellerOrders.Stat.Revenue", "Toplam Gelir")</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'pending' }, click: function() { setTab('pending'); }" href="#">
+                <i class="bi bi-clock-history"></i> @Html.T("SellerOrders.Tab.Pending", "Onay Bekleyen")
+                <span class="badge bg-warning ms-1" data-bind="text: pendingOrderCount"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'active' }, click: function() { setTab('active'); }" href="#">
+                <i class="bi bi-hourglass-split"></i> @Html.T("SellerOrders.Tab.Active", "Aktif")
+                <span class="badge bg-primary ms-1" data-bind="text: activeOrderCount"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'completed' }, click: function() { setTab('completed'); }" href="#">
+                <i class="bi bi-check-circle"></i> @Html.T("SellerOrders.Tab.Completed", "Tamamlanan")
+                <span class="badge bg-success ms-1" data-bind="text: completedOrderCount"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'cancelled' }, click: function() { setTab('cancelled'); }" href="#">
+                <i class="bi bi-x-circle"></i> @Html.T("SellerOrders.Tab.Cancelled", "Iptal/Iade")
+                <span class="badge bg-secondary ms-1" data-bind="text: cancelledOrderCount"></span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- Order List -->
+    <div data-bind="visible: !isLoading()">
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" placeholder="@Html.T("Common.Search", "Siparis no veya alici ara...")"
+                                   data-bind="value: filter.search, valueUpdate: 'afterkeydown'" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" data-bind="value: filter.status">
+                            <option value="">@Html.T("Common.AllStatuses", "Tum Durumlar")</option>
+                            <option value="3">Onay Bekliyor</option>
+                            <option value="4">Onaylandi</option>
+                            <option value="5">Hazirlaniyor</option>
+                            <option value="7">Kargoya Verildi</option>
+                            <option value="8">Yolda</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" class="form-control form-control-sm" data-bind="value: filter.fromDate" placeholder="Baslangic" />
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-sm btn-outline-secondary" data-bind="click: resetFilters">
+                            <i class="bi bi-x-circle"></i> @Html.T("Common.Reset", "Sifirla")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div data-bind="visible: orders().length === 0" class="text-center py-5">
+            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+            <h5 class="mt-3 text-muted">@Html.T("SellerOrders.NoOrders", "Henuz siparis yok")</h5>
+            <p class="text-muted">@Html.T("SellerOrders.NoOrdersHint", "Siparisler burada goruntulenecek.")</p>
+        </div>
+
+        <!-- Order Cards -->
+        <div data-bind="foreach: orders">
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge me-2" data-bind="css: getStatusBadgeClass(status), text: statusText"></span>
+                        <span class="fw-bold" data-bind="text: orderNumber"></span>
+                        <span class="text-muted ms-2" data-bind="text: '(' + formatDate(createdAt) + ')'"></span>
+                    </div>
+                    <div>
+                        <span class="badge" data-bind="css: getPaymentBadgeClass(paymentStatus), text: paymentStatusText"></span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Left: Buyer Info -->
+                        <div class="col-md-7">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-person text-primary me-2"></i>
+                                <strong data-bind="text: buyerCompanyName"></strong>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="text-muted">
+                                    <i class="bi bi-box"></i>
+                                    <span data-bind="text: itemCount"></span> urun
+                                </span>
+                                <!-- ko if: shipmentCount > 0 -->
+                                <span class="text-muted">
+                                    <i class="bi bi-truck"></i>
+                                    <span data-bind="text: shipmentCount"></span> kargo
+                                </span>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <!-- Right: Summary & Actions -->
+                        <div class="col-md-5">
+                            <div class="bg-light rounded p-3">
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Toplam:</span>
+                                    <span class="text-primary" data-bind="text: formatCurrency(totalAmount) + ' ' + currency"></span>
+                                </div>
+                            </div>
+
+                            <!-- Shipment Status -->
+                            <!-- ko if: hasActiveShipment -->
+                            <div class="mt-3">
+                                <span class="badge bg-info">
+                                    <i class="bi bi-truck"></i> @Html.T("OrderStatus.InTransit", "Kargoda")
+                                </span>
+                            </div>
+                            <!-- /ko -->
+
+                            <!-- Actions -->
+                            <div class="mt-3 d-flex gap-2 flex-wrap">
+                                <!-- Pending Confirm -->
+                                <!-- ko if: status === 3 -->
+                                <button class="btn btn-sm btn-success" data-bind="click: $parent.confirmOrder">
+                                    <i class="bi bi-check-lg"></i> @Html.T("Common.Approve", "Onayla")
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.rejectOrder">
+                                    <i class="bi bi-x-lg"></i> @Html.T("Common.Reject", "Reddet")
+                                </button>
+                                <!-- /ko -->
+
+                                <!-- Confirmed/Processing -->
+                                <!-- ko if: status === 4 || status === 5 -->
+                                <button class="btn btn-sm btn-primary" data-bind="click: $parent.addShipment">
+                                    <i class="bi bi-truck"></i> @Html.T("SellerOrders.Button.AddShipment", "Kargo Ekle")
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" data-bind="click: $parent.updateStatus">
+                                    <i class="bi bi-arrow-repeat"></i> @Html.T("Common.Status", "Durum")
+                                </button>
+                                <!-- /ko -->
+
+                                <!-- View Detail -->
+                                <button class="btn btn-sm btn-outline-secondary" data-bind="click: $parent.viewOrderDetail">
+                                    <i class="bi bi-eye"></i> @Html.T("Common.Detail", "Detay")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav data-bind="visible: totalPages() > 1">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" data-bind="css: { disabled: currentPage() === 1 }">
+                    <a class="page-link" href="#" data-bind="click: prevPage">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                <!-- ko foreach: pageNumbers -->
+                <li class="page-item" data-bind="css: { active: $data === $parent.currentPage() }">
+                    <a class="page-link" href="#" data-bind="text: $data, click: function() { $parent.goToPage($data); }"></a>
+                </li>
+                <!-- /ko -->
+                <li class="page-item" data-bind="css: { disabled: currentPage() === totalPages() }">
+                    <a class="page-link" href="#" data-bind="click: nextPage">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-bag me-2"></i>@Html.T("SellerOrders.Modal.Detail.Title", "Siparis Detayi")
+                    <span class="badge bg-primary ms-2" data-bind="text: selectedOrder()?.orderNumber"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" data-bind="with: selectedOrder">
+                <!-- Order Info -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">@Html.T("SellerOrders.Card.Buyer", "Alici")</h6>
+                        <p class="mb-0" data-bind="text: buyerCompanyName"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">@Html.T("Common.OrderDate", "Siparis Tarihi")</h6>
+                        <p class="mb-0" data-bind="text: formatDate(createdAt)"></p>
+                    </div>
+                </div>
+
+                <!-- Items -->
+                <h6 class="text-muted mb-3">@Html.T("Common.Products", "Urunler")</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>@Html.T("Common.Product", "Urun")</th>
+                                <th class="text-end">@Html.T("Common.Quantity", "Miktar")</th>
+                                <th class="text-end">@Html.T("SellerOrders.Shipped", "Kargolanan")</th>
+                                <th class="text-end">@Html.T("Common.Total", "Toplam")</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: items">
+                            <tr>
+                                <td data-bind="text: productName"></td>
+                                <td class="text-end" data-bind="text: quantity + ' ' + unit"></td>
+                                <td class="text-end" data-bind="text: shippedQuantity + ' ' + unit"></td>
+                                <td class="text-end" data-bind="text: formatCurrency(totalPrice)"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Addresses -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">@Html.T("Common.ShippingAddress", "Teslimat Adresi")</h6>
+                        <p class="mb-0" data-bind="text: shippingAddress || '-'"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">@Html.T("Common.BillingAddress", "Fatura Adresi")</h6>
+                        <p class="mb-0" data-bind="text: billingAddress || '-'"></p>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div data-bind="visible: notes">
+                    <h6 class="text-muted">@Html.T("Common.Notes", "Notlar")</h6>
+                    <p data-bind="text: notes"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Order Modal -->
+<div class="modal fade" id="confirmOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-check-circle text-success me-2"></i>@Html.T("SellerOrders.Modal.Confirm.Title", "Siparis Onayi")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@Html.T("SellerOrders.Modal.Confirm.Message", "Bu siparisi onaylamak istediginizden emin misiniz?")</p>
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("SellerOrders.Modal.Confirm.Note", "Not (Opsiyonel)")</label>
+                    <textarea class="form-control" rows="2" data-bind="value: confirmNotes" placeholder="@Html.T("SellerOrders.Modal.Confirm.NotePlaceholder", "Aliciya gonderilecek not...")"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Vazgec")</button>
+                <button type="button" class="btn btn-success" data-bind="click: doConfirmOrder, enable: !isProcessing()">
+                    <span data-bind="visible: isProcessing()" class="spinner-border spinner-border-sm me-1"></span>
+                    @Html.T("SellerOrders.Modal.Confirm.Button", "Siparisi Onayla")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Order Modal -->
+<div class="modal fade" id="rejectOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-x-circle text-danger me-2"></i>@Html.T("SellerOrders.Modal.Reject.Title", "Siparis Reddi")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@Html.T("SellerOrders.Modal.Reject.Message", "Bu siparisi reddetmek istediginizden emin misiniz?")</p>
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("SellerOrders.Modal.Reject.Reason", "Red Nedeni") <span class="text-danger">*</span></label>
+                    <textarea class="form-control" rows="3" data-bind="value: rejectReason" placeholder="@Html.T("SellerOrders.Modal.Reject.ReasonPlaceholder", "Red nedeninizi yazin...")"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Vazgec")</button>
+                <button type="button" class="btn btn-danger" data-bind="click: doRejectOrder, enable: !isProcessing() && rejectReason()">
+                    <span data-bind="visible: isProcessing()" class="spinner-border spinner-border-sm me-1"></span>
+                    @Html.T("SellerOrders.Modal.Reject.Button", "Siparisi Reddet")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Shipment Modal -->
+<div class="modal fade" id="addShipmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-truck text-primary me-2"></i>@Html.T("SellerOrders.Modal.Shipment.Title", "Kargo Ekle")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">@Html.T("SellerOrders.Modal.Shipment.Carrier", "Kargo Firmasi") <span class="text-danger">*</span></label>
+                        <select class="form-select" data-bind="value: shipmentForm.carrierCode">
+                            <option value="">@Html.T("Common.Select", "Secin...")</option>
+                            <option value="DHL">DHL</option>
+                            <option value="FEDEX">FedEx</option>
+                            <option value="UPS">UPS</option>
+                            <option value="ARAS">Aras Kargo</option>
+                            <option value="YURTICI">Yurtici Kargo</option>
+                            <option value="MNG">MNG Kargo</option>
+                            <option value="PTT">PTT Kargo</option>
+                            <option value="OTHER">@Html.T("Common.Other", "Diger")</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" data-bind="visible: shipmentForm.carrierCode() === 'OTHER'">
+                        <label class="form-label">@Html.T("SellerOrders.Modal.Shipment.CarrierName", "Firma Adi")</label>
+                        <input type="text" class="form-control" data-bind="value: shipmentForm.carrierName" placeholder="@Html.T("SellerOrders.Modal.Shipment.CarrierNamePlaceholder", "Kargo firma adi")" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">@Html.T("SellerOrders.Modal.Shipment.TrackingNo", "Takip Numarasi")</label>
+                        <input type="text" class="form-control" data-bind="value: shipmentForm.trackingNumber" placeholder="@Html.T("SellerOrders.Modal.Shipment.TrackingNoPlaceholder", "Takip numarasi")" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Html.T("SellerOrders.Modal.Shipment.EstimatedDelivery", "Tahmini Teslim Tarihi")</label>
+                        <input type="date" class="form-control" data-bind="value: shipmentForm.estimatedDeliveryDate" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("SellerOrders.Modal.Shipment.TrackingUrl", "Takip URL'i")</label>
+                    <input type="url" class="form-control" data-bind="value: shipmentForm.trackingUrl" placeholder="https://..." />
+                </div>
+
+                <h6 class="mb-3">@Html.T("SellerOrders.Modal.Shipment.Content", "Kargo Icerigi")</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>@Html.T("Common.Product", "Urun")</th>
+                                <th class="text-center">@Html.T("SellerOrders.Modal.Shipment.OrderQuantity", "Siparis Miktari")</th>
+                                <th class="text-center">@Html.T("SellerOrders.Modal.Shipment.PreviousShipments", "Onceki Kargolar")</th>
+                                <th class="text-center" style="width: 150px;">@Html.T("SellerOrders.Modal.Shipment.ThisShipment", "Bu Kargoda")</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: shipmentForm.items">
+                            <tr>
+                                <td data-bind="text: productName"></td>
+                                <td class="text-center" data-bind="text: orderQuantity"></td>
+                                <td class="text-center" data-bind="text: shippedQuantity"></td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm text-center"
+                                           data-bind="value: quantity, attr: { max: remainingQuantity }"
+                                           min="0" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("Common.Notes", "Notlar")</label>
+                    <textarea class="form-control" rows="2" data-bind="value: shipmentForm.notes" placeholder="@Html.T("SellerOrders.Modal.Shipment.NotesPlaceholder", "Kargo ile ilgili notlar...")"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Vazgec")</button>
+                <button type="button" class="btn btn-primary" data-bind="click: saveShipment, enable: !isProcessing() && shipmentForm.carrierCode()">
+                    <span data-bind="visible: isProcessing()" class="spinner-border spinner-border-sm me-1"></span>
+                    @Html.T("SellerOrders.Modal.Shipment.Button", "Kargo Olustur")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-repeat text-primary me-2"></i>@Html.T("SellerOrders.Modal.Status.Title", "Durum Guncelle")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("SellerOrders.Modal.Status.NewStatus", "Yeni Durum") <span class="text-danger">*</span></label>
+                    <select class="form-select" data-bind="value: newStatus">
+                        <option value="">@Html.T("Common.Select", "Secin...")</option>
+                        <option value="5">@Html.T("OrderStatus.Preparing", "Hazirlaniyor")</option>
+                        <option value="7">@Html.T("OrderStatus.Shipped", "Kargoya Verildi")</option>
+                        <option value="8">@Html.T("OrderStatus.InTransit", "Yolda")</option>
+                        <option value="11">@Html.T("OrderStatus.Delivered", "Teslim Edildi")</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("SellerOrders.Modal.Status.Note", "Not (Opsiyonel)")</label>
+                    <textarea class="form-control" rows="2" data-bind="value: statusNotes" placeholder="@Html.T("SellerOrders.Modal.Status.NotePlaceholder", "Durum degisikligi notu...")"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Vazgec")</button>
+                <button type="button" class="btn btn-primary" data-bind="click: doUpdateStatus, enable: !isProcessing() && newStatus()">
+                    <span data-bind="visible: isProcessing()" class="spinner-border spinner-border-sm me-1"></span>
+                    @Html.T("SellerOrders.Modal.Status.Button", "Durumu Guncelle")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/SellerOrders.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            ko.applyBindings(new SellerOrdersViewModel(), document.getElementById('seller-orders-app'));
+        });
+    </script>
+}

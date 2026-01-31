@@ -1,0 +1,138 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Module.PasswordSecurity", "Sifre ve Guvenlik").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid" id="security-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-shield-lock text-primary me-2"></i>
+                @Html.T("Module.PasswordSecurity", "Sifre ve Guvenlik")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Security.Subtitle", "Hesabinizin guvenligini yonetin")</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sifre Degistir -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-key me-2"></i>
+                        @Html.T("Security.ChangePassword", "Sifre Degistir")
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form data-bind="submit: changePassword">
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Security.CurrentPassword", "Mevcut Sifre") <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" data-bind="value: currentPassword, attr: { type: showCurrentPassword() ? 'text' : 'password' }" required>
+                                <button class="btn btn-outline-secondary" type="button" data-bind="click: toggleCurrentPassword">
+                                    <i class="bi" data-bind="css: showCurrentPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Security.NewPassword", "Yeni Sifre") <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" data-bind="value: newPassword, attr: { type: showNewPassword() ? 'text' : 'password' }" required minlength="6">
+                                <button class="btn btn-outline-secondary" type="button" data-bind="click: toggleNewPassword">
+                                    <i class="bi" data-bind="css: showNewPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">En az 6 karakter</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Security.ConfirmPassword", "Sifre Tekrar") <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" data-bind="value: confirmPassword, attr: { type: showNewPassword() ? 'text' : 'password' }" required>
+                            <!-- ko if: passwordMismatch -->
+                            <small class="text-danger">Sifreler eslesmiyor</small>
+                            <!-- /ko -->
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" data-bind="enable: canChangePassword() && !isChangingPassword()">
+                            <span data-bind="visible: isChangingPassword"><i class="bi bi-hourglass-split me-1"></i></span>
+                            <span data-bind="visible: !isChangingPassword()"><i class="bi bi-check-lg me-1"></i></span>
+                            @Html.T("Security.UpdatePassword", "Sifreyi Guncelle")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guvenlik Durumu -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-shield-check me-2"></i>
+                        @Html.T("Security.Status", "Guvenlik Durumu")
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                @Html.T("Security.PasswordSet", "Sifre Ayarlandi")
+                            </div>
+                            <span class="badge bg-success">Aktif</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-shield-exclamation text-warning me-2"></i>
+                                @Html.T("Security.TwoFactor", "Iki Faktorlu Dogrulama")
+                            </div>
+                            <span class="badge bg-secondary" data-bind="text: twoFactorEnabled() ? 'Aktif' : 'Pasif', css: twoFactorEnabled() ? 'bg-success' : 'bg-secondary'">Pasif</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-laptop me-2"></i>
+                                @Html.T("Security.ActiveSessions", "Aktif Oturumlar")
+                            </div>
+                            <span class="badge bg-info" data-bind="text: activeSessionsCount">1</span>
+                        </li>
+                    </ul>
+
+                    <hr>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-warning" disabled>
+                            <i class="bi bi-shield-plus me-1"></i>
+                            @Html.T("Security.Enable2FA", "2FA Etkinlestir") (Yakin Zamanda)
+                        </button>
+                        <button class="btn btn-outline-danger" disabled>
+                            <i class="bi bi-box-arrow-right me-1"></i>
+                            @Html.T("Security.LogoutAll", "Tum Oturumlardan Cik") (Yakin Zamanda)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guvenlik Ipuclari -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h6><i class="bi bi-lightbulb me-2"></i>@Html.T("Security.Tips", "Guvenlik Ipuclari")</h6>
+                    <ul class="mb-0">
+                        <li>En az 8 karakter uzunlugunda, harf, rakam ve ozel karakter iceren guclu sifreler kullanin.</li>
+                        <li>Sifrenizi duzenli olarak degistirin ve farkli platformlarda ayni sifreyi kullanmayin.</li>
+                        <li>Iki faktorlu dogrulamayi etkinlestirerek hesabinizi ekstra koruma altina alin.</li>
+                        <li>Supheli aktivite farkettiginizde hemen sifrenizi degistirin.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/SecuritySettings.js"></script>
+}

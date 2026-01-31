@@ -1,0 +1,695 @@
+@using Bridgo.Extensions
+@using Bridgo.DTOs.Catalog
+@model CatalogProductDetailDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var categories = ViewBag.Categories as List<CatalogCategoryDto> ?? new List<CatalogCategoryDto>();
+    var mainImage = Model.Images.FirstOrDefault(i => i.IsMain) ?? Model.Images.FirstOrDefault();
+}
+
+@section Head {
+    <link rel="canonical" href="@Url.Action("Detail", "Catalog", new { slug = Model.Slug }, Context.Request.Scheme)" />
+    <meta property="og:title" content="@(Model.MetaTitle ?? Model.Name)" />
+    <meta property="og:description" content="@(Model.MetaDescription ?? Model.ShortDescription)" />
+    <meta property="og:type" content="product" />
+    @if (mainImage != null)
+    {
+        <meta property="og:image" content="@mainImage.Url" />
+    }
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org/",
+        "@@type": "Product",
+        "name": "@Html.Raw(Model.Name.Replace("\"", "\\\""))",
+        "description": "@Html.Raw((Model.ShortDescription ?? "").Replace("\"", "\\\""))",
+        @if (mainImage != null)
+        {
+            @:"image": "@mainImage.Url",
+        }
+        "sku": "@(Model.SKU ?? "")",
+        "brand": {
+            "@@type": "Brand",
+            "name": "@Html.Raw(Model.VendorName.Replace("\"", "\\\""))"
+        },
+        "offers": {
+            "@@type": "Offer",
+            "url": "@Url.Action("Detail", "Catalog", new { slug = Model.Slug }, Context.Request.Scheme)",
+            "priceCurrency": "@Model.Currency",
+            "price": "@Model.Price",
+            "availability": "@(Model.InStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock")"
+        }
+    }
+    </script>
+}
+
+<div id="product-detail-app" class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Catalog">@Html.T("Catalog.Title", "Katalog")</a></li>
+            @foreach (var crumb in Model.CategoryBreadcrumb)
+            {
+                <li class="breadcrumb-item"><a href="/Catalog/Category/@crumb.Slug">@crumb.Name</a></li>
+            }
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Sol: Gorseller -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-body p-2">
+                    <!-- Ana Gorsel -->
+                    <div class="main-image-container ratio ratio-1x1 bg-light rounded mb-3" id="mainImageContainer">
+                        @if (mainImage != null)
+                        {
+                            <img src="@mainImage.Url" alt="@(mainImage.AltText ?? Model.Name)" class="object-fit-contain rounded" id="mainImage" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="bi bi-image display-1 text-muted"></i>
+                            </div>
+                        }
+
+                        <!-- Badges -->
+                        <div class="position-absolute top-0 start-0 p-3">
+                            @if (Model.IsFeatured)
+                            {
+                                <span class="badge bg-warning text-dark fs-6"><i class="bi bi-star-fill"></i> @Html.T("Catalog.Featured", "One Cikan")</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Thumbnail Gallery -->
+                    @if (Model.Images.Count > 1)
+                    {
+                        <div class="d-flex gap-2 flex-wrap justify-content-center">
+                            @foreach (var image in Model.Images)
+                            {
+                                <div class="thumbnail-item @(image.IsMain ? "active" : "")"
+                                     onclick="changeMainImage('@image.Url', '@(image.AltText ?? Model.Name)')"
+                                     style="width: 80px; height: 80px; cursor: pointer; border: 2px solid @(image.IsMain ? "#0d6efd" : "#dee2e6"); border-radius: 8px; overflow: hidden;">
+                                    <img src="@image.Url" alt="@(image.AltText ?? Model.Name)" class="w-100 h-100 object-fit-cover" />
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sag: Urun Bilgileri -->
+        <div class="col-lg-6">
+            <!-- Kategori + Duzenleme Butonu -->
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                @if (Model.CategoryName != null)
+                {
+                    <a href="/Catalog/Category/@Model.CategorySlug" class="text-decoration-none">
+                        <span class="badge bg-light text-dark">@Model.CategoryName</span>
+                    </a>
+                }
+                else
+                {
+                    <div></div>
+                }
+                @if (ViewBag.IsOwnProduct == true)
+                {
+                    <a href="/Products?edit=@Model.Id" target="_blank" class="btn btn-outline-secondary btn-sm" title="@Html.T("Catalog.EditProduct", "Urunu Duzenle")">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                }
+            </div>
+
+            <!-- Urun Adi -->
+            <h1 class="h2 mb-3">@Model.Name</h1>
+
+            <!-- SKU -->
+            @if (!string.IsNullOrEmpty(Model.SKU))
+            {
+                <p class="text-muted mb-3">
+                    <small>SKU: @Model.SKU</small>
+                </p>
+            }
+
+            <!-- Fiyat -->
+            @{
+                // Varsayilan birim: SalesUnit varsa onu kullan, yoksa "Adet"
+                var defaultUnitName = Model.SalesUnit != null
+                    ? Html.T(Model.SalesUnit.UnitResourceKey, Model.SalesUnit.UnitName)
+                    : Html.T("UnitType.Piece", "Adet");
+                var pieceUnitName = Html.T("UnitType.Piece", "Adet");
+            }
+            <div class="mb-4">
+                @if (Model.CompareAtPrice.HasValue && Model.CompareAtPrice > Model.Price)
+                {
+                    <div class="text-muted text-decoration-line-through fs-5">
+                        @Model.CompareAtPrice?.ToString("N2") @Model.Currency
+                    </div>
+                }
+                <div class="text-primary fw-bold display-6">
+                    @Model.Price.ToString("N2") @Model.Currency
+                    <span class="fs-5 fw-normal text-muted">/ @defaultUnitName</span>
+                </div>
+                @if (Model.SalesUnit != null && Model.SalesUnit.Quantity > 1)
+                {
+                    <small class="text-muted">
+                        (@((Model.Price / Model.SalesUnit.Quantity).ToString("N2")) @Model.Currency / @pieceUnitName)
+                    </small>
+                }
+            </div>
+
+            <!-- Stok Durumu -->
+            <div class="mb-4">
+                @if (Model.InStock)
+                {
+                    <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> @Html.T("Catalog.InStock", "Stokta")</span>
+                    if (Model.StockQuantity > 0 && Model.StockQuantity <= 10)
+                    {
+                        <span class="text-warning ms-2"><i class="bi bi-exclamation-triangle"></i> @Html.T("Catalog.LowStock", "Son") @Model.StockQuantity @Html.T("Catalog.Units", "adet")</span>
+                    }
+                }
+                else if (Model.AllowBackorder)
+                {
+                    <span class="badge bg-warning text-dark fs-6"><i class="bi bi-clock"></i> @Html.T("Catalog.Backorder", "On Siparis")</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary fs-6"><i class="bi bi-x-circle"></i> @Html.T("Catalog.OutOfStock", "Stokta Yok")</span>
+                }
+            </div>
+
+            <!-- Satis Birimi (Paketleme) -->
+            @if (Model.SalesUnit != null)
+            {
+                var salesUnitName = Html.T(Model.SalesUnit.UnitResourceKey, Model.SalesUnit.UnitName);
+                <div class="alert alert-info py-2 mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="@(Model.SalesUnit.UnitIcon ?? "bi bi-box-seam") fs-4 me-2"></i>
+                        <div>
+                            <strong>@Html.T("Catalog.SalesUnit", "Satis Birimi"):</strong>
+                            <span class="badge bg-primary ms-1">@salesUnitName</span>
+                            <br/>
+                            <small class="text-muted">
+                                1 @salesUnitName = @Model.SalesUnit.Quantity @Html.T("UnitType.Piece", "Adet")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Kisa Aciklama -->
+            @if (!string.IsNullOrEmpty(Model.ShortDescription))
+            {
+                <p class="lead mb-4">@Model.ShortDescription</p>
+            }
+
+            <!-- Fiyat Esikleri -->
+            @if (Model.PriceTiers.Any())
+            {
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-tags text-success"></i> @Html.T("Catalog.BulkPricing", "Toptan Fiyatlandirma")</h5>
+                        <p class="text-muted small mb-2"><i class="bi bi-hand-index"></i> @Html.T("Catalog.ClickToSelect", "Miktari secmek icin tiklayiniz")</p>
+                        <table class="table table-sm table-hover mb-0" id="priceTiersTable">
+                            <thead>
+                                <tr>
+                                    <th>@Html.T("Catalog.Quantity", "Miktar")</th>
+                                    <th>@Html.T("Catalog.UnitPrice", "Birim Fiyat")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tier in Model.PriceTiers)
+                                {
+                                    <tr class="price-tier-row" style="cursor: pointer;"
+                                        data-min-qty="@tier.MinQuantity"
+                                        data-max-qty="@(tier.MaxQuantity?.ToString() ?? "")"
+                                        data-price="@tier.Price"
+                                        onclick="selectPriceTier(@tier.MinQuantity, @tier.Price)">
+                                        <td>
+                                            <i class="bi bi-arrow-right-circle text-primary me-1"></i>
+                                            @tier.MinQuantity
+                                            @if (tier.MaxQuantity.HasValue)
+                                            {
+                                                <span>- @tier.MaxQuantity</span>
+                                            }
+                                            else
+                                            {
+                                                <span>+</span>
+                                            }
+                                            @defaultUnitName
+                                        </td>
+                                        <td class="fw-bold">@tier.Price.ToString("N2") @Model.Currency / @defaultUnitName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            <!-- Sepete Ekle Bolumu -->
+            @if (User.Identity?.IsAuthenticated == true && ViewBag.IsOwnProduct != true)
+            {
+                <div class="card bg-light mb-4" id="addToCartSection">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3"><i class="bi bi-cart-plus text-success"></i> @Html.T("Catalog.AddToCart", "Sepete Ekle")</h5>
+
+                        @{
+                            var hasSalesUnit = Model.SalesUnit != null && Model.SalesUnit.Quantity > 1;
+                        }
+                        <!-- Miktar -->
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label">
+                                    @Html.T("Catalog.Quantity", "Miktar")
+                                    <span class="badge bg-primary ms-1">@defaultUnitName</span>
+                                    *
+                                </label>
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnDecreaseQty">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" class="form-control text-center" id="cartQuantity" min="1" value="1" />
+                                    <span class="input-group-text" id="quantityUnitLabel">@defaultUnitName</span>
+                                    <button class="btn btn-outline-secondary" type="button" id="btnIncreaseQty">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted" id="minQuantityInfo"></small>
+                                @if (hasSalesUnit)
+                                {
+                                    <div class="mt-1">
+                                        <small class="text-info" id="totalUnitsInfo">
+                                            <i class="bi bi-calculator"></i>
+                                            = <span id="totalUnitsCount">@Model.SalesUnit!.Quantity</span> @pieceUnitName
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label">@Html.T("Catalog.CalculatedPrice", "Hesaplanan Fiyat")</label>
+                                <div class="fs-4 fw-bold text-primary" id="calculatedPrice">-</div>
+                                <small class="text-muted" id="unitPriceInfo"></small>
+                            </div>
+                        </div>
+
+                        <!-- Teslimat Adresi -->
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Catalog.DeliveryAddress", "Teslimat Adresi") *</label>
+                            <select class="form-select" id="cartDeliveryAddress" required>
+                                <option value="">@Html.T("Common.Select", "Secin...")</option>
+                            </select>
+                            <div class="invalid-feedback">@Html.T("Catalog.AddressRequired", "Lutfen teslimat adresi secin")</div>
+                        </div>
+
+                        <!-- Not -->
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Catalog.Note", "Not (Opsiyonel)")</label>
+                            <textarea class="form-control" id="cartNote" rows="2" placeholder="@Html.T("Catalog.NotePlaceholder", "Ozel isteklerinizi yazin...")"></textarea>
+                        </div>
+
+                        <!-- Sepete Ekle Butonu -->
+                        <button type="button" class="btn btn-success btn-lg w-100" id="btnAddToCart">
+                            <i class="bi bi-cart-plus"></i> @Html.T("Catalog.AddToCart", "Sepete Ekle")
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- Teklif Iste Butonu (kendi urunu degilse) -->
+            <div class="d-grid gap-2 mb-4">
+                @if (ViewBag.IsOwnProduct != true)
+                {
+                    <a href="#inquiryModal" class="btn btn-primary btn-lg" data-bs-toggle="modal">
+                        <i class="bi bi-chat-square-text"></i> @Html.T("Catalog.RequestQuote", "Teklif Iste")
+                    </a>
+                }
+                @if (Model.VendorSlug != null)
+                {
+                    <a href="/Suppliers/@Model.VendorSlug" class="btn btn-outline-secondary">
+                        <i class="bi bi-shop"></i> @Html.T("Catalog.ViewSupplier", "Saticiyi Gor")
+                    </a>
+                }
+            </div>
+
+            <!-- Satici Bilgisi -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="bi bi-shop fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">
+                                @Model.VendorName
+                                @if (Model.VendorIsVerified)
+                                {
+                                    <i class="bi bi-patch-check-fill text-primary" title="@Html.T("Catalog.VerifiedSupplier", "Dogrulanmis Tedarikci")"></i>
+                                }
+                            </h6>
+                            <small class="text-muted">
+                                @if (!string.IsNullOrEmpty(Model.VendorCity) || !string.IsNullOrEmpty(Model.VendorCountry))
+                                {
+                                    <i class="bi bi-geo-alt"></i>
+                                    @Model.VendorCity
+                                    @if (!string.IsNullOrEmpty(Model.VendorCity) && !string.IsNullOrEmpty(Model.VendorCountry))
+                                    {
+                                        <span>, </span>
+                                    }
+                                    @Model.VendorCountry
+                                }
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Etiketler -->
+            @if (Model.Tags.Any())
+            {
+                <div class="mb-4">
+                    @foreach (var tag in Model.Tags)
+                    {
+                        <a href="/Catalog?search=@tag" class="badge bg-secondary text-decoration-none me-1">@tag</a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Aciklama ve Detaylar Tabs -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button">
+                        <i class="bi bi-file-text"></i> @Html.T("Catalog.Description", "Aciklama")
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs" type="button">
+                        <i class="bi bi-list-check"></i> @Html.T("Catalog.Specifications", "Ozellikler")
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content border border-top-0 rounded-bottom p-4" id="productTabsContent">
+                <!-- Aciklama -->
+                <div class="tab-pane fade show active" id="description" role="tabpanel">
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div>@Html.Raw(Model.Description.Replace("\n", "<br/>"))</div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">@Html.T("Catalog.NoDescription", "Urun aciklamasi bulunmuyor.")</p>
+                    }
+                </div>
+
+                <!-- Ozellikler -->
+                <div class="tab-pane fade" id="specs" role="tabpanel">
+                    <table class="table">
+                        <tbody>
+                            @if (!string.IsNullOrEmpty(Model.SKU))
+                            {
+                                <tr><th style="width: 200px;">SKU</th><td>@Model.SKU</td></tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.CountryOfOrigin))
+                            {
+                                <tr><th>@Html.T("Catalog.CountryOfOrigin", "Mensei Ulke")</th><td>@Model.CountryOfOrigin</td></tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.HSCode))
+                            {
+                                <tr><th>@Html.T("Catalog.HSCode", "HS Kodu")</th><td>@Model.HSCode</td></tr>
+                            }
+                            @if (Model.Weight.HasValue)
+                            {
+                                <tr><th>@Html.T("Catalog.Weight", "Agirlik")</th><td>@Model.Weight kg / @defaultUnitName</td></tr>
+                            }
+                            @if (Model.Length.HasValue || Model.Width.HasValue || Model.Height.HasValue)
+                            {
+                                <tr>
+                                    <th>@Html.T("Catalog.Dimensions", "Boyutlar")</th>
+                                    <td>@Model.Length x @Model.Width x @Model.Height cm</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ayni Depodan Diger Urunler (Cross-sell) -->
+    <div class="mt-5" id="sameWarehouseSection" style="display: none;">
+        <h4 class="mb-4">
+            <i class="bi bi-building text-primary"></i> @Html.T("Catalog.SameWarehouseProducts", "Ayni Depodan Diger Urunler")
+            <small class="text-muted fs-6 ms-2">@Html.T("Catalog.SameWarehouseHint", "Tek sevkiyat avantaji")</small>
+        </h4>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3" id="sameWarehouseProducts">
+            <!-- JS ile doldurulacak -->
+        </div>
+    </div>
+
+    <!-- Benzer Urunler -->
+    @if (Model.RelatedProducts.Any())
+    {
+        <div class="mt-5">
+            <h4 class="mb-4"><i class="bi bi-grid"></i> @Html.T("Catalog.RelatedProducts", "Benzer Urunler")</h4>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+                @foreach (var related in Model.RelatedProducts.Take(4))
+                {
+                    <div class="col">
+                        <div class="card h-100 product-card">
+                            <a href="/Catalog/@related.Slug">
+                                <div class="ratio ratio-1x1 bg-light">
+                                    @if (!string.IsNullOrEmpty(related.MainImageUrl))
+                                    {
+                                        <img src="@related.MainImageUrl" alt="@related.Name" class="card-img-top object-fit-cover" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-image display-4 text-muted"></i>
+                                        </div>
+                                    }
+                                </div>
+                            </a>
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <a href="/Catalog/@related.Slug" class="text-decoration-none text-dark">@related.Name</a>
+                                </h6>
+                                <div class="fw-bold text-primary">@related.Price.ToString("N2") @related.Currency</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Teklif Isteme Modal -->
+<div class="modal fade" id="inquiryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-chat-square-text text-primary"></i> @Html.T("Catalog.RequestQuote", "Teklif Iste")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        @if (mainImage != null)
+                        {
+                            <img src="@mainImage.Url" alt="@Model.Name" class="img-fluid rounded" />
+                        }
+                    </div>
+                    <div class="col-md-9">
+                        <h5>@Model.Name</h5>
+                        <p class="text-muted mb-1">@Model.VendorName</p>
+                        <p class="fw-bold text-primary mb-0">@Model.Price.ToString("N2") @Model.Currency</p>
+                    </div>
+                </div>
+                <hr />
+                <form id="inquiryForm">
+                    <input type="hidden" id="productId" value="@Model.Id" />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Catalog.Inquiry.Quantity", "Miktar") *</label>
+                            <input type="number" class="form-control" id="inquiryQuantity" min="1" value="1" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Catalog.Inquiry.Unit", "Birim")</label>
+                            <select class="form-select" id="inquiryUnit">
+                                @if (Model.SalesUnit != null && Model.SalesUnit.Quantity > 1)
+                                {
+                                    var inquirySalesUnitName = Html.T(Model.SalesUnit.UnitResourceKey, Model.SalesUnit.UnitName);
+                                    <option value="@inquirySalesUnitName" selected>
+                                        @inquirySalesUnitName
+                                        (@Model.SalesUnit.Quantity @pieceUnitName)
+                                    </option>
+                                }
+                                @{
+                                    var pieceSelected = Model.SalesUnit == null || Model.SalesUnit.Quantity == 1;
+                                }
+                                @if (pieceSelected)
+                                {
+                                    <option value="@pieceUnitName" selected>@pieceUnitName</option>
+                                }
+                                else
+                                {
+                                    <option value="@pieceUnitName">@pieceUnitName</option>
+                                }
+                                <option value="@Html.T("UnitType.Kilogram", "Kilogram")">@Html.T("UnitType.Kilogram", "Kilogram")</option>
+                                <option value="@Html.T("UnitType.Ton", "Ton")">@Html.T("UnitType.Ton", "Ton")</option>
+                                <option value="@Html.T("UnitType.Meter", "Metre")">@Html.T("UnitType.Meter", "Metre")</option>
+                                <option value="@Html.T("UnitType.Box", "Kutu")">@Html.T("UnitType.Box", "Kutu")</option>
+                                <option value="@Html.T("UnitType.Pallet", "Palet")">@Html.T("UnitType.Pallet", "Palet")</option>
+                            </select>
+                            @if (Model.SalesUnit != null && Model.SalesUnit.Quantity > 1)
+                            {
+                                var hintUnitName = Html.T(Model.SalesUnit.UnitResourceKey, Model.SalesUnit.UnitName);
+                                <small class="text-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    @Html.T("Catalog.Inquiry.SalesUnitHint", "Bu urun") @hintUnitName @Html.T("Catalog.Inquiry.SalesUnitHint2", "ile satiliyor")
+                                </small>
+                            }
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">@Html.T("Catalog.Inquiry.Message", "Mesajiniz")</label>
+                            <textarea class="form-control" id="inquiryMessage" rows="3" placeholder="@Html.T("Catalog.Inquiry.MessagePlaceholder", "Ozel isteklerinizi, sorularinizi yazin...")"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Catalog.Inquiry.DeliveryCountry", "Teslimat Ulkesi")</label>
+                            <input type="text" class="form-control" id="inquiryDeliveryCountry" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Catalog.Inquiry.DeliveryCity", "Teslimat Sehri")</label>
+                            <input type="text" class="form-control" id="inquiryDeliveryCity" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Catalog.Inquiry.ContactName", "Iletisim Adi") *</label>
+                            <input type="text" class="form-control" id="inquiryContactName" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Catalog.Inquiry.ContactEmail", "E-posta") *</label>
+                            <input type="email" class="form-control" id="inquiryContactEmail" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Catalog.Inquiry.ContactPhone", "Telefon")</label>
+                            <input type="tel" class="form-control" id="inquiryContactPhone" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-primary" id="submitInquiryBtn">
+                    <i class="bi bi-send"></i> @Html.T("Catalog.Inquiry.Send", "Teklif Iste")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sepete Eklendi + Cross-sell Modal -->
+<div class="modal fade" id="addedToCartModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i>@Html.T("Catalog.AddedToCartTitle", "Urun Sepete Eklendi")</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Eklenen urun ozeti -->
+                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                    @if (mainImage != null)
+                    {
+                        <img src="@mainImage.Url" alt="@Model.Name" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;" />
+                    }
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">@Model.Name</h6>
+                        <p class="mb-0 text-muted">
+                            <span id="addedQuantity">1</span> @Html.T("Catalog.Units", "adet") x
+                            <span id="addedPrice" class="fw-bold text-primary">@Model.Price.ToString("N2") @Model.Currency</span>
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <span class="fs-5 fw-bold text-success" id="addedTotal">@Model.Price.ToString("N2") @Model.Currency</span>
+                    </div>
+                </div>
+
+                <!-- Cross-sell: Ayni depodan diger urunler -->
+                <div id="crossSellSection" style="display: none;">
+                    <h6 class="mb-3">
+                        <i class="bi bi-lightning-charge text-warning"></i>
+                        @Html.T("Catalog.CrossSellTitle", "Ayni depodan bunlari da ekleyebilirsiniz")
+                        <small class="text-muted">@Html.T("Catalog.CrossSellHint", "(Tek sevkiyat, kargo tasarrufu)")</small>
+                    </h6>
+                    <div class="row row-cols-2 row-cols-md-4 g-2" id="crossSellProducts">
+                        <!-- JS ile doldurulacak -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-arrow-left"></i> @Html.T("Catalog.ContinueShopping", "Alisverise Devam Et")
+                </button>
+                <a href="/Cart" class="btn btn-success">
+                    <i class="bi bi-cart-check"></i> @Html.T("Catalog.GoToCart", "Sepete Git")
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .thumbnail-item {
+        transition: border-color 0.2s;
+    }
+    .thumbnail-item:hover, .thumbnail-item.active {
+        border-color: #0d6efd !important;
+    }
+    .main-image-container img {
+        cursor: zoom-in;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        var productConfig = {
+            productId: @Model.Id,
+            vendorId: @Model.VendorId,
+            currency: '@Model.Currency',
+            basePrice: @Model.Price,
+            isAuthenticated: @Json.Serialize(User.Identity?.IsAuthenticated == true),
+            isOwnProduct: @Json.Serialize(ViewBag.IsOwnProduct == true),
+            priceTiers: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PriceTiers.Select(t => new { minQuantity = t.MinQuantity, maxQuantity = t.MaxQuantity, price = t.Price }))),
+            minOrderQuantity: @(Model.PriceTiers.Any() ? Model.PriceTiers.First().MinQuantity : 1),
+            salesUnit: @Html.Raw(Model.SalesUnit != null
+                ? System.Text.Json.JsonSerializer.Serialize(new {
+                    id = Model.SalesUnit.Id,
+                    name = Html.T(Model.SalesUnit.UnitResourceKey, Model.SalesUnit.UnitName).ToString(),
+                    baseUnitQuantity = Model.SalesUnit.Quantity,
+                    minOrderQuantity = Model.SalesUnit.MinOrderQuantity
+                })
+                : "null"),
+            defaultUnitName: '@Html.Raw(defaultUnitName)',
+            pieceUnitName: '@Html.Raw(pieceUnitName)'
+        };
+    </script>
+    <script src="~/js/Catalog/Detail.js" asp-append-version="true"></script>
+}

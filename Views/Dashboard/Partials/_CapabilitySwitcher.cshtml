@@ -1,0 +1,18 @@
+@* Capability Switcher - Tab-based navigation between dashboards *@
+@using Bridgo.Services.Interfaces
+@{
+    var capabilities = ViewBag.Capabilities as List<VendorCapabilityDto> ?? new List<VendorCapabilityDto>();
+}
+
+<div class="capability-switcher mb-4">
+    <ul class="nav nav-pills" role="tablist" data-bind="foreach: capabilities">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" type="button" role="tab"
+                    data-bind="text: name,
+                               css: { active: $parent.activeCapability() && $parent.activeCapability().id === id },
+                               click: function() { $parent.switchCapability($data); },
+                               attr: { 'aria-selected': $parent.activeCapability() && $parent.activeCapability().id === id }">
+            </button>
+        </li>
+    </ul>
+</div>

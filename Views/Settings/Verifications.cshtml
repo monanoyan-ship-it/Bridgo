@@ -1,0 +1,435 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Module.Verifications", "Dogrulamalar").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid" id="verifications-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-patch-check text-primary me-2"></i>
+                @Html.T("Module.Verifications", "Dogrulamalar")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Verifications.Subtitle", "Hesabinizi ve firmanizi dogrulayin")</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-personal">
+                <i class="bi bi-person me-1"></i> Kisisel Dogrulama
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-corporate">
+                <i class="bi bi-building me-1"></i> Kurumsal Dogrulama
+            </button>
+        </li>
+    </ul>
+
+    <!-- Loading -->
+    <!-- ko if: isLoading -->
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Yukleniyor...</p>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko ifnot: isLoading -->
+    <div class="tab-content">
+        <!-- ========================================= -->
+        <!-- KISISEL DOGRULAMA TAB -->
+        <!-- ========================================= -->
+        <div class="tab-pane fade show active" id="tab-personal">
+            <div class="row">
+                <!-- E-posta Dogrulama -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <!-- ko if: emailVerified -->
+                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-check-lg fs-4"></i>
+                                    </div>
+                                    <!-- /ko -->
+                                    <!-- ko ifnot: emailVerified -->
+                                    <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-envelope fs-4"></i>
+                                    </div>
+                                    <!-- /ko -->
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">E-posta Dogrulama</h6>
+                                    <p class="text-muted mb-2 small">E-posta adresinizi dogrulayin</p>
+                                    <!-- ko if: emailVerified -->
+                                    <span class="badge bg-success">Dogrulandi</span>
+                                    <!-- /ko -->
+                                    <!-- ko ifnot: emailVerified -->
+                                    <button class="btn btn-sm btn-outline-warning" data-bind="click: sendEmailVerification, enable: !isSendingEmail()">
+                                        <span data-bind="visible: isSendingEmail"><i class="bi bi-hourglass-split me-1"></i></span>
+                                        Dogrulama E-postasi Gonder
+                                    </button>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telefon Dogrulama -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <!-- ko if: phoneVerified -->
+                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-check-lg fs-4"></i>
+                                    </div>
+                                    <!-- /ko -->
+                                    <!-- ko ifnot: phoneVerified -->
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-phone fs-4"></i>
+                                    </div>
+                                    <!-- /ko -->
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Telefon Dogrulama</h6>
+                                    <p class="text-muted mb-2 small">Telefon numaranizi dogrulayin</p>
+                                    <!-- ko if: phoneVerified -->
+                                    <span class="badge bg-success">Dogrulandi</span>
+                                    <!-- /ko -->
+                                    <!-- ko ifnot: phoneVerified -->
+                                    <span class="badge bg-secondary">Yakin Zamanda</span>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kimlik Dogrulama -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <!-- ko if: identityVerified -->
+                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-check-lg fs-4"></i>
+                                    </div>
+                                    <!-- /ko -->
+                                    <!-- ko ifnot: identityVerified -->
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-person-badge fs-4"></i>
+                                    </div>
+                                    <!-- /ko -->
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Kimlik Dogrulama</h6>
+                                    <p class="text-muted mb-2 small">Kimlik belgenizi yukleyin</p>
+                                    <!-- ko if: identityVerified -->
+                                    <span class="badge bg-success">Dogrulandi</span>
+                                    <!-- /ko -->
+                                    <!-- ko ifnot: identityVerified -->
+                                    <span class="badge bg-secondary">Yakin Zamanda</span>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================= -->
+        <!-- KURUMSAL DOGRULAMA TAB -->
+        <!-- ========================================= -->
+        <div class="tab-pane fade" id="tab-corporate">
+            <!-- Kurumsal Dogrulama Durumu -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-building me-2"></i>Firma Dogrulama Durumu</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 text-center mb-3">
+                                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;" data-bind="css: companyVerified() ? 'bg-success' : 'bg-secondary'">
+                                        <i class="bi fs-3 text-white" data-bind="css: companyVerified() ? 'bi-check-lg' : 'bi-building'"></i>
+                                    </div>
+                                    <div class="mt-2">
+                                        <span class="badge" data-bind="text: companyVerified() ? 'Dogrulandi' : 'Beklemede', css: companyVerified() ? 'bg-success' : 'bg-warning text-dark'"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <h5 class="mb-3">Kurumsal Dogrulama Adimları</h5>
+                                    <div class="list-group list-group-flush">
+                                        <div class="list-group-item d-flex align-items-center px-0">
+                                            <i class="bi me-2" data-bind="css: companyDocsVerified() ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'"></i>
+                                            <span>Firma belgeleri (Vergi Levhasi, Ticaret Sicil)</span>
+                                        </div>
+                                        <div class="list-group-item d-flex align-items-center px-0">
+                                            <i class="bi me-2" data-bind="css: hasVerifiedRepresentative() ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'"></i>
+                                            <span>En az 1 dogrulanmis temsilci</span>
+                                        </div>
+                                        <div class="list-group-item d-flex align-items-center px-0">
+                                            <i class="bi me-2" data-bind="css: shareholdersVerified() ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'"></i>
+                                            <span>Hissedar/ortak bilgileri</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Firma Belgeleri -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Firma Belgeleri</h6>
+                            <button class="btn btn-sm btn-outline-primary" data-bind="click: showUploadDocModal">
+                                <i class="bi bi-upload me-1"></i> Belge Yukle
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- ko if: companyDocuments().length === 0 -->
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-file-earmark fs-1"></i>
+                                <p class="mt-2">Henuz belge yuklenmemis</p>
+                                <p class="small">Vergi Levhasi, Ticaret Sicil Gazetesi, Imza Sirküleri vb.</p>
+                            </div>
+                            <!-- /ko -->
+
+                            <div class="table-responsive" data-bind="visible: companyDocuments().length > 0">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Belge</th>
+                                            <th>Tip</th>
+                                            <th>Yukleme Tarihi</th>
+                                            <th>Durum</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: companyDocuments">
+                                        <tr>
+                                            <td>
+                                                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                <span data-bind="text: name"></span>
+                                            </td>
+                                            <td data-bind="text: typeName"></td>
+                                            <td data-bind="text: uploadedAtFormatted"></td>
+                                            <td>
+                                                <span class="badge" data-bind="text: statusName, css: statusBadgeClass"></span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.deleteDocument" title="Sil">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ekip Uyeleri Dogrulama -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-people me-2"></i>Temsilci ve Ortak Dogrulamalari</h6>
+                            <button class="btn btn-sm btn-outline-primary" data-bind="click: showAddMemberModal">
+                                <i class="bi bi-plus-lg me-1"></i> Temsilci Ekle
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- ko if: corporateMembers().length === 0 -->
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-people fs-1"></i>
+                                <p class="mt-2">Henuz kurumsal temsilci eklenmemis</p>
+                                <button class="btn btn-outline-primary" data-bind="click: showAddMemberModal">
+                                    <i class="bi bi-plus-lg me-1"></i> Temsilci Ekle
+                                </button>
+                            </div>
+                            <!-- /ko -->
+
+                            <div class="table-responsive" data-bind="visible: corporateMembers().length > 0">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Ad Soyad</th>
+                                            <th>Tip</th>
+                                            <th>Unvan</th>
+                                            <th>Yetki</th>
+                                            <th>Dogrulama</th>
+                                            <th style="width: 100px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: corporateMembers">
+                                        <tr>
+                                            <td>
+                                                <div data-bind="text: name"></div>
+                                                <small class="text-muted" data-bind="text: email"></small>
+                                                <!-- ko ifnot: hasUser -->
+                                                <br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Kullanici Yok</small>
+                                                <!-- /ko -->
+                                            </td>
+                                            <td><span class="badge" data-bind="text: memberTypeName, css: memberTypeBadgeClass"></span></td>
+                                            <td data-bind="text: title || '-'"></td>
+                                            <td>
+                                                <!-- ko if: isAuthorizedSignatory -->
+                                                <span class="badge bg-info me-1" title="Imza Yetkili"><i class="bi bi-pen"></i></span>
+                                                <!-- /ko -->
+                                                <!-- ko if: isLegalRepresentative -->
+                                                <span class="badge bg-primary" title="Yasal Temsilci"><i class="bi bi-shield-check"></i></span>
+                                                <!-- /ko -->
+                                                <!-- ko if: !isAuthorizedSignatory && !isLegalRepresentative -->-<!-- /ko -->
+                                            </td>
+                                            <td>
+                                                <!-- ko if: verificationStatusId === 3 -->
+                                                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Dogrulandi</span>
+                                                <!-- /ko -->
+                                                <!-- ko if: verificationStatusId !== 3 -->
+                                                <button class="btn btn-sm btn-outline-success" data-bind="click: $parent.verifyMember">
+                                                    <i class="bi bi-patch-check me-1"></i>Dogrula
+                                                </button>
+                                                <!-- /ko -->
+                                            </td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-primary me-1" data-bind="click: $parent.editMember" title="Duzenle">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.removeMember" title="Sil">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dogrulama Avantajlari -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h6><i class="bi bi-info-circle me-2"></i>Dogrulama Avantajlari</h6>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-shield-check text-success me-2"></i>
+                                <span>Guvenilir satici rozeti</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+                                <span>Arama sonuclarinda one cikin</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-cash-stack text-warning me-2"></i>
+                                <span>Yuksek islem limitleri</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- Temsilci Ekleme Modal -->
+    <div class="modal fade" id="memberModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-plus me-2"></i>
+                        <span data-bind="text: editingMemberId() ? 'Temsilci Duzenle' : 'Temsilci Ekle'"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Uye Tipi <span class="text-danger">*</span></label>
+                        <select class="form-select" data-bind="value: memberForm.memberTypeId, options: corporateMemberTypes, optionsValue: 'id', optionsText: 'name'"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ad Soyad <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" data-bind="value: memberForm.name" placeholder="Ornek: Ali Yilmaz">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-posta <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" data-bind="value: memberForm.email" placeholder="ornek@firma.com">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefon</label>
+                            <input type="text" class="form-control" data-bind="value: memberForm.phone" placeholder="+90 5xx xxx xxxx">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Unvan</label>
+                            <input type="text" class="form-control" data-bind="value: memberForm.title" placeholder="Genel Mudur">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">TC/Kimlik No</label>
+                            <input type="text" class="form-control" data-bind="value: memberForm.identityNumber">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Hisse Orani (%)</label>
+                            <input type="number" class="form-control" data-bind="value: memberForm.sharePercentage" min="0" max="100" step="0.01">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="chkSignatory" data-bind="checked: memberForm.isAuthorizedSignatory">
+                                <label class="form-check-label" for="chkSignatory">Imza Yetkili</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="chkRepresentative" data-bind="checked: memberForm.isLegalRepresentative">
+                                <label class="form-check-label" for="chkRepresentative">Yasal Temsilci</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: saveMember, enable: !isProcessing()">
+                        <span data-bind="visible: isProcessing"><i class="bi bi-hourglass-split me-1"></i></span>
+                        <span data-bind="text: editingMemberId() ? 'Guncelle' : 'Kaydet'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/Verifications.js"></script>
+}

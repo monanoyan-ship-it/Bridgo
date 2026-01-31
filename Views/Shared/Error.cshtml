@@ -1,0 +1,23 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = Html.T("Error.Title", "Hata").ToString();
+}
+
+<h1 class="text-danger">@Html.T("Error.Title", "Hata")</h1>
+<h2 class="text-danger">@Html.T("Error.Message", "Isteminiz islenirken bir hata olustu.")</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>@Html.T("Error.RequestId", "Istek ID"):</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<h3>@Html.T("Error.DevelopmentMode", "Gelistirme Modu")</h3>
+<p>
+    @Html.T("Error.DevelopmentInfo", "Development ortamina gecis yapmak hatanin daha detayli bilgisini gosterecektir.")
+</p>
+<p>
+    <strong>@Html.T("Error.DevelopmentWarning", "Development ortami canli uygulamalarda etkinlestirilmemelidir.")</strong>
+    @Html.T("Error.DevelopmentRisk", "Son kullanicilara hassas bilgilerin gosterilmesine neden olabilir.")
+</p>

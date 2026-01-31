@@ -1,0 +1,603 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Checkout.Title", "Siparis Olustur").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="checkout-app">
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- Empty Cart -->
+    <div data-bind="visible: !isLoading() && !summary()" class="text-center py-5">
+        <i class="bi bi-cart-x display-1 text-muted"></i>
+        <h4 class="mt-3">@Html.T("Checkout.EmptyCart", "Sepetiniz bos")</h4>
+        <p class="text-muted">@Html.T("Checkout.EmptyCartDesc", "Urun eklemek icin kataloga gidin.")</p>
+        <a href="/Catalog" class="btn btn-primary">
+            <i class="bi bi-grid me-2"></i>@Html.T("Checkout.GoToCatalog", "Kataloga Git")
+        </a>
+    </div>
+
+    <!-- Checkout Content -->
+    <!-- ko if: !isLoading() && summary() -->
+    <div>
+        <!-- Stepper -->
+        <div class="checkout-stepper mb-4">
+            <div class="d-flex justify-content-center">
+                <div class="step" data-bind="css: { active: step() === 1, completed: step() > 1 }">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">@Html.T("Checkout.Step.Summary", "Ozet")</div>
+                </div>
+                <div class="step-line" data-bind="css: { completed: step() > 1 }"></div>
+                <div class="step" data-bind="css: { active: step() === 2, completed: step() > 2 }">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">@Html.T("Checkout.Step.Incoterm", "Teslimat")</div>
+                </div>
+                <div class="step-line" data-bind="css: { completed: step() > 2 }"></div>
+                <div class="step" data-bind="css: { active: step() === 3, completed: step() > 3 }">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">@Html.T("Checkout.Step.Services", "Hizmetler")</div>
+                </div>
+                <div class="step-line" data-bind="css: { completed: step() > 3 }"></div>
+                <div class="step" data-bind="css: { active: step() === 4, completed: step() > 4 }">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">@Html.T("Checkout.Step.Confirm", "Onay")</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1: Order Summary -->
+        <div data-bind="visible: step() === 1">
+            <div class="row">
+                <!-- Products -->
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-cart3 me-2"></i>@Html.T("Checkout.Products", "Urunler")
+                                <span class="badge bg-primary ms-2" data-bind="text: summary().totalItemCount"></span>
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <!-- Vendor Groups -->
+                            <!-- ko foreach: summary().vendorGroups -->
+                            <div class="vendor-group border-bottom">
+                                <div class="vendor-header bg-light px-3 py-2">
+                                    <i class="bi bi-shop me-2"></i>
+                                    <strong data-bind="text: vendorName"></strong>
+                                    <!-- ko if: origin -->
+                                    <span class="text-muted ms-2">
+                                        <i class="bi bi-geo-alt"></i>
+                                        <span data-bind="text: origin.city"></span>
+                                    </span>
+                                    <!-- /ko -->
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <tbody data-bind="foreach: items">
+                                            <tr>
+                                                <td style="width: 60px;">
+                                                    <img data-bind="attr: { src: productImageUrl || '/img/no-image.png' }"
+                                                         class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                                </td>
+                                                <td>
+                                                    <div class="fw-medium" data-bind="text: productName"></div>
+                                                    <small class="text-muted" data-bind="text: 'SKU: ' + (productSku || '-')"></small>
+                                                </td>
+                                                <td class="text-center" data-bind="text: quantity + ' Adet'"></td>
+                                                <td class="text-end" data-bind="text: $root.formatCurrency(unitPrice, currency)"></td>
+                                                <td class="text-end fw-bold" data-bind="text: $root.formatCurrency(totalPrice, currency)"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="px-3 py-2 bg-light text-end">
+                                    <strong>@Html.T("Checkout.SubTotal", "Ara Toplam"): </strong>
+                                    <span class="text-primary fw-bold" data-bind="text: $root.formatCurrency(subTotal, $parent.summary().currency)"></span>
+                                </div>
+                            </div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Shipping Address -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>@Html.T("Checkout.ShippingAddress", "Teslimat Adresi")</h6>
+                        </div>
+                        <div class="card-body">
+                            <select class="form-select" data-bind="options: summary().availableAddresses,
+                                optionsValue: 'id', optionsText: 'title',
+                                value: selectedAddressId"></select>
+                            <div class="mt-2" data-bind="with: selectedAddress">
+                                <small class="text-muted">
+                                    <span data-bind="text: fullAddress"></span><br>
+                                    <span data-bind="text: countryName"></span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Total -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-receipt me-2"></i>@Html.T("Checkout.OrderSummary", "Siparis Ozeti")</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>@Html.T("Checkout.ProductTotal", "Urun Toplami")</span>
+                                <span data-bind="text: formatCurrency(summary().totalProductAmount, summary().currency)"></span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <strong>@Html.T("Checkout.Total", "Toplam")</strong>
+                                <strong class="text-primary fs-5" data-bind="text: formatCurrency(summary().totalProductAmount, summary().currency)"></strong>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                * @Html.T("Checkout.ServicesNote", "Hizmet ucretleri bir sonraki adimda eklenecektir.")
+                            </small>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-primary w-100" data-bind="click: nextStep">
+                                @Html.T("Checkout.Continue", "Devam Et")
+                                <i class="bi bi-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Incoterm Selection -->
+        <div data-bind="visible: step() === 2">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-signpost-2 me-2"></i>@Html.T("Checkout.IncotermSelection", "Teslimat Sartlari (Incoterm)")
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                @Html.T("Checkout.IncotermInfo", "Incoterm, uluslararasi ticarette alici ve saticinin sorumluluklarini belirler. Sectiginiz terime gore tasimacilik, sigorta ve gumruk islemlerinin kimin sorumluluğunda olacagi otomatik belirlenir.")
+                            </div>
+
+                            <!-- Incoterm Selection -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">@Html.T("Checkout.SelectIncoterm", "Incoterm Secin") *</label>
+                                    <select class="form-select" data-bind="options: incoterms,
+                                        optionsValue: 'id',
+                                        optionsText: function(item) { return item.code + ' - ' + item.name; },
+                                        optionsCaption: '@Html.T("Common.Select", "Secin...")',
+                                        value: selectedIncotermId"></select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">@Html.T("Checkout.IncotermLocation", "Incoterm Lokasyonu") *</label>
+                                    <input type="text" class="form-control"
+                                           placeholder="@Html.T("Checkout.IncotermLocationHint", "Ornegin: Istanbul Port, Buyer Warehouse")"
+                                           data-bind="value: incotermLocation">
+                                </div>
+                            </div>
+
+                            <!-- Selected Incoterm Info -->
+                            <div data-bind="visible: selectedIncoterm()" class="mt-4">
+                                <!-- Incoterm Description -->
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h6 class="mb-2">
+                                            <span class="badge bg-primary me-2" data-bind="text: selectedIncoterm().code"></span>
+                                            <span data-bind="text: selectedIncoterm().name"></span>
+                                        </h6>
+                                        <p class="text-muted mb-0 small" data-bind="text: selectedIncoterm().description"></p>
+                                        <!-- ko if: selectedIncoterm().isSeaOnly -->
+                                        <div class="mt-2">
+                                            <span class="badge bg-info"><i class="bi bi-water me-1"></i>@Html.T("Checkout.SeaOnlyIncoterm", "Sadece Deniz Tasimaciligi")</span>
+                                        </div>
+                                        <!-- /ko -->
+                                    </div>
+                                </div>
+
+                                <!-- Responsibility Matrix -->
+                                <h6 class="mt-4 mb-3"><i class="bi bi-list-check me-2"></i>@Html.T("Checkout.ResponsibilityMatrix", "Sorumluluk Dagilimi")</h6>
+                                <div class="row" data-bind="visible: incotermResponsibilities()">
+                                    <div class="col-md-6">
+                                        <div class="card border-primary h-100">
+                                            <div class="card-header bg-primary text-white">
+                                                <i class="bi bi-shop me-2"></i>@Html.T("Checkout.SellerResponsibilities", "Satici Sorumlu")
+                                            </div>
+                                            <ul class="list-group list-group-flush" data-bind="foreach: incotermResponsibilities().sellerResponsibilities">
+                                                <li class="list-group-item">
+                                                    <i data-bind="attr: { class: icon + ' me-2 text-primary' }"></i>
+                                                    <span data-bind="text: name"></span>
+                                                </li>
+                                            </ul>
+                                            <!-- ko if: incotermResponsibilities().sellerResponsibilities.length === 0 -->
+                                            <div class="card-body text-muted text-center">
+                                                <i class="bi bi-dash-circle me-2"></i>@Html.T("Checkout.NoResponsibility", "Sorumluluk yok")
+                                            </div>
+                                            <!-- /ko -->
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card border-success h-100">
+                                            <div class="card-header bg-success text-white">
+                                                <i class="bi bi-cart me-2"></i>@Html.T("Checkout.BuyerResponsibilities", "Alici Sorumlu (Siz)")
+                                            </div>
+                                            <ul class="list-group list-group-flush" data-bind="foreach: incotermResponsibilities().buyerResponsibilities">
+                                                <li class="list-group-item">
+                                                    <i data-bind="attr: { class: icon + ' me-2 text-success' }"></i>
+                                                    <span data-bind="text: name"></span>
+                                                    <!-- ko if: canRequestFinancing -->
+                                                    <span class="badge bg-warning text-dark float-end" title="@Html.T("Checkout.CanRequestFinancing", "Finansman istenebilir")">
+                                                        <i class="bi bi-bank"></i>
+                                                    </span>
+                                                    <!-- /ko -->
+                                                </li>
+                                            </ul>
+                                            <!-- ko if: incotermResponsibilities().buyerResponsibilities.length === 0 -->
+                                            <div class="card-body text-muted text-center">
+                                                <i class="bi bi-dash-circle me-2"></i>@Html.T("Checkout.NoResponsibility", "Sorumluluk yok")
+                                            </div>
+                                            <!-- /ko -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Buyer Responsibility Note -->
+                                <div class="alert alert-success mt-3" data-bind="visible: incotermResponsibilities() && incotermResponsibilities().buyerResponsibilities.length > 0">
+                                    <i class="bi bi-lightbulb me-2"></i>
+                                    @Html.T("Checkout.BuyerNote", "Alici olarak sorumlu oldugunuz kalemler icin bir sonraki adimda servis saglayicilardan teklif isteyebilir ve finansman talebinde bulunabilirsiniz.")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-signpost me-2"></i>@Html.T("Checkout.SelectedIncoterm", "Secilen Incoterm")</h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- ko if: selectedIncoterm() -->
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-primary fs-6 me-2" data-bind="text: selectedIncoterm().code"></span>
+                                <span data-bind="text: selectedIncoterm().name"></span>
+                            </div>
+                            <!-- ko if: incotermLocation() -->
+                            <div class="text-muted small">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                <span data-bind="text: incotermLocation()"></span>
+                            </div>
+                            <!-- /ko -->
+                            <!-- /ko -->
+                            <!-- ko if: !selectedIncoterm() -->
+                            <p class="text-muted mb-0">@Html.T("Checkout.NoIncotermSelected", "Incoterm secilmedi")</p>
+                            <!-- /ko -->
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary flex-fill" data-bind="click: prevStep">
+                                    <i class="bi bi-arrow-left me-2"></i>@Html.T("Common.Back", "Geri")
+                                </button>
+                                <button class="btn btn-primary flex-fill" data-bind="click: nextStep, enable: canProceedFromIncoterm">
+                                    @Html.T("Checkout.Continue", "Devam Et")
+                                    <i class="bi bi-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Service Selection -->
+        <div data-bind="visible: step() === 3">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-gear me-2"></i>@Html.T("Checkout.SelectServices", "Hizmet Secimi")
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">@Html.T("Checkout.ServicesDesc", "Siparisiz icin hangi hizmetlere ihtiyaciniz oldugunu secin. Servis saglayicilar teklif gonderecek.")</p>
+
+                            <!-- Service Options -->
+                            <div class="row g-3" data-bind="foreach: summary().serviceOptions">
+                                <div class="col-md-6">
+                                    <div class="card h-100 service-option" data-bind="css: { 'border-primary': isSelected, 'selected': isSelected }">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                       data-bind="checked: isSelected, attr: { id: 'service-' + serviceType, disabled: isRequired }">
+                                                <label class="form-check-label" data-bind="attr: { for: 'service-' + serviceType }">
+                                                    <i data-bind="attr: { class: 'bi ' + serviceTypeIcon + ' me-2' }"></i>
+                                                    <strong data-bind="text: serviceTypeName"></strong>
+                                                    <!-- ko if: isRequired -->
+                                                    <span class="badge bg-warning ms-2">@Html.T("Checkout.Required", "Zorunlu")</span>
+                                                    <!-- /ko -->
+                                                </label>
+                                            </div>
+                                            <p class="text-muted small mt-2 mb-0" data-bind="text: description"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Financing Option -->
+                            <div class="mt-4 pt-3 border-top">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="request-financing" data-bind="checked: requestFinancing">
+                                    <label class="form-check-label" for="request-financing">
+                                        <i class="bi bi-bank me-2 text-success"></i>
+                                        <strong>@Html.T("Checkout.RequestFinancing", "Finansman Istiyorum")</strong>
+                                    </label>
+                                </div>
+                                <p class="text-muted small ms-4 mb-0">@Html.T("Checkout.FinancingDesc", "Siparisiniz icin yatirimcilardan finansman teklifi alin.")</p>
+
+                                <!-- Financing Details Form -->
+                                <div data-bind="visible: requestFinancing" class="ms-4 mt-3 p-3 bg-light rounded">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small">@Html.T("Checkout.FinancingAmount", "Talep Tutari")</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" class="form-control" step="0.01" min="0"
+                                                       data-bind="value: financingForm.requestedAmount, attr: { max: summary().totalProductAmount }">
+                                                <span class="input-group-text" data-bind="text: summary().currency || 'TRY'"></span>
+                                            </div>
+                                            <small class="text-muted">
+                                                @Html.T("Checkout.MaxAmount", "Max"): <span data-bind="text: formatCurrency(summary().totalProductAmount, summary().currency)"></span>
+                                            </small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">@Html.T("Checkout.FinancingDuration", "Vade Suresi")</label>
+                                            <select class="form-select form-select-sm" data-bind="value: financingForm.durationDays">
+                                                <option value="15">15 @Html.T("Common.Days", "Gun")</option>
+                                                <option value="30">30 @Html.T("Common.Days", "Gun")</option>
+                                                <option value="45">45 @Html.T("Common.Days", "Gun")</option>
+                                                <option value="60">60 @Html.T("Common.Days", "Gun")</option>
+                                                <option value="90">90 @Html.T("Common.Days", "Gun")</option>
+                                                <option value="120">120 @Html.T("Common.Days", "Gun")</option>
+                                                <option value="180">180 @Html.T("Common.Days", "Gun")</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">@Html.T("Checkout.MaxInterestRate", "Max Faiz Orani")</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" class="form-control" step="0.5" min="0" max="50"
+                                                       data-bind="value: financingForm.maxInterestRate">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                            <small class="text-muted">@Html.T("Checkout.MaxInterestHint", "Bos birakirsaniz sinir olmaz")</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">@Html.T("Checkout.OfferDeadline", "Teklif Son Tarihi")</label>
+                                            <input type="date" class="form-control form-control-sm"
+                                                   data-bind="value: financingForm.offerDeadline">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small">@Html.T("Checkout.FinancingNotes", "Aciklama (Opsiyonel)")</label>
+                                            <textarea class="form-control form-control-sm" rows="2"
+                                                      placeholder="@Html.T("Checkout.FinancingNotesPlaceholder", "Yatirimcilara iletmek istediginiz ek bilgiler...")"
+                                                      data-bind="value: financingForm.description"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-list-check me-2"></i>@Html.T("Checkout.SelectedServices", "Secilen Hizmetler")</h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- ko foreach: selectedServices -->
+                            <div class="d-flex align-items-center mb-2">
+                                <i data-bind="attr: { class: 'bi ' + serviceTypeIcon + ' me-2 text-primary' }"></i>
+                                <span data-bind="text: serviceTypeName"></span>
+                            </div>
+                            <!-- /ko -->
+                            <!-- ko if: selectedServices().length === 0 -->
+                            <p class="text-muted mb-0">@Html.T("Checkout.NoServicesSelected", "Hizmet secilmedi")</p>
+                            <!-- /ko -->
+                            <!-- ko if: requestFinancing -->
+                            <div class="d-flex align-items-center mt-2 pt-2 border-top">
+                                <i class="bi bi-bank me-2 text-success"></i>
+                                <span>@Html.T("Checkout.Financing", "Finansman")</span>
+                            </div>
+                            <!-- /ko -->
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary flex-fill" data-bind="click: prevStep">
+                                    <i class="bi bi-arrow-left me-2"></i>@Html.T("Common.Back", "Geri")
+                                </button>
+                                <button class="btn btn-primary flex-fill" data-bind="click: nextStep">
+                                    @Html.T("Checkout.Continue", "Devam Et")
+                                    <i class="bi bi-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Confirmation -->
+        <div data-bind="visible: step() === 4">
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Order Summary -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>@Html.T("Checkout.ConfirmOrder", "Siparis Onayi")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                @Html.T("Checkout.QuoteInfo", "Siparisiz olusturulduktan sonra servis saglayicilardan teklif gelecektir. Teklifleri inceleyip secim yapabilirsiniz.")
+                            </div>
+
+                            <!-- Products Summary -->
+                            <h6 class="mt-4"><i class="bi bi-box me-2"></i>@Html.T("Checkout.Products", "Urunler")</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody data-bind="foreach: allItems">
+                                        <tr>
+                                            <td data-bind="text: productName"></td>
+                                            <td class="text-center" data-bind="text: quantity + ' Adet'"></td>
+                                            <td class="text-end" data-bind="text: $root.formatCurrency(totalPrice, currency)"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Shipping Address -->
+                            <h6 class="mt-4"><i class="bi bi-geo-alt me-2"></i>@Html.T("Checkout.ShippingAddress", "Teslimat Adresi")</h6>
+                            <div data-bind="with: selectedAddress">
+                                <p class="mb-0">
+                                    <strong data-bind="text: title"></strong><br>
+                                    <span data-bind="text: fullAddress"></span><br>
+                                    <span data-bind="text: countryName"></span>
+                                </p>
+                            </div>
+
+                            <!-- Incoterm -->
+                            <h6 class="mt-4"><i class="bi bi-signpost-2 me-2"></i>@Html.T("Checkout.Incoterm", "Teslimat Sartlari")</h6>
+                            <div data-bind="if: selectedIncoterm()">
+                                <p class="mb-0">
+                                    <span class="badge bg-primary me-2" data-bind="text: selectedIncoterm().code"></span>
+                                    <span data-bind="text: selectedIncoterm().name"></span>
+                                    <!-- ko if: incotermLocation() -->
+                                    <br><small class="text-muted"><i class="bi bi-geo-alt me-1"></i><span data-bind="text: incotermLocation()"></span></small>
+                                    <!-- /ko -->
+                                </p>
+                            </div>
+
+                            <!-- Selected Services -->
+                            <h6 class="mt-4"><i class="bi bi-gear me-2"></i>@Html.T("Checkout.SelectedServices", "Secilen Hizmetler")</h6>
+                            <!-- ko foreach: selectedServices -->
+                            <div class="d-flex align-items-center mb-2">
+                                <i data-bind="attr: { class: 'bi ' + serviceTypeIcon + ' me-2 text-primary' }"></i>
+                                <span data-bind="text: serviceTypeName"></span>
+                                <span class="text-muted ms-2">- @Html.T("Checkout.AwaitingQuotes", "Teklif bekleniyor")</span>
+                            </div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-pencil me-2"></i>@Html.T("Checkout.Notes", "Notlar")</h6>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control" rows="3" placeholder="@Html.T("Checkout.NotesPlaceholder", "Siparisiniz hakkinda ek bilgi...")"
+                                      data-bind="value: notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-receipt me-2"></i>@Html.T("Checkout.OrderSummary", "Siparis Ozeti")</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>@Html.T("Checkout.ProductTotal", "Urun Toplami")</span>
+                                <span data-bind="text: formatCurrency(summary().totalProductAmount, summary().currency)"></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>@Html.T("Checkout.Services", "Hizmetler")</span>
+                                <span class="text-muted">@Html.T("Checkout.ToBeQuoted", "Teklif bekleniyor")</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <strong>@Html.T("Checkout.Total", "Urun Toplami")</strong>
+                                <strong class="text-primary fs-5" data-bind="text: formatCurrency(summary().totalProductAmount, summary().currency)"></strong>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-2 mb-3">
+                                <button class="btn btn-outline-secondary flex-fill" data-bind="click: prevStep">
+                                    <i class="bi bi-arrow-left me-2"></i>@Html.T("Common.Back", "Geri")
+                                </button>
+                            </div>
+                            <button class="btn btn-success w-100" data-bind="click: submitOrder, disable: isSubmitting">
+                                <span data-bind="visible: !isSubmitting()">
+                                    <i class="bi bi-check-circle me-2"></i>@Html.T("Checkout.PlaceOrder", "Siparisi Olustur")
+                                </span>
+                                <span data-bind="visible: isSubmitting">
+                                    <span class="spinner-border spinner-border-sm me-2"></span>@Html.T("Common.Processing", "Isleniyor...")
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+</div>
+
+<style>
+    .checkout-stepper .step {
+        text-align: center;
+        position: relative;
+    }
+    .checkout-stepper .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin: 0 auto 8px;
+    }
+    .checkout-stepper .step.active .step-circle {
+        background: var(--bs-primary);
+        color: white;
+    }
+    .checkout-stepper .step.completed .step-circle {
+        background: var(--bs-success);
+        color: white;
+    }
+    .checkout-stepper .step-line {
+        flex: 1;
+        height: 2px;
+        background: #e9ecef;
+        margin: 20px 10px;
+    }
+    .checkout-stepper .step-line.completed {
+        background: var(--bs-success);
+    }
+    .service-option.selected {
+        background: rgba(var(--bs-primary-rgb), 0.05);
+    }
+</style>
+
+@section Scripts {
+    <script src="~/js/Checkout/Index.js" asp-append-version="true"></script>
+}

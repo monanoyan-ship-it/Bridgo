@@ -1,0 +1,247 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("ServiceJobs.Title.Logistics", "Lojistik Islerim").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="my-logistics-jobs-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-truck text-primary"></i> @Html.T("ServiceJobs.Title.Logistics", "Lojistik Islerim")</h4>
+            <p class="text-muted mb-0">@Html.T("ServiceJobs.Subtitle.Logistics", "Kabul edilen ve tamamlanan lojistik isleriniz")</p>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" data-bind="click: loadJobs">
+            <i class="bi bi-arrow-clockwise"></i> @Html.T("Common.Refresh", "Yenile")
+        </button>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-bind="css: { active: currentTab() === 'active' }, click: function() { currentTab('active'); }">
+                <i class="bi bi-play-circle"></i> @Html.T("ServiceJobs.Tab.Active", "Aktif Isler")
+                <span class="badge bg-primary ms-1" data-bind="text: activeJobs().length, visible: activeJobs().length > 0"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-bind="css: { active: currentTab() === 'completed' }, click: function() { currentTab('completed'); }">
+                <i class="bi bi-check-circle"></i> @Html.T("ServiceJobs.Tab.Completed", "Tamamlananlar")
+                <span class="badge bg-success ms-1" data-bind="text: completedJobs().length, visible: completedJobs().length > 0"></span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading()" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+    </div>
+
+    <!-- Active Jobs Tab -->
+    <div data-bind="visible: !isLoading() && currentTab() === 'active'">
+        <!-- Empty State -->
+        <div data-bind="visible: activeJobs().length === 0" class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="mt-3 text-muted">@Html.T("ServiceJobs.Empty.Active.Logistics", "Aktif lojistik isiniz bulunmuyor")</p>
+            <a href="/Services/Logistics" class="btn btn-outline-primary">
+                <i class="bi bi-search me-1"></i> @Html.T("ServiceJobs.BrowseRequests", "Taleplere Goz At")
+            </a>
+        </div>
+
+        <!-- Job Cards -->
+        <div class="row" data-bind="foreach: activeJobs">
+            <div class="col-lg-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge" data-bind="text: statusName, css: statusCssClass"></span>
+                            <span class="fw-bold ms-2" data-bind="text: orderNumber"></span>
+                        </div>
+                        <small class="text-muted" data-bind="text: $parent.formatDate(createdAt)"></small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block">@Html.T("Common.Buyer", "Alici")</small>
+                                <span data-bind="text: buyerName"></span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">@Html.T("Common.Seller", "Satici")</small>
+                                <span data-bind="text: sellerName"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block">@Html.T("Common.Destination", "Hedef")</small>
+                                <span data-bind="text: (destinationCity || '') + (destinationCountry ? ', ' + destinationCountry : '')"></span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">@Html.T("Common.Amount", "Tutar")</small>
+                                <span class="fw-bold text-success" data-bind="text: $parent.formatCurrency(netAmount, currency)"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary flex-fill" data-bind="click: function() { $parent.viewDetail($data); }">
+                                <i class="bi bi-eye"></i> @Html.T("Common.Detail", "Detay")
+                            </button>
+                            <button class="btn btn-sm btn-success flex-fill" data-bind="click: function() { $parent.completeJob($data); }">
+                                <i class="bi bi-check-lg"></i> @Html.T("ServiceJobs.Complete", "Tamamla")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Jobs Tab -->
+    <div data-bind="visible: !isLoading() && currentTab() === 'completed'">
+        <!-- Empty State -->
+        <div data-bind="visible: completedJobs().length === 0" class="text-center py-5">
+            <i class="bi bi-check-circle display-1 text-muted"></i>
+            <p class="mt-3 text-muted">@Html.T("ServiceJobs.Empty.Completed.Logistics", "Tamamlanmis lojistik isiniz bulunmuyor")</p>
+        </div>
+
+        <!-- Job List -->
+        <div class="table-responsive" data-bind="visible: completedJobs().length > 0">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>@Html.T("Common.Order", "Siparis")</th>
+                        <th>@Html.T("Common.Buyer", "Alici")</th>
+                        <th>@Html.T("Common.Destination", "Hedef")</th>
+                        <th>@Html.T("Common.Amount", "Tutar")</th>
+                        <th>@Html.T("ServiceJobs.Completed", "Tamamlanma")</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: completedJobs">
+                    <tr>
+                        <td><span class="fw-bold" data-bind="text: orderNumber"></span></td>
+                        <td data-bind="text: buyerName"></td>
+                        <td data-bind="text: (destinationCity || '') + (destinationCountry ? ', ' + destinationCountry : '')"></td>
+                        <td><span class="text-success" data-bind="text: $parent.formatCurrency(netAmount, currency)"></span></td>
+                        <td data-bind="text: $parent.formatDate(taskCompletedAt)"></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary" data-bind="click: function() { $parent.viewDetail($data); }">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="jobDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-truck text-primary me-2"></i>
+                        @Html.T("ServiceJobs.Modal.Detail", "Is Detayi") - <span data-bind="text: selectedJob()?.orderNumber"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" data-bind="with: selectedJob">
+                    <!-- Durum -->
+                    <div class="alert" data-bind="css: 'alert-' + (status === 3 ? 'success' : 'primary')">
+                        <i class="bi" data-bind="css: status === 3 ? 'bi-check-circle' : 'bi-play-circle'"></i>
+                        <span data-bind="text: statusName"></span>
+                        <!-- ko if: taskCompletedAt -->
+                        <small class="ms-2" data-bind="text: '(' + $parent.formatDate(taskCompletedAt) + ')'"></small>
+                        <!-- /ko -->
+                    </div>
+
+                    <!-- Firma Bilgileri -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header py-2"><small class="fw-bold">@Html.T("ServiceJobs.BuyerCompany", "Alici Firma")</small></div>
+                                <div class="card-body py-2">
+                                    <p class="mb-1" data-bind="text: buyerName"></p>
+                                    <small class="text-muted" data-bind="text: buyerEmail"></small><br/>
+                                    <small class="text-muted" data-bind="text: buyerPhone"></small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header py-2"><small class="fw-bold">@Html.T("ServiceJobs.SellerCompany", "Satici Firma")</small></div>
+                                <div class="card-body py-2">
+                                    <p class="mb-1" data-bind="text: sellerName"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teslimat Adresi -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">@Html.T("Common.ShippingAddress", "Teslimat Adresi")</label>
+                        <p class="mb-0" data-bind="text: destinationAddress || '-'"></p>
+                    </div>
+
+                    <!-- Kargo Bilgileri -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">@Html.T("ServiceJobs.CargoValue", "Kargo Degeri")</label>
+                            <p class="mb-0" data-bind="text: cargoValue ? $parent.formatCurrency(cargoValue, 'USD') : '-'"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">@Html.T("ServiceJobs.Weight", "Agirlik")</label>
+                            <p class="mb-0" data-bind="text: weightKg ? weightKg + ' kg' : '-'"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">@Html.T("ServiceJobs.HSCode", "HS Kodu")</label>
+                            <p class="mb-0" data-bind="text: hsCode || '-'"></p>
+                        </div>
+                    </div>
+
+                    <!-- Odeme -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">@Html.T("ServiceJobs.GrossAmount", "Brut Tutar")</small>
+                                    <span class="fw-bold" data-bind="text: $parent.formatCurrency(amount, currency)"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">@Html.T("ServiceJobs.Commission", "Komisyon")</small>
+                                    <span class="text-danger" data-bind="text: '-' + $parent.formatCurrency(commissionAmount, currency)"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">@Html.T("ServiceJobs.NetAmount", "Net Tutar")</small>
+                                    <span class="fw-bold text-success" data-bind="text: $parent.formatCurrency(netAmount, currency)"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notlar -->
+                    <!-- ko if: notes -->
+                    <div class="mt-3">
+                        <label class="form-label fw-bold">@Html.T("Common.Notes", "Notlar")</label>
+                        <p class="mb-0" data-bind="text: notes"></p>
+                    </div>
+                    <!-- /ko -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+                    <!-- ko if: selectedJob() && !selectedJob().isTaskCompleted -->
+                    <button type="button" class="btn btn-success" data-bind="click: function() { completeJob(selectedJob()); }">
+                        <i class="bi bi-check-lg"></i> @Html.T("ServiceJobs.CompleteJob", "Isi Tamamla")
+                    </button>
+                    <!-- /ko -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/MyLogisticsJobs.js" asp-append-version="true"></script>
+}

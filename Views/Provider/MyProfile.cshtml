@@ -1,0 +1,453 @@
+@{
+    ViewData["Title"] = Html.T("ProviderProfile.Title", "Firma Profili");
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+@section Styles {
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 0.5rem;
+        color: white;
+        margin-bottom: 1.5rem;
+    }
+    .nav-pills .nav-link {
+        color: #6c757d;
+    }
+    .nav-pills .nav-link.active {
+        background-color: #0d6efd;
+    }
+    .capability-selector {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .capability-card {
+        padding: 1rem 1.5rem;
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .capability-card:hover {
+        border-color: #0d6efd;
+        background: #f8f9fa;
+    }
+    .capability-card.active {
+        border-color: #0d6efd;
+        background: #0d6efd;
+        color: white;
+    }
+    .capability-card i {
+        font-size: 1.5rem;
+    }
+    .gallery-item {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border-radius: 0.5rem;
+    }
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .gallery-item .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+    .gallery-item:hover .overlay {
+        display: flex;
+    }
+</style>
+}
+
+<div id="provider-profile-app" class="container-fluid py-4">
+    <!-- Loading State -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yukleniyor...</span>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div data-bind="visible: loadError" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span data-bind="text: loadError"></span>
+    </div>
+
+    <!-- Main Content -->
+    <div data-bind="visible: !isLoading() && !loadError()">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">@Html.T("ProviderProfile.Title", "Firma Profili")</h4>
+                <p class="text-muted mb-0">@Html.T("ProviderProfile.Subtitle", "Hizmet profil bilgilerinizi yonetin")</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" data-bind="click: saveProfile, disable: isSaving">
+                    <span data-bind="visible: isSaving" class="spinner-border spinner-border-sm me-1"></span>
+                    <i class="bi bi-check-lg" data-bind="visible: !isSaving()"></i> @Html.T("Common.Save", "Kaydet")
+                </button>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div data-bind="visible: successMessage" class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i>
+            <span data-bind="text: successMessage"></span>
+            <button type="button" class="btn-close" data-bind="click: function() { successMessage('') }"></button>
+        </div>
+
+        <!-- Capability Selector (if multiple capabilities) -->
+        <div data-bind="visible: capabilities().length > 1" class="capability-selector">
+            <!-- ko foreach: capabilities -->
+            <div class="capability-card"
+                 data-bind="click: $parent.selectCapability, css: { active: id === $parent.selectedCapabilityId() }">
+                <i data-bind="class: icon || 'bi bi-building'"></i>
+                <span data-bind="text: name"></span>
+            </div>
+            <!-- /ko -->
+        </div>
+
+        <!-- Profile Form -->
+        <div data-bind="visible: profile()">
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <!-- Basic Info Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-building me-2"></i>@Html.T("ProviderProfile.BasicInfo", "Temel Bilgiler")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.DisplayName", "Gosterilecek Isim")</label>
+                                <input type="text" class="form-control" data-bind="value: form.displayName" placeholder="Firma adiniz">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.Tagline", "Slogan")</label>
+                                <input type="text" class="form-control" data-bind="value: form.tagline" placeholder="Kisa slogan">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.ShortDescription", "Kisa Tanitim")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.shortDescription" placeholder="Kisa tanitim metni"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.Description", "Detayli Tanitim")</label>
+                                <textarea class="form-control" rows="5" data-bind="value: form.description" placeholder="Detayli firma tanitimi"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Services Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>@Html.T("ProviderProfile.Services", "Hizmetler")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.ServicesOffered", "Sunulan Hizmetler")</label>
+                                <textarea class="form-control" rows="3" data-bind="value: form.services" placeholder="Sundugunuz hizmetleri yazin"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.Certifications", "Sertifikalar")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.certifications" placeholder="ISO, TSE vb. sertifikalar"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.ServiceRegions", "Hizmet Bolgeleri")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.serviceRegions" placeholder="Hizmet verdiginiz bolgeler"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Capability-Specific Fields -->
+                    <!-- Satici (2) -->
+                    <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 2">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-shop me-2"></i>@Html.T("ProviderProfile.SellerInfo", "Satici Bilgileri")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.ProductionCapacity", "Uretim Kapasitesi")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.productionCapacity" placeholder="Aylik/yillik uretim kapasitesi"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.MinimumOrderValue", "Minimum Siparis Tutari")</label>
+                                <input type="text" class="form-control" data-bind="value: form.minimumOrderValue" placeholder="Ornegin: 1000 USD">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.LeadTime", "Teslim Suresi")</label>
+                                <input type="text" class="form-control" data-bind="value: form.leadTime" placeholder="Ornegin: 2-4 hafta">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alici (3) -->
+                    <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-cart me-2"></i>@Html.T("ProviderProfile.BuyerInfo", "Alici Bilgileri")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.Industry", "Sektor")</label>
+                                <input type="text" class="form-control" data-bind="value: form.industry" placeholder="Faaliyet gosterdiginiz sektor">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.BusinessType", "Is Tipi")</label>
+                                <input type="text" class="form-control" data-bind="value: form.businessType" placeholder="Imalatci, Toptanci, Perakendeci vb.">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.PreferredCategories", "Tercih Edilen Kategoriler")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.preferredCategories" placeholder="Ilgilendiginiz urun kategorileri"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("ProviderProfile.AnnualPurchaseVolume", "Yillik Satin Alma Hacmi")</label>
+                                    <input type="number" class="form-control" data-bind="value: form.annualPurchaseVolume" placeholder="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("ProviderProfile.Currency", "Para Birimi")</label>
+                                    <select class="form-select" data-bind="value: form.purchaseVolumeCurrency">
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="TRY">TRY</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasimaci (4) -->
+                    <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-truck me-2"></i>@Html.T("ProviderProfile.LogisticsInfo", "Lojistik Bilgileri")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.FleetInfo", "Filo Bilgisi")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.fleetInfo" placeholder="Arac tipleri ve sayilari"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.TransportModes", "Tasima Yontemleri")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.transportModes" placeholder="Kara, Deniz, Hava, Demiryolu"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.Routes", "Ana Rotalar")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.routes" placeholder="Calistiginiz ana rotalar"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sigorta (5) -->
+                    <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 5">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>@Html.T("ProviderProfile.InsuranceInfo", "Sigorta Bilgileri")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.InsuranceTypes", "Sigorta Turleri")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.insuranceTypes" placeholder="Kargo, Nakliyat, CMR vb."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.CoverageTypes", "Teminat Turleri")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.coverageTypes" placeholder="Tam kapsamli, Sinirli vb."></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("ProviderProfile.MaxCoverage", "Maks. Teminat Tutari")</label>
+                                    <input type="number" class="form-control" data-bind="value: form.maxCoverageAmount" placeholder="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("ProviderProfile.Currency", "Para Birimi")</label>
+                                    <select class="form-select" data-bind="value: form.maxCoverageCurrency">
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="TRY">TRY</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gumruk (6) -->
+                    <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 6">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-passport me-2"></i>@Html.T("ProviderProfile.CustomsInfo", "Gumruk Bilgileri")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.CustomsServices", "Gumruk Hizmetleri")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.customsServices" placeholder="Ithalat, Ihracat, Transit vb."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.LicenseNumbers", "Lisans Numaralari")</label>
+                                <input type="text" class="form-control" data-bind="value: form.licenseNumbers" placeholder="Gumruk musavirligi lisans no">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.CustomsOffices", "Calisilan Gumrukler")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.customsOffices" placeholder="Gumruk mudurlukleri"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gozetim (7) -->
+                    <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 7">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-search me-2"></i>@Html.T("ProviderProfile.SurveyInfo", "Gozetim Bilgileri")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.InspectionTypes", "Gozetim Turleri")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.inspectionTypes" placeholder="Pre-shipment, Loading, Discharge vb."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.InspectionStandards", "Standartlar")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.inspectionStandards" placeholder="ISO, SGS vb."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Yatirimci (8) -->
+                    <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 8">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>@Html.T("ProviderProfile.InvestorInfo", "Yatirimci Bilgileri")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.InvestmentTypes", "Yatirim Turleri")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.investmentTypes" placeholder="Dış Ticaret Finansmanı, Faktoring, Leasing vb."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("ProviderProfile.InvestmentFocus", "Yatirim Odagi")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form.investmentFocus" placeholder="İhracat, İthalat, Üretim vb."></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("ProviderProfile.MinInvestment", "Min. Yatirim Tutari")</label>
+                                    <input type="number" class="form-control" data-bind="value: form.minInvestmentAmount" placeholder="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("ProviderProfile.MaxInvestment", "Maks. Yatirim Tutari")</label>
+                                    <input type="number" class="form-control" data-bind="value: form.maxInvestmentAmount" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("ProviderProfile.Currency", "Para Birimi")</label>
+                                    <select class="form-select" data-bind="value: form.investmentCurrency">
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="TRY">TRY</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("ProviderProfile.InterestRateRange", "Faiz Orani Araligi")</label>
+                                    <input type="text" class="form-control" data-bind="value: form.interestRateRange" placeholder="Ornegin: %5-15">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Approval Status Card -->
+                    <!-- ko with: profile -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>@Html.T("ProviderProfile.ApprovalStatus", "Onay Durumu")</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Not Published: isPubliclyVisible = false -->
+                            <div data-bind="visible: !isPubliclyVisible" class="text-muted">
+                                <i class="bi bi-dash-circle me-2"></i>
+                                @Html.T("ProviderProfile.NotPublished", "Profil henuz yayinlanmadi")
+                            </div>
+                            <!-- Pending Approval: isPubliclyVisible = true, isVerified = false, rejectionReason = null -->
+                            <div data-bind="visible: isPendingApproval" class="text-warning">
+                                <i class="bi bi-hourglass-split me-2"></i>
+                                @Html.T("ProviderProfile.PendingApproval", "Onay bekleniyor")
+                                <small class="d-block text-muted mt-1" data-bind="visible: publicationRequestedAt">
+                                    <span data-bind="text: new Date(publicationRequestedAt).toLocaleDateString('tr-TR')"></span>
+                                </small>
+                            </div>
+                            <!-- Approved: isPublic = true (isPubliclyVisible && isVerified) -->
+                            <div data-bind="visible: isPublic" class="text-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                @Html.T("ProviderProfile.Approved", "Onaylandi - Profil aktif")
+                                <small class="d-block text-muted mt-1" data-bind="visible: verifiedAt">
+                                    <span data-bind="text: new Date(verifiedAt).toLocaleDateString('tr-TR')"></span>
+                                </small>
+                            </div>
+                            <!-- Rejected: isPubliclyVisible = true, isVerified = false, rejectionReason != null -->
+                            <div data-bind="visible: isPubliclyVisible && !isVerified && rejectionReason" class="text-danger">
+                                <i class="bi bi-x-circle me-2"></i>
+                                @Html.T("ProviderProfile.Rejected", "Reddedildi")
+                                <small class="d-block mt-1" data-bind="text: rejectionReason"></small>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+
+                    <!-- Visibility Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-eye me-2"></i>@Html.T("ProviderProfile.Visibility", "Gorunurluk")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" data-bind="checked: form.isPubliclyVisible" id="isPublic">
+                                <label class="form-check-label" for="isPublic">@Html.T("ProviderProfile.IsPublic", "Profili Yayinla")</label>
+                            </div>
+                            <small class="text-muted d-block mb-3">
+                                @Html.T("ProviderProfile.PublicNote", "Profili yayinlamak icin admin onayi gereklidir")
+                            </small>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" data-bind="checked: form.acceptingNewRequests" id="acceptingRequests">
+                                <label class="form-check-label" for="acceptingRequests">@Html.T("ProviderProfile.AcceptingRequests", "Yeni Talepler Kabul Ediliyor")</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>@Html.T("ProviderProfile.Stats", "Istatistikler")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">@Html.T("ProviderProfile.Views", "Goruntulenme")</span>
+                                <strong data-bind="text: profile()?.viewCount || 0"></strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">@Html.T("ProviderProfile.Contacts", "Iletisim Talepleri")</span>
+                                <strong data-bind="text: profile()?.contactRequestCount || 0"></strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">@Html.T("ProviderProfile.Responses", "Verilen Teklifler")</span>
+                                <strong data-bind="text: profile()?.responseCount || 0"></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Provider/MyProfile.js"></script>
+}

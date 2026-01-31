@@ -1,0 +1,410 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("DiscoverSuppliers.Title", "Tedarikci Bul").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="discover-suppliers-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-search text-primary me-2"></i>
+                @Html.T("DiscoverSuppliers.Title", "Tedarikci Bul")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("DiscoverSuppliers.Subtitle", "Dogrulanmis tedarikcileri kesfet ve iletisime gec.")</p>
+        </div>
+        <a href="/Dashboard/FavoriteSuppliers" class="btn btn-outline-danger">
+            <i class="bi bi-heart-fill me-1"></i>
+            @Html.T("DiscoverSuppliers.ViewFavorites", "Favorilerim")
+            <span class="badge bg-danger ms-1" data-bind="text: favoriteCount, visible: favoriteCount() > 0"></span>
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4" data-bind="visible: !isLoading()">
+        <div class="col-md-3">
+            <div class="card border-0 bg-primary bg-opacity-10">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-circle p-2 me-3">
+                            <i class="bi bi-building fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" data-bind="text: totalSuppliers">0</h5>
+                            <small class="text-muted">@Html.T("DiscoverSuppliers.Stats.TotalSuppliers", "Tedarikci")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-success bg-opacity-10">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success text-white rounded-circle p-2 me-3">
+                            <i class="bi bi-patch-check fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" data-bind="text: verifiedCount">0</h5>
+                            <small class="text-muted">@Html.T("DiscoverSuppliers.Stats.Verified", "Dogrulanmis")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-danger bg-opacity-10">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-danger text-white rounded-circle p-2 me-3">
+                            <i class="bi bi-heart-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" data-bind="text: favoriteCount">0</h5>
+                            <small class="text-muted">@Html.T("DiscoverSuppliers.Stats.Favorites", "Favori")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-warning bg-opacity-10">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning text-dark rounded-circle p-2 me-3">
+                            <i class="bi bi-star-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" data-bind="text: recommendedCount">0</h5>
+                            <small class="text-muted">@Html.T("DiscoverSuppliers.Stats.Recommended", "Onerilen")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">@Html.T("Common.Search", "Ara")</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control"
+                               placeholder="@Html.T("DiscoverSuppliers.SearchPlaceholder", "Firma adi...")"
+                               data-bind="value: filter.search, valueUpdate: 'afterkeydown'">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">@Html.T("Common.Category", "Kategori")</label>
+                    <select class="form-select" data-bind="
+                        options: categories,
+                        optionsText: 'name',
+                        optionsValue: 'id',
+                        optionsCaption: '@Html.T("Common.AllCategories", "Tum Kategoriler")',
+                        value: filter.categoryId"></select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">@Html.T("Common.Sort", "Siralama")</label>
+                    <select class="form-select" data-bind="value: filter.sortBy">
+                        <option value="">@Html.T("Common.Newest", "En Yeni")</option>
+                        <option value="rating">@Html.T("Common.TopRated", "En Yuksek Puan")</option>
+                        <option value="products">@Html.T("DiscoverSuppliers.MostProducts", "En Cok Urun")</option>
+                        <option value="name">@Html.T("Common.Name", "Isim")</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="hasProducts" data-bind="checked: filter.hasProducts">
+                        <label class="form-check-label small" for="hasProducts">
+                            @Html.T("DiscoverSuppliers.HasProducts", "Urunu Olanlar")
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-outline-secondary w-100" data-bind="click: resetFilters">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+    </div>
+
+    <!-- Recommended Suppliers (only show if no filters) -->
+    <div data-bind="visible: !isLoading() && showRecommended() && recommended().length > 0" class="mb-4">
+        <h5 class="mb-3">
+            <i class="bi bi-stars text-warning me-2"></i>
+            @Html.T("DiscoverSuppliers.Recommended", "Size Ozel Oneriler")
+        </h5>
+        <div class="row g-3" data-bind="foreach: recommended">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 hover-shadow">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <!-- ko if: logoUrl -->
+                            <img data-bind="attr: { src: logoUrl }" class="rounded me-3" style="width: 48px; height: 48px; object-fit: cover;">
+                            <!-- /ko -->
+                            <!-- ko ifnot: logoUrl -->
+                            <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                <i class="bi bi-building text-primary fs-4"></i>
+                            </div>
+                            <!-- /ko -->
+                            <div class="flex-grow-1 min-w-0">
+                                <h6 class="mb-1 text-truncate" data-bind="text: companyName"></h6>
+                                <div class="small text-muted" data-bind="visible: countryName">
+                                    <i class="bi bi-geo-alt"></i> <span data-bind="text: countryName"></span>
+                                </div>
+                            </div>
+                            <!-- ko if: isVerified -->
+                            <span class="badge bg-success-subtle text-success"><i class="bi bi-patch-check-fill"></i></span>
+                            <!-- /ko -->
+                        </div>
+                        <div class="mt-3 d-flex justify-content-between align-items-center">
+                            <div class="small">
+                                <span class="text-warning"><i class="bi bi-star-fill"></i></span>
+                                <span data-bind="text: averageRating.toFixed(1)">0</span>
+                                <span class="text-muted">(<span data-bind="text: reviewCount">0</span>)</span>
+                                <span class="text-muted mx-1">|</span>
+                                <span data-bind="text: productCount">0</span> @Html.T("Common.Products", "urun")
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" data-bind="click: function() { $parent.viewSupplier($data); }">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier Grid -->
+    <div data-bind="visible: !isLoading()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class="bi bi-grid-3x3 me-2"></i>
+                @Html.T("DiscoverSuppliers.AllSuppliers", "Tum Tedarikciler")
+                <span class="badge bg-secondary ms-2" data-bind="text: totalSuppliers">0</span>
+            </h5>
+        </div>
+
+        <!-- ko if: suppliers().length === 0 -->
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="mt-3 text-muted">@Html.T("DiscoverSuppliers.NoSuppliers", "Tedarikci bulunamadi.")</p>
+        </div>
+        <!-- /ko -->
+
+        <div class="row g-3" data-bind="foreach: suppliers">
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 hover-shadow">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <!-- ko if: logoUrl -->
+                            <img data-bind="attr: { src: logoUrl }" class="rounded me-3" style="width: 56px; height: 56px; object-fit: cover;">
+                            <!-- /ko -->
+                            <!-- ko ifnot: logoUrl -->
+                            <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center me-3" style="width: 56px; height: 56px;">
+                                <i class="bi bi-building text-primary fs-3"></i>
+                            </div>
+                            <!-- /ko -->
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex align-items-center">
+                                    <h6 class="mb-0 text-truncate me-2" data-bind="text: companyName"></h6>
+                                    <!-- ko if: isVerified -->
+                                    <span class="badge bg-success-subtle text-success" title="Dogrulanmis"><i class="bi bi-patch-check-fill"></i></span>
+                                    <!-- /ko -->
+                                </div>
+                                <div class="small text-muted mt-1" data-bind="visible: countryName || city">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span data-bind="text: city"></span>
+                                    <!-- ko if: city && countryName -->, <!-- /ko -->
+                                    <span data-bind="text: countryName"></span>
+                                </div>
+                                <div class="small mt-1" data-bind="visible: shortDescription, text: shortDescription"></div>
+                            </div>
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="mb-3" data-bind="visible: categories && categories.length > 0">
+                            <!-- ko foreach: categories.slice(0, 3) -->
+                            <span class="badge bg-light text-dark me-1" data-bind="text: $data"></span>
+                            <!-- /ko -->
+                            <!-- ko if: categories.length > 3 -->
+                            <span class="badge bg-secondary">+<span data-bind="text: categories.length - 3"></span></span>
+                            <!-- /ko -->
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
+                            <div>
+                                <span class="text-warning"><i class="bi bi-star-fill"></i></span>
+                                <span data-bind="text: averageRating.toFixed(1)">0</span>
+                                <span>(<span data-bind="text: reviewCount">0</span> degerlendirme)</span>
+                            </div>
+                            <div>
+                                <i class="bi bi-box"></i> <span data-bind="text: productCount">0</span> urun
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary flex-grow-1" data-bind="click: function() { $parent.viewSupplier($data); }">
+                                <i class="bi bi-eye me-1"></i> @Html.T("Common.View", "Gor")
+                            </button>
+                            <button class="btn btn-sm" data-bind="
+                                click: function() { $parent.toggleFavorite($data); },
+                                css: { 'btn-danger': isFavorite, 'btn-outline-danger': !isFavorite }">
+                                <i class="bi" data-bind="css: { 'bi-heart-fill': isFavorite, 'bi-heart': !isFavorite }"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="mt-4" data-bind="visible: totalPages() > 1">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" data-bind="css: { disabled: currentPage() === 1 }">
+                    <a class="page-link" href="#" data-bind="click: function() { goToPage(currentPage() - 1); }">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                <!-- ko foreach: pageNumbers -->
+                <li class="page-item" data-bind="css: { active: $data === $parent.currentPage() }">
+                    <a class="page-link" href="#" data-bind="text: $data, click: function() { $parent.goToPage($data); }"></a>
+                </li>
+                <!-- /ko -->
+                <li class="page-item" data-bind="css: { disabled: currentPage() === totalPages() }">
+                    <a class="page-link" href="#" data-bind="click: function() { goToPage(currentPage() + 1); }">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Supplier Detail Modal -->
+<div class="modal fade" id="supplierModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-bind="text: selectedSupplier()?.companyName || ''"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" data-bind="with: selectedSupplier">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <!-- ko if: logoUrl -->
+                        <img data-bind="attr: { src: logoUrl }" class="rounded img-fluid" style="max-height: 150px;">
+                        <!-- /ko -->
+                        <!-- ko ifnot: logoUrl -->
+                        <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px;">
+                            <i class="bi bi-building text-primary display-4"></i>
+                        </div>
+                        <!-- /ko -->
+
+                        <!-- ko if: isVerified -->
+                        <div class="mt-2">
+                            <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i> Dogrulanmis</span>
+                        </div>
+                        <!-- /ko -->
+                    </div>
+                    <div class="col-md-8">
+                        <p data-bind="text: description, visible: description"></p>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6" data-bind="visible: countryName">
+                                <small class="text-muted d-block">Konum</small>
+                                <span><i class="bi bi-geo-alt text-primary me-1"></i><span data-bind="text: city"></span>, <span data-bind="text: countryName"></span></span>
+                            </div>
+                            <div class="col-6" data-bind="visible: website">
+                                <small class="text-muted d-block">Website</small>
+                                <a data-bind="attr: { href: website }, text: website" target="_blank"></a>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Urun Sayisi</small>
+                                <span><span data-bind="text: totalProductCount || productCount">0</span> urun</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Degerlendirme</small>
+                                <span class="text-warning"><i class="bi bi-star-fill"></i></span>
+                                <span data-bind="text: averageRating.toFixed(1)">0</span>
+                                (<span data-bind="text: reviewCount">0</span>)
+                            </div>
+                        </div>
+
+                        <!-- Categories -->
+                        <div data-bind="visible: categories && categories.length > 0">
+                            <small class="text-muted d-block mb-1">Kategoriler</small>
+                            <!-- ko foreach: categories -->
+                            <span class="badge bg-light text-dark me-1 mb-1" data-bind="text: $data"></span>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Featured Products -->
+                <div data-bind="visible: featuredProducts && featuredProducts.length > 0" class="mt-4">
+                    <h6><i class="bi bi-box-seam me-1"></i> One Cikan Urunler</h6>
+                    <div class="row g-2">
+                        <!-- ko foreach: featuredProducts.slice(0, 4) -->
+                        <div class="col-6 col-md-3">
+                            <div class="card border h-100">
+                                <!-- ko if: mainImageUrl -->
+                                <img data-bind="attr: { src: mainImageUrl }" class="card-img-top" style="height: 80px; object-fit: cover;">
+                                <!-- /ko -->
+                                <div class="card-body p-2">
+                                    <small class="text-truncate d-block" data-bind="text: name"></small>
+                                    <small class="text-primary fw-bold" data-bind="text: price + ' ' + currency"></small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                    </div>
+                </div>
+
+                <!-- Reviews -->
+                <div data-bind="visible: recentReviews && recentReviews.length > 0" class="mt-4">
+                    <h6><i class="bi bi-chat-quote me-1"></i> Son Degerlendirmeler</h6>
+                    <!-- ko foreach: recentReviews.slice(0, 2) -->
+                    <div class="border rounded p-3 mb-2">
+                        <div class="d-flex justify-content-between">
+                            <strong data-bind="text: reviewerCompanyName"></strong>
+                            <span>
+                                <!-- ko foreach: new Array(Math.floor(overallRating)) -->
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <!-- /ko -->
+                            </span>
+                        </div>
+                        <p class="small mb-0 mt-1" data-bind="text: comment"></p>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn" data-bind="
+                    click: function() { toggleFavorite(selectedSupplier()); },
+                    css: { 'btn-danger': selectedSupplier()?.isFavorite, 'btn-outline-danger': !selectedSupplier()?.isFavorite }">
+                    <i class="bi" data-bind="css: { 'bi-heart-fill': selectedSupplier()?.isFavorite, 'bi-heart': !selectedSupplier()?.isFavorite }"></i>
+                    <span data-bind="text: selectedSupplier()?.isFavorite ? 'Favorilerden Cikar' : 'Favorilere Ekle'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/Dashboard/DiscoverSuppliers.js"></script>
+}

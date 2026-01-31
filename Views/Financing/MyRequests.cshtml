@@ -1,0 +1,742 @@
+@{
+    ViewData["Title"] = "Finansman Taleplerim";
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="financing-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-cash-coin text-primary"></i> Finansman Taleplerim</h4>
+            <p class="text-muted mb-0">Finansman taleplerini olusturun ve yonetin</p>
+        </div>
+        <button class="btn btn-primary" data-bind="click: openCreateModal">
+            <i class="bi bi-plus-lg"></i> Yeni Talep
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <small class="text-muted">Toplam Talep</small>
+                            <h4 class="mb-0" data-bind="text: requests().length">0</h4>
+                        </div>
+                        <div class="text-primary"><i class="bi bi-file-earmark-text fs-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <small class="text-muted">Aktif</small>
+                            <h4 class="mb-0" data-bind="text: activeCount()">0</h4>
+                        </div>
+                        <div class="text-success"><i class="bi bi-broadcast fs-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <small class="text-muted">Bekleyen Teklif</small>
+                            <h4 class="mb-0" data-bind="text: pendingOfferCount()">0</h4>
+                        </div>
+                        <div class="text-warning"><i class="bi bi-hourglass-split fs-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <small class="text-muted">Finanse Edilen</small>
+                            <h4 class="mb-0" data-bind="text: formatCurrency(fundedTotal())">0</h4>
+                        </div>
+                        <div class="text-info"><i class="bi bi-wallet2 fs-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Ara..." data-bind="textInput: searchTerm" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm" data-bind="value: statusFilter">
+                        <option value="">Tum Durumlar</option>
+                        <option value="1">Taslak</option>
+                        <option value="2">Teklif Bekleniyor</option>
+                        <option value="3">Teklifler Geldi</option>
+                        <option value="4">Kismi Finanse</option>
+                        <option value="5">Tam Finanse</option>
+                        <option value="6">Geri Odendi</option>
+                        <option value="8">Iptal</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm" data-bind="value: typeFilter">
+                        <option value="">Tum Tipler</option>
+                        <option value="1">Fatura Finansmani</option>
+                        <option value="2">Siparis Finansmani</option>
+                        <option value="3">Proje Finansmani</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-sm btn-outline-secondary w-100" data-bind="click: loadRequests">
+                        <i class="bi bi-arrow-clockwise"></i> Yenile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading()" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2 text-muted">Yukleniyor...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div data-bind="visible: !isLoading() && filteredRequests().length === 0" class="text-center py-5">
+        <i class="bi bi-cash-coin display-1 text-muted"></i>
+        <p class="mt-3 text-muted">Henuz finansman talebi olusturmadiniz</p>
+        <button class="btn btn-primary" data-bind="click: openCreateModal">
+            <i class="bi bi-plus-lg"></i> Ilk Talebi Olustur
+        </button>
+    </div>
+
+    <!-- Request Cards -->
+    <div class="row" data-bind="foreach: filteredRequests">
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge" data-bind="text: financingTypeName, css: financingTypeCss"></span>
+                        <span class="badge ms-1" data-bind="text: statusName, css: statusCss"></span>
+                    </div>
+                    <small class="text-muted" data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></small>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title" data-bind="text: title"></h6>
+                    <p class="card-text text-muted small" data-bind="text: description, visible: description"></p>
+
+                    <!-- Amount Info -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Talep Edilen</small>
+                            <strong class="text-primary">
+                                <span data-bind="text: requestedAmount.toLocaleString('tr-TR')"></span>
+                                <span data-bind="text: currency"></span>
+                            </strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Finanse Edilen</small>
+                            <strong class="text-success">
+                                <span data-bind="text: fundedAmount.toLocaleString('tr-TR')"></span>
+                                <span data-bind="text: currency"></span>
+                            </strong>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress mb-3" style="height: 8px;" data-bind="visible: fundingProgress > 0">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             data-bind="style: { width: fundingProgress + '%' }, attr: { 'aria-valuenow': fundingProgress }">
+                        </div>
+                    </div>
+
+                    <!-- Details -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-4">
+                            <small class="text-muted d-block">Vade</small>
+                            <strong><span data-bind="text: durationDays"></span> gun</strong>
+                        </div>
+                        <div class="col-4" data-bind="visible: maxInterestRate">
+                            <small class="text-muted d-block">Max Faiz</small>
+                            <strong>%<span data-bind="text: maxInterestRate"></span></strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block">Teklifler</small>
+                            <strong>
+                                <span data-bind="text: offerCount"></span>
+                                <!-- ko if: pendingOfferCount > 0 -->
+                                <span class="badge bg-warning text-dark ms-1" data-bind="text: pendingOfferCount + ' yeni'"></span>
+                                <!-- /ko -->
+                            </strong>
+                        </div>
+                    </div>
+
+                    <!-- Collateral -->
+                    <div data-bind="visible: collateralTypeName" class="mb-2">
+                        <small class="text-muted"><i class="bi bi-shield-check"></i> Teminat: <span data-bind="text: collateralTypeName"></span></small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-end gap-2">
+                        <!-- Draft actions -->
+                        <!-- ko if: status === 1 -->
+                        <button class="btn btn-sm btn-outline-primary" data-bind="click: $parent.editRequest" title="Duzenle">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success" data-bind="click: $parent.publishRequest" title="Yayinla">
+                            <i class="bi bi-broadcast"></i> Yayinla
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.cancelRequest" title="Sil">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <!-- /ko -->
+
+                        <!-- Active actions -->
+                        <!-- ko if: status >= 2 && status <= 4 -->
+                        <button class="btn btn-sm btn-primary" data-bind="click: $parent.viewOffers, visible: offerCount > 0">
+                            <i class="bi bi-list-check"></i> Teklifler (<span data-bind="text: offerCount"></span>)
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.cancelRequest, visible: status !== 4" title="Iptal">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                        <!-- /ko -->
+
+                        <!-- Funded actions -->
+                        <!-- ko if: status === 5 || status === 6 -->
+                        <button class="btn btn-sm btn-outline-primary" data-bind="click: $parent.viewOffers">
+                            <i class="bi bi-eye"></i> Detay
+                        </button>
+                        <!-- /ko -->
+
+                        <!-- All: View detail -->
+                        <button class="btn btn-sm btn-outline-secondary" data-bind="click: $parent.viewDetail" title="Detay">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal fade" id="requestModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-cash-coin"></i>
+                        <span data-bind="text: isEditing() ? 'Talebi Duzenle' : 'Yeni Finansman Talebi'"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="requestForm">
+                        <!-- Financing Type -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="form-label">Finansman Tipi *</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="financingType" id="typeInvoice" value="1"
+                                           data-bind="checked: form().financingType, checkedValue: '1'">
+                                    <label class="btn btn-outline-primary" for="typeInvoice">
+                                        <i class="bi bi-receipt"></i> Fatura Finansmani
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="financingType" id="typeOrder" value="2"
+                                           data-bind="checked: form().financingType, checkedValue: '2'">
+                                    <label class="btn btn-outline-success" for="typeOrder">
+                                        <i class="bi bi-cart"></i> Siparis Finansmani
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="financingType" id="typeProject" value="3"
+                                           data-bind="checked: form().financingType, checkedValue: '3'">
+                                    <label class="btn btn-outline-info" for="typeProject">
+                                        <i class="bi bi-kanban"></i> Proje Finansmani
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Info -->
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Baslik *</label>
+                                <input type="text" class="form-control" data-bind="value: form().title"
+                                       placeholder="Orn: Ocak 2025 Fatura Finansmani" required />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Aciklama</label>
+                                <textarea class="form-control" rows="2" data-bind="value: form().description"
+                                          placeholder="Finansman talebi hakkinda detayli bilgi..."></textarea>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- Amount Section -->
+                        <h6 class="text-muted mb-3"><i class="bi bi-currency-exchange"></i> Tutar Bilgileri</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Talep Edilen Tutar *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" data-bind="value: form().requestedAmount"
+                                           required min="0" step="0.01" />
+                                    <select class="form-select" style="max-width: 100px;" data-bind="value: form().currency">
+                                        <option value="TRY">TRY</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Toplam Deger (Teminat)</label>
+                                <input type="number" class="form-control" data-bind="value: form().totalValue"
+                                       min="0" step="0.01" placeholder="Fatura/Siparis toplam degeri" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Max Faiz Orani (Aylik %)</label>
+                                <input type="number" class="form-control" data-bind="value: form().maxInterestRate"
+                                       min="0" max="100" step="0.1" placeholder="Kabul edilebilir max faiz" />
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- Duration -->
+                        <h6 class="text-muted mb-3"><i class="bi bi-calendar3"></i> Vade</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Vade Suresi (Gun) *</label>
+                                <input type="number" class="form-control" data-bind="value: form().durationDays"
+                                       required min="1" max="365" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Teklif Son Tarihi</label>
+                                <input type="date" class="form-control" data-bind="value: form().offerDeadline" />
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- Collateral -->
+                        <h6 class="text-muted mb-3"><i class="bi bi-shield-check"></i> Teminat</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Teminat Tipi</label>
+                                <select class="form-select" data-bind="value: form().collateralType">
+                                    <option value="">Teminatsiz</option>
+                                    <option value="1">Fatura</option>
+                                    <option value="2">Siparis</option>
+                                    <option value="3">Stok</option>
+                                    <option value="4">Alacaklar</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label class="form-label">Teminat Aciklamasi</label>
+                                <input type="text" class="form-control" data-bind="value: form().collateralDescription"
+                                       placeholder="Teminat detaylari..." />
+                            </div>
+                        </div>
+
+                        <!-- Invoice Details (visible when invoice financing) -->
+                        <div data-bind="visible: form().financingType === '1'" class="mt-4">
+                            <h6 class="text-muted mb-3"><i class="bi bi-receipt"></i> Fatura Bilgileri</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Fatura No</label>
+                                    <input type="text" class="form-control" data-bind="value: form().invoiceNumber" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Fatura Tarihi</label>
+                                    <input type="date" class="form-control" data-bind="value: form().invoiceDate" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Borclu Firma</label>
+                                    <input type="text" class="form-control" data-bind="value: form().debtorName"
+                                           placeholder="Fatura borclusu" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Borclu Vergi No</label>
+                                    <input type="text" class="form-control" data-bind="value: form().debtorTaxNumber" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order Selection (visible when order financing) -->
+                        <div data-bind="visible: form().financingType === '2'" class="mt-4">
+                            <h6 class="text-muted mb-3"><i class="bi bi-cart"></i> Siparis Bilgileri</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Ilgili Siparis</label>
+                                    <select class="form-select" data-bind="value: form().relatedOrderId, options: orders,
+                                            optionsText: function(o) { return o.orderNumber + ' - ' + o.totalAmount.toLocaleString('tr-TR') + ' ' + o.currency; },
+                                            optionsValue: 'id', optionsCaption: 'Siparis Secin...'">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                    <button type="button" class="btn btn-outline-primary" data-bind="click: saveDraft, disable: isSubmitting()">
+                        <i class="bi bi-save"></i> Taslak Kaydet
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bind="click: saveAndPublish, disable: isSubmitting()">
+                        <span data-bind="visible: isSubmitting()"><span class="spinner-border spinner-border-sm"></span></span>
+                        <span data-bind="visible: !isSubmitting()"><i class="bi bi-broadcast"></i> Kaydet ve Yayinla</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-info-circle"></i> Talep Detayi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" data-bind="with: detailData">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <h5 data-bind="text: title"></h5>
+                            <p class="text-muted" data-bind="text: description, visible: description"></p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="badge fs-6" data-bind="text: financingTypeName, css: financingTypeCss"></span>
+                            <span class="badge fs-6 ms-1" data-bind="text: statusName, css: statusCss"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body py-2">
+                                    <small class="text-muted">Talep Edilen</small>
+                                    <h5 class="mb-0 text-primary" data-bind="text: requestedAmount.toLocaleString('tr-TR') + ' ' + currency"></h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body py-2">
+                                    <small class="text-muted">Finanse Edilen</small>
+                                    <h5 class="mb-0 text-success" data-bind="text: fundedAmount.toLocaleString('tr-TR') + ' ' + currency"></h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body py-2">
+                                    <small class="text-muted">Kalan</small>
+                                    <h5 class="mb-0" data-bind="text: remainingAmount.toLocaleString('tr-TR') + ' ' + currency"></h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="progress my-3" style="height: 10px;" data-bind="visible: fundingProgress > 0">
+                        <div class="progress-bar bg-success" data-bind="style: { width: fundingProgress + '%' }">
+                            <span class="small" data-bind="text: fundingProgress + '%'"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Vade</small>
+                            <strong><span data-bind="text: durationDays"></span> gun</strong>
+                        </div>
+                        <div class="col-md-3" data-bind="visible: maxInterestRate">
+                            <small class="text-muted d-block">Max Faiz</small>
+                            <strong>%<span data-bind="text: maxInterestRate"></span></strong>
+                        </div>
+                        <div class="col-md-3" data-bind="visible: collateralTypeName">
+                            <small class="text-muted d-block">Teminat</small>
+                            <strong data-bind="text: collateralTypeName"></strong>
+                        </div>
+                        <div class="col-md-3" data-bind="visible: riskScore">
+                            <small class="text-muted d-block">Risk Skoru</small>
+                            <strong data-bind="text: riskScore"></strong>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Details -->
+                    <div data-bind="visible: invoiceNumber" class="mt-3">
+                        <hr />
+                        <h6 class="text-muted"><i class="bi bi-receipt"></i> Fatura Bilgileri</h6>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Fatura No</small>
+                                <span data-bind="text: invoiceNumber"></span>
+                            </div>
+                            <div class="col-md-3" data-bind="visible: invoiceDate">
+                                <small class="text-muted d-block">Tarih</small>
+                                <span data-bind="text: new Date(invoiceDate).toLocaleDateString('tr-TR')"></span>
+                            </div>
+                            <div class="col-md-3" data-bind="visible: debtorName">
+                                <small class="text-muted d-block">Borclu</small>
+                                <span data-bind="text: debtorName"></span>
+                            </div>
+                            <div class="col-md-3" data-bind="visible: debtorTaxNumber">
+                                <small class="text-muted d-block">Vergi No</small>
+                                <span data-bind="text: debtorTaxNumber"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Details -->
+                    <div data-bind="visible: relatedOrderId" class="mt-3">
+                        <hr />
+                        <h6 class="text-muted"><i class="bi bi-cart"></i> Siparis Bilgileri</h6>
+                        <p>Siparis No: <strong data-bind="text: orderNumber"></strong></p>
+                    </div>
+
+                    <!-- Collateral Description -->
+                    <div data-bind="visible: collateralDescription" class="mt-3">
+                        <hr />
+                        <h6 class="text-muted"><i class="bi bi-shield-check"></i> Teminat Detayi</h6>
+                        <p data-bind="text: collateralDescription"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offers Modal -->
+    <div class="modal fade" id="offersModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-list-check"></i> Gelen Teklifler
+                        <span class="badge bg-primary ms-2" data-bind="text: selectedRequest()?.offerCount || 0"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Request Summary -->
+                    <div class="alert alert-light mb-4" data-bind="with: selectedRequest">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong data-bind="text: title"></strong>
+                                <div class="mt-1">
+                                    <span class="badge" data-bind="text: financingTypeName, css: financingTypeCss"></span>
+                                    <span class="badge ms-1" data-bind="text: statusName, css: statusCss"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div>
+                                    <span class="text-muted">Talep:</span>
+                                    <strong data-bind="text: requestedAmount.toLocaleString('tr-TR') + ' ' + currency"></strong>
+                                </div>
+                                <div>
+                                    <span class="text-muted">Kalan:</span>
+                                    <strong class="text-success" data-bind="text: remainingAmount.toLocaleString('tr-TR') + ' ' + currency"></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading -->
+                    <div data-bind="visible: offersLoading()" class="text-center py-4">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+
+                    <!-- Empty -->
+                    <div data-bind="visible: !offersLoading() && offers().length === 0" class="text-center py-4">
+                        <i class="bi bi-inbox display-4 text-muted"></i>
+                        <p class="mt-2 text-muted">Henuz teklif gelmedi</p>
+                    </div>
+
+                    <!-- Offers Table -->
+                    <div class="table-responsive" data-bind="visible: offers().length > 0">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Yatirimci</th>
+                                    <th>Teklif Tutari</th>
+                                    <th>Faiz</th>
+                                    <th>Geri Odeme</th>
+                                    <th>Durum</th>
+                                    <th>Tarih</th>
+                                    <th class="text-end">Islemler</th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: offers">
+                                <tr>
+                                    <td>
+                                        <strong data-bind="text: investorCompanyName"></strong>
+                                        <div class="small text-muted" data-bind="text: notes, visible: notes"></div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-primary" data-bind="text: offeredAmount.toLocaleString('tr-TR')"></strong>
+                                        <span data-bind="text: $parent.selectedRequest()?.currency"></span>
+                                    </td>
+                                    <td>%<span data-bind="text: interestRate"></span> <small class="text-muted">(aylik)</small></td>
+                                    <td>
+                                        <strong data-bind="text: totalRepaymentAmount.toLocaleString('tr-TR')"></strong>
+                                        <span data-bind="text: $parent.selectedRequest()?.currency"></span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" data-bind="text: statusName, css: statusCss"></span>
+                                        <!-- Transfer/Repayment status -->
+                                        <!-- ko if: status === 2 && !isFundTransferred -->
+                                        <span class="badge bg-warning text-dark ms-1">Transfer Bekleniyor</span>
+                                        <!-- /ko -->
+                                        <!-- ko if: isFundTransferred && !isRepaid -->
+                                        <span class="badge bg-info ms-1">Transfer Alindi</span>
+                                        <!-- /ko -->
+                                        <!-- ko if: isRepaid -->
+                                        <span class="badge bg-success ms-1">Geri Odendi</span>
+                                        <!-- /ko -->
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></span>
+                                        <div class="small text-muted" data-bind="visible: validUntil">
+                                            Gecerlilik: <span data-bind="text: validUntil ? new Date(validUntil).toLocaleDateString('tr-TR') : ''"></span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <!-- Pending actions -->
+                                        <!-- ko if: status === 1 -->
+                                        <button class="btn btn-sm btn-success me-1" data-bind="click: $parent.acceptOffer" title="Kabul Et">
+                                            <i class="bi bi-check-lg"></i> Kabul
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.rejectOffer" title="Reddet">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                        <!-- /ko -->
+
+                                        <!-- Accepted - confirm transfer -->
+                                        <!-- ko if: status === 2 && !isFundTransferred -->
+                                        <button class="btn btn-sm btn-primary" data-bind="click: $parent.confirmTransfer">
+                                            <i class="bi bi-check2-circle"></i> Transfer Onayla
+                                        </button>
+                                        <!-- /ko -->
+
+                                        <!-- Funded - confirm repayment -->
+                                        <!-- ko if: status === 6 && isFundTransferred && !isRepaid -->
+                                        <button class="btn btn-sm btn-success" data-bind="click: $parent.confirmRepayment">
+                                            <i class="bi bi-currency-exchange"></i> Geri Odeme Bildir
+                                        </button>
+                                        <!-- /ko -->
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Reason Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-x-circle text-danger"></i> Teklifi Reddet</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Red Nedeni (Opsiyonel)</label>
+                        <textarea class="form-control" rows="3" data-bind="value: rejectReason"
+                                  placeholder="Reddetme nedeninizi yazabilirsiniz..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                    <button type="button" class="btn btn-danger" data-bind="click: confirmReject">
+                        <i class="bi bi-x-circle"></i> Reddet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Reference Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-check2-circle text-primary"></i> Transfer Onayi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Yatirimcidan gelen transfer bilgilerini onaylayin.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Transfer Referans No (Opsiyonel)</label>
+                        <input type="text" class="form-control" data-bind="value: transferReference"
+                               placeholder="Banka dekont/referans numarasi" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: confirmTransferSubmit">
+                        <i class="bi bi-check2-circle"></i> Onayla
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repayment Reference Modal -->
+    <div class="modal fade" id="repaymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-currency-exchange text-success"></i> Geri Odeme Bildirimi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Yatirimciya yaptiginiz geri odeme bilgilerini girin.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Odeme Referans No (Opsiyonel)</label>
+                        <input type="text" class="form-control" data-bind="value: repaymentReference"
+                               placeholder="Banka dekont/referans numarasi" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                    <button type="button" class="btn btn-success" data-bind="click: confirmRepaymentSubmit">
+                        <i class="bi bi-check2-circle"></i> Onayla
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Financing/MyRequests.js" asp-append-version="true"></script>
+}

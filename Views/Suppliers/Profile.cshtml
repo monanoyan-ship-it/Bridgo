@@ -1,0 +1,425 @@
+@using Bridgo.Extensions
+@using Bridgo.DTOs.Supplier
+@model SupplierProfileDetailDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="supplier-profile-app" class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">@Html.T("Nav.Home", "Ana Sayfa")</a></li>
+            <li class="breadcrumb-item"><a href="/Suppliers">@Html.T("Suppliers.Title", "Tedarikciler")</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@(Model.DisplayName ?? Model.CompanyName)</li>
+        </ol>
+    </nav>
+
+    <!-- Cover Image -->
+    @if (!string.IsNullOrEmpty(Model.CoverImageUrl))
+    {
+        <div class="mb-4 rounded overflow-hidden" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <img src="@Model.CoverImageUrl" alt="@Model.DisplayName Cover" class="w-100 h-100" style="object-fit: cover;" />
+        </div>
+    }
+    else
+    {
+        <div class="mb-4 rounded" style="height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+    }
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Profile Header -->
+            <div class="card mb-4" style="margin-top: -60px; position: relative;">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-4">
+                        <!-- Logo -->
+                        <div class="flex-shrink-0">
+                            @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                            {
+                                <img src="@Model.LogoUrl" alt="@Model.DisplayName Logo"
+                                     class="rounded border bg-white shadow-sm"
+                                     style="width: 100px; height: 100px; object-fit: contain; padding: 8px;" />
+                            }
+                            else
+                            {
+                                <div class="rounded border bg-light d-flex align-items-center justify-content-center"
+                                     style="width: 100px; height: 100px;">
+                                    <i class="bi bi-building display-5 text-muted"></i>
+                                </div>
+                            }
+                        </div>
+                        <!-- Info -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <h1 class="h3 mb-0">@(Model.DisplayName ?? Model.CompanyName)</h1>
+                                @if (Model.IsVerified)
+                                {
+                                    <span class="badge bg-success" title="@Html.T("Suppliers.VerifiedBadge", "Dogrulanmis Tedarikci")">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                    </span>
+                                }
+                                @if (Model.AcceptingNewRequests)
+                                {
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-check2-circle"></i> @Html.T("Suppliers.AcceptingRequests", "Teklif Kabul Ediyor")
+                                    </span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.Tagline))
+                            {
+                                <p class="text-muted mb-2 fst-italic">"@Model.Tagline"</p>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.ShortDescription))
+                            {
+                                <p class="mb-2">@Model.ShortDescription</p>
+                            }
+                            <!-- Quick Stats -->
+                            <div class="d-flex flex-wrap gap-3 text-muted small">
+                                @if (!string.IsNullOrEmpty(Model.CountryName))
+                                {
+                                    <span><i class="bi bi-geo-alt"></i> @Model.CountryName @(!string.IsNullOrEmpty(Model.City) ? $", {Model.City}" : "")</span>
+                                }
+                                @if (Model.AverageRating.HasValue && Model.AverageRating > 0)
+                                {
+                                    <span><i class="bi bi-star-fill text-warning"></i> @Model.AverageRating.Value.ToString("N1") (@Model.RatingCount @Html.T("Suppliers.Reviews", "degerlendirme"))</span>
+                                }
+                                <span><i class="bi bi-eye"></i> @Model.ViewCount @Html.T("Common.Views", "goruntulenme")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            @if (Model.Categories != null && Model.Categories.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-tags"></i> @Html.T("Suppliers.Categories", "Kategoriler")</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var cat in Model.Categories)
+                            {
+                                <span class="badge bg-primary fs-6">@cat.Name</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- About -->
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> @Html.T("Suppliers.About", "Hakkinda")</h5>
+                    </div>
+                    <div class="card-body">
+                        <p style="white-space: pre-line;">@Model.Description</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Capabilities -->
+            @if (!string.IsNullOrEmpty(Model.Capabilities))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear"></i> @Html.T("Suppliers.Capabilities", "Yetenekler")</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var cap in Model.Capabilities.Split(','))
+                            {
+                                <span class="badge bg-secondary">@cap.Trim()</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Business Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-briefcase"></i> @Html.T("Suppliers.BusinessInfo", "Is Bilgileri")</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @if (!string.IsNullOrEmpty(Model.ProductionCapacity))
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-speedometer2 text-primary"></i>
+                                    <div>
+                                        <small class="text-muted d-block">@Html.T("Suppliers.ProductionCapacity", "Uretim Kapasitesi")</small>
+                                        <strong>@Model.ProductionCapacity</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.MinimumOrderValue))
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-cash-stack text-success"></i>
+                                    <div>
+                                        <small class="text-muted d-block">@Html.T("Suppliers.MinimumOrder", "Minimum Siparis")</small>
+                                        <strong>@Model.MinimumOrderValue</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.LeadTime))
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-clock text-info"></i>
+                                    <div>
+                                        <small class="text-muted d-block">@Html.T("Suppliers.LeadTime", "Teslim Suresi")</small>
+                                        <strong>@Model.LeadTime</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.ServiceRegions))
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-globe text-warning"></i>
+                                    <div>
+                                        <small class="text-muted d-block">@Html.T("Suppliers.ServiceRegions", "Hizmet Bolgeleri")</small>
+                                        <strong>@Model.ServiceRegions</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certifications -->
+            @if (!string.IsNullOrEmpty(Model.Certifications))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-award"></i> @Html.T("Suppliers.Certifications", "Sertifikalar")</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var cert in Model.Certifications.Split(','))
+                            {
+                                <span class="badge bg-warning text-dark fs-6">
+                                    <i class="bi bi-award-fill"></i> @cert.Trim()
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Gallery -->
+            @if (Model.GalleryImageList != null && Model.GalleryImageList.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-images"></i> @Html.T("Suppliers.Gallery", "Galeri")</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            @foreach (var img in Model.GalleryImageList)
+                            {
+                                <div class="col-4 col-md-3">
+                                    <a href="@img" target="_blank" class="d-block">
+                                        <img src="@img" alt="Gallery Image" class="img-fluid rounded" style="aspect-ratio: 1; object-fit: cover;" />
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Contact Card -->
+            <div class="card sticky-top mb-4" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-envelope"></i> @Html.T("Suppliers.Contact", "Iletisim")</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ShowContactInfo)
+                    {
+                        @if (!string.IsNullOrEmpty(Model.PublicEmail))
+                        {
+                            <div class="mb-3">
+                                <small class="text-muted d-block">@Html.T("Common.Email", "E-posta")</small>
+                                <a href="mailto:@Model.PublicEmail" class="text-decoration-none">
+                                    <i class="bi bi-envelope"></i> @Model.PublicEmail
+                                </a>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.PublicPhone))
+                        {
+                            <div class="mb-3">
+                                <small class="text-muted d-block">@Html.T("Common.Phone", "Telefon")</small>
+                                <a href="tel:@Model.PublicPhone" class="text-decoration-none">
+                                    <i class="bi bi-telephone"></i> @Model.PublicPhone
+                                </a>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.PublicWebsite))
+                        {
+                            <div class="mb-3">
+                                <small class="text-muted d-block">@Html.T("Common.Website", "Web Sitesi")</small>
+                                <a href="@Model.PublicWebsite" target="_blank" class="text-decoration-none">
+                                    <i class="bi bi-globe"></i> @Model.PublicWebsite
+                                </a>
+                            </div>
+                        }
+                        <hr />
+                    }
+
+                    <!-- Contact Request Form -->
+                    <form id="contactForm">
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Suppliers.YourName", "Adiniz") *</label>
+                            <input type="text" class="form-control" id="contactName" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Common.Email", "E-posta") *</label>
+                            <input type="email" class="form-control" id="contactEmail" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Suppliers.Subject", "Konu")</label>
+                            <input type="text" class="form-control" id="contactSubject" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Suppliers.Message", "Mesaj") *</label>
+                            <textarea class="form-control" rows="4" id="contactMessage" required></textarea>
+                        </div>
+
+                        <div class="alert alert-danger d-none" id="contactError"></div>
+                        <div class="alert alert-success d-none" id="contactSuccess"></div>
+
+                        <button type="submit" class="btn btn-primary w-100" id="contactSubmitBtn">
+                            <i class="bi bi-send"></i> @Html.T("Suppliers.SendMessage", "Mesaj Gonder")
+                        </button>
+                    </form>
+
+                    <p class="text-muted small mt-3 mb-0">
+                        <i class="bi bi-shield-check"></i>
+                        @Html.T("Suppliers.ContactNote", "Mesajiniz tedarikçiye iletilecektir.")
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stats Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-graph-up"></i> @Html.T("Suppliers.Stats", "Istatistikler")</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center g-3">
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <div class="h4 mb-0 text-primary">@Model.ViewCount</div>
+                                <small class="text-muted">@Html.T("Common.Views", "Goruntulenme")</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <div class="h4 mb-0 text-success">@Model.ResponseCount</div>
+                                <small class="text-muted">@Html.T("Suppliers.Responses", "Teklif")</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <div class="h4 mb-0 text-warning">@(Model.AverageRating?.ToString("N1") ?? "-")</div>
+                                <small class="text-muted">@Html.T("Suppliers.Rating", "Puan")</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <div class="h4 mb-0 text-info">@Model.RatingCount</div>
+                                <small class="text-muted">@Html.T("Suppliers.Reviews", "Degerlendirme")</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Since -->
+            <div class="card">
+                <div class="card-body text-center">
+                    <small class="text-muted">
+                        <i class="bi bi-calendar-check"></i> @Html.T("Suppliers.MemberSince", "Uyelik"): @Model.CreatedAt.ToString("MMMM yyyy")
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var supplierId = @Model.Id;
+
+    $(document).ready(function() {
+        $('#contactForm').on('submit', function(e) {
+            e.preventDefault();
+
+            var $btn = $('#contactSubmitBtn');
+            var $error = $('#contactError');
+            var $success = $('#contactSuccess');
+
+            $error.addClass('d-none');
+            $success.addClass('d-none');
+
+            var name = $('#contactName').val();
+            var email = $('#contactEmail').val();
+            var subject = $('#contactSubject').val();
+            var message = $('#contactMessage').val();
+
+            if (!name || !email || !message) {
+                $error.text('Lutfen zorunlu alanlari doldurun.').removeClass('d-none');
+                return;
+            }
+
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Gonderiliyor...');
+
+            fetch('/api/suppliers/' + supplierId + '/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    supplierId: supplierId,
+                    name: name,
+                    email: email,
+                    subject: subject,
+                    message: message
+                })
+            })
+            .then(function(r) {
+                if (r.ok) return r.json();
+                return r.json().then(function(err) { throw new Error(err.message || 'Bir hata olustu.'); });
+            })
+            .then(function(data) {
+                $success.text('Mesajiniz basariyla gonderildi!').removeClass('d-none');
+                $('#contactName').val('');
+                $('#contactEmail').val('');
+                $('#contactSubject').val('');
+                $('#contactMessage').val('');
+            })
+            .catch(function(err) {
+                $error.text(err.message).removeClass('d-none');
+            })
+            .finally(function() {
+                $btn.prop('disabled', false).html('<i class="bi bi-send"></i> Mesaj Gonder');
+            });
+        });
+    });
+</script>
+}

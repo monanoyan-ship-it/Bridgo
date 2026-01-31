@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = Html.T("Company.Profile.Title", "Firma Profili").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="profile-app">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-building-gear me-2"></i>@Html.T("Company.Profile.Title", "Firma Profili")</h4>
+            <p class="text-muted mb-0">@Html.T("Company.Profile.Description", "Firma profilini goruntule ve duzenle")</p>
+        </div>
+    </div>
+
+    <!-- Error/Success Messages -->
+    <div data-bind="visible: errorMessage" class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span data-bind="text: errorMessage"></span>
+        <button type="button" class="btn-close" data-bind="click: function() { errorMessage(''); }"></button>
+    </div>
+    <div data-bind="visible: successMessage" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle"></i>
+        <span data-bind="text: successMessage"></span>
+        <button type="button" class="btn-close" data-bind="click: function() { successMessage(''); }"></button>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+    </div>
+
+    <!-- Form -->
+    <div data-bind="visible: !isLoading()">
+        <form data-bind="submit: save">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <i class="bi bi-info-circle me-1"></i> @Html.T("Company.Profile.BasicInfo", "Temel Bilgiler")
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Company.Fields.CompanyName", "Firma Adi") <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" data-bind="value: vendor().companyName" required maxlength="200" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Email", "E-posta") <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" data-bind="value: vendor().email" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Company.Fields.Phone", "Telefon")</label>
+                            <input type="text" class="form-control" data-bind="value: vendor().phone" maxlength="20" placeholder="0212 123 45 67" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Company.Fields.Website", "Website")</label>
+                            <input type="url" class="form-control" data-bind="value: vendor().website" placeholder="https://www.example.com" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <i class="bi bi-receipt me-1"></i> @Html.T("Company.Profile.TaxInfo", "Vergi Bilgileri")
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Company.Fields.TaxNumber", "Vergi Numarasi")</label>
+                            <input type="text" class="form-control" data-bind="value: vendor().taxNumber" maxlength="20" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Company.Fields.TaxOffice", "Vergi Dairesi")</label>
+                            <input type="text" class="form-control" data-bind="value: vendor().taxOffice" maxlength="100" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <i class="bi bi-image me-1"></i> @Html.T("Company.Profile.Logo", "Logo")
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div data-bind="visible: vendor().logoUrl" class="border rounded p-2" style="width: 100px; height: 100px;">
+                                <img data-bind="attr: { src: vendor().logoUrl }" class="img-fluid" style="max-height: 100%;" />
+                            </div>
+                            <div data-bind="visible: !vendor().logoUrl" class="border rounded p-2 d-flex align-items-center justify-content-center bg-light" style="width: 100px; height: 100px;">
+                                <i class="bi bi-building text-muted" style="font-size: 2rem;"></i>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">@Html.T("Company.Profile.LogoUrl", "Logo URL")</label>
+                            <input type="url" class="form-control" data-bind="value: vendor().logoUrl" placeholder="https://..." />
+                            <small class="text-muted">@Html.T("Company.Profile.LogoHint", "Logo yukleme yakinda eklenecek")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" data-bind="disable: isSaving">
+                    <span data-bind="visible: !isSaving()"><i class="bi bi-check-circle"></i> @Html.T("Common.Save", "Kaydet")</span>
+                    <span data-bind="visible: isSaving()"><span class="spinner-border spinner-border-sm"></span> @Html.T("Common.Saving", "Kaydediliyor...")</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-bind="click: load, disable: isSaving">
+                    <i class="bi bi-arrow-counterclockwise"></i> @Html.T("Common.Reset", "Sifirla")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Company/Profile.js" asp-append-version="true"></script>
+}

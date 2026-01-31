@@ -1,0 +1,282 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("FavoriteSuppliers.Title", "Favori Tedarikciler").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="favorite-suppliers-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-heart-fill text-danger me-2"></i>
+                @Html.T("FavoriteSuppliers.Title", "Favori Tedarikciler")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("FavoriteSuppliers.Subtitle", "Favori olarak isaretlediginiz tedarikciler.")</p>
+        </div>
+        <a href="/Dashboard/DiscoverSuppliers" class="btn btn-primary">
+            <i class="bi bi-search me-1"></i>
+            @Html.T("FavoriteSuppliers.DiscoverMore", "Tedarikci Bul")
+        </a>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+    </div>
+
+    <!-- Empty State -->
+    <div data-bind="visible: !isLoading() && favorites().length === 0" class="text-center py-5">
+        <i class="bi bi-heart display-1 text-muted"></i>
+        <h5 class="mt-3">@Html.T("FavoriteSuppliers.Empty.Title", "Henuz favori tedarikciniz yok")</h5>
+        <p class="text-muted">@Html.T("FavoriteSuppliers.Empty.Subtitle", "Tedarikcileri kesfederek favorilerinize ekleyin.")</p>
+        <a href="/Dashboard/DiscoverSuppliers" class="btn btn-primary">
+            <i class="bi bi-search me-1"></i>
+            @Html.T("FavoriteSuppliers.Empty.Action", "Tedarikci Kesfet")
+        </a>
+    </div>
+
+    <!-- Favorites Grid -->
+    <div class="row g-3" data-bind="visible: !isLoading() && favorites().length > 0, foreach: favorites">
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <!-- ko if: logoUrl -->
+                        <img data-bind="attr: { src: logoUrl }" class="rounded me-3" style="width: 56px; height: 56px; object-fit: cover;">
+                        <!-- /ko -->
+                        <!-- ko ifnot: logoUrl -->
+                        <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center me-3" style="width: 56px; height: 56px;">
+                            <i class="bi bi-building text-primary fs-3"></i>
+                        </div>
+                        <!-- /ko -->
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex align-items-center">
+                                <h6 class="mb-0 text-truncate me-2" data-bind="text: companyName"></h6>
+                                <!-- ko if: isVerified -->
+                                <span class="badge bg-success-subtle text-success" title="Dogrulanmis"><i class="bi bi-patch-check-fill"></i></span>
+                                <!-- /ko -->
+                            </div>
+                            <div class="small text-muted mt-1" data-bind="visible: countryName">
+                                <i class="bi bi-geo-alt"></i> <span data-bind="text: countryName"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="row g-2 mb-3 small">
+                        <div class="col-6">
+                            <div class="bg-light rounded p-2 text-center">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <span data-bind="text: averageRating.toFixed(1)">0</span>
+                                <small class="text-muted">(<span data-bind="text: reviewCount">0</span>)</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light rounded p-2 text-center">
+                                <i class="bi bi-box text-primary"></i>
+                                <span data-bind="text: productCount">0</span>
+                                <small class="text-muted">urun</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div data-bind="visible: notes" class="mb-3">
+                        <small class="text-muted d-block mb-1">Not:</small>
+                        <p class="small mb-0 fst-italic" data-bind="text: notes"></p>
+                    </div>
+
+                    <!-- Tags -->
+                    <div data-bind="visible: tags" class="mb-3">
+                        <!-- ko foreach: (tags || '').split(',').filter(function(t) { return t.trim(); }) -->
+                        <span class="badge bg-light text-dark me-1" data-bind="text: $data.trim()"></span>
+                        <!-- /ko -->
+                    </div>
+
+                    <!-- Added date -->
+                    <div class="small text-muted mb-3">
+                        <i class="bi bi-clock"></i>
+                        <span data-bind="text: new Date(addedAt).toLocaleDateString('tr-TR')"></span> tarihinde eklendi
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-sm btn-success flex-grow-1" data-bind="click: function() { $parent.showQuoteModal($data); }">
+                            <i class="bi bi-chat-quote me-1"></i> Teklif Iste
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" data-bind="click: function() { $parent.viewSupplier($data); }" title="Profili Gor">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" data-bind="click: function() { $parent.editFavorite($data); }" title="Duzenle">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" data-bind="click: function() { $parent.removeFavorite($data); }" title="Cikar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Favorite Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Favori Duzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Not</label>
+                    <textarea class="form-control" rows="3" placeholder="Bu tedarikci hakkinda notunuz..."
+                              data-bind="value: editForm.notes"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Etiketler</label>
+                    <input type="text" class="form-control" placeholder="hizli teslimat, kaliteli urun"
+                           data-bind="value: editForm.tags">
+                    <small class="text-muted">Virgul ile ayirin</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                <button type="button" class="btn btn-primary" data-bind="click: saveEdit, enable: !isSaving()">
+                    <span data-bind="visible: isSaving" class="spinner-border spinner-border-sm me-1"></span>
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Quote Request Modal -->
+<div class="modal fade" id="quoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-chat-quote me-2"></i>Hizli Teklif Iste</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong data-bind="text: quoteForm.companyName"></strong> firmasina teklif talebi gonderiyorsunuz.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Konu <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" placeholder="Ornegin: Toplu urun fiyat teklifi"
+                           data-bind="value: quoteForm.subject">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mesajiniz <span class="text-danger">*</span></label>
+                    <textarea class="form-control" rows="5"
+                              placeholder="Hangi urunler/hizmetler icin teklif istediginizi, miktarlari ve ozel gereksinimlerinizi yazin..."
+                              data-bind="value: quoteForm.message"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                <button type="button" class="btn btn-success" data-bind="click: sendQuoteRequest, enable: !isSending()">
+                    <span data-bind="visible: isSending" class="spinner-border spinner-border-sm me-1"></span>
+                    <i class="bi bi-send me-1" data-bind="visible: !isSending()"></i>
+                    Gonder
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Supplier Profile Modal -->
+<div class="modal fade" id="supplierModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-bind="text: selectedSupplier()?.companyName || ''"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" data-bind="with: selectedSupplier">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <!-- ko if: logoUrl -->
+                        <img data-bind="attr: { src: logoUrl }" class="rounded img-fluid" style="max-height: 150px;">
+                        <!-- /ko -->
+                        <!-- ko ifnot: logoUrl -->
+                        <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px;">
+                            <i class="bi bi-building text-primary display-4"></i>
+                        </div>
+                        <!-- /ko -->
+                        <!-- ko if: isVerified -->
+                        <div class="mt-2">
+                            <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i> Dogrulanmis</span>
+                        </div>
+                        <!-- /ko -->
+                    </div>
+                    <div class="col-md-8">
+                        <p data-bind="text: description, visible: description"></p>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6" data-bind="visible: countryName">
+                                <small class="text-muted d-block">Konum</small>
+                                <span><i class="bi bi-geo-alt text-primary me-1"></i><span data-bind="text: city"></span>, <span data-bind="text: countryName"></span></span>
+                            </div>
+                            <div class="col-6" data-bind="visible: website">
+                                <small class="text-muted d-block">Website</small>
+                                <a data-bind="attr: { href: website }, text: website" target="_blank"></a>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Urun Sayisi</small>
+                                <span><span data-bind="text: productCount || 0">0</span> urun</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Degerlendirme</small>
+                                <span class="text-warning"><i class="bi bi-star-fill"></i></span>
+                                <span data-bind="text: (averageRating || 0).toFixed(1)">0</span>
+                                (<span data-bind="text: reviewCount || 0">0</span>)
+                            </div>
+                        </div>
+                        <!-- Categories -->
+                        <div data-bind="visible: categories && categories.length > 0">
+                            <small class="text-muted d-block mb-1">Kategoriler</small>
+                            <!-- ko foreach: categories -->
+                            <span class="badge bg-light text-dark me-1 mb-1" data-bind="text: $data"></span>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Featured Products -->
+                <div data-bind="visible: featuredProducts && featuredProducts.length > 0" class="mt-4">
+                    <h6><i class="bi bi-box-seam me-1"></i> One Cikan Urunler</h6>
+                    <div class="row g-2">
+                        <!-- ko foreach: featuredProducts.slice(0, 4) -->
+                        <div class="col-6 col-md-3">
+                            <div class="card border h-100">
+                                <!-- ko if: mainImageUrl -->
+                                <img data-bind="attr: { src: mainImageUrl }" class="card-img-top" style="height: 80px; object-fit: cover;">
+                                <!-- /ko -->
+                                <div class="card-body p-2">
+                                    <small class="text-truncate d-block" data-bind="text: name"></small>
+                                    <small class="text-primary fw-bold" data-bind="text: price + ' ' + currency"></small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-success" data-bind="click: function() { showQuoteModal(selectedSupplier()); supplierModal.hide(); }">
+                    <i class="bi bi-chat-quote me-1"></i> Teklif Iste
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/Dashboard/FavoriteSuppliers.js"></script>
+}

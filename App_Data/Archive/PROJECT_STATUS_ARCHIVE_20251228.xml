@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    PROJECT STATUS ARCHIVE - 2025-12-28
+    Task 81-101 (2025-12-20 to 2025-12-26)
+    Archived from main PROJECT_STATUS.xml
+-->
+<ArchivedTasks>
+    <Task id="81" date="2025-12-20">
+        <Title>Mesajlasma Sistemi</Title>
+        <Description>Firma-firma mesajlasma sistemi: MessageThread, Message entities, MessagingService, API endpoints, real-time bildirim</Description>
+    </Task>
+    <Task id="82" date="2025-12-20">
+        <Title>Raporlama Sayfasi</Title>
+        <Description>Satici/Alici raporlama: ReportService, donemsel veriler, Chart.js grafikleri, top products/customers/suppliers</Description>
+    </Task>
+    <Task id="83" date="2025-12-20">
+        <Title>Billing Page: Adres Secimi ve API Endpointleri</Title>
+        <Description>Fatura bilgileri, banka hesaplari, odeme gecmisi API'leri, BillingAddressId eklendi</Description>
+    </Task>
+    <Task id="84" date="2025-12-21">
+        <Title>Team ve Verifications Sayfalari</Title>
+        <Description>Ekip yonetimi, kurumsal dogrulama, TeamMemberType/MemberVerificationStatus TypeItem pattern</Description>
+    </Task>
+    <Task id="85" date="2025-12-21">
+        <Title>Buyer Favoriler + Bildirim Sistemi</Title>
+        <Description>Favori tedarikci ozellikleri, siparis degerlendirme, bildirim sistemi dogrulama</Description>
+    </Task>
+    <Task id="86" date="2025-12-21">
+        <Title>User Identity Role Sistemi</Title>
+        <Description>User rolu eklendi, tum kullanicilara temel Identity rolu atama</Description>
+    </Task>
+    <Task id="87" date="2025-12-21">
+        <Title>Capability-Based Authorization</Title>
+        <Description>RequireCapabilityAttribute, CapabilityAuthorizationHandler, claim-based yetkilendirme</Description>
+    </Task>
+    <Task id="88" date="2025-12-22">
+        <Title>Yatirim/Finansman Sistemi (Investment)</Title>
+        <Description>FinancingRequest, InvestmentOffer entities, InvestmentApiController, yatirimci teklif sistemi</Description>
+    </Task>
+    <Task id="89" date="2025-12-22">
+        <Title>Odeme Sonrasi Buyer Capability ve Sidebar Capability Sections</Title>
+        <Description>Stripe webhook ile Buyer capability ekleme, sidebar collapsible sections</Description>
+    </Task>
+    <Task id="90" date="2025-12-22">
+        <Title>Capability Request Modulu + Rol Permission UI Guncelleme</Title>
+        <Description>CapabilityRequest entity, talep sistemi, Admin onay sayfasi, gruplu modul yetkilendirme</Description>
+    </Task>
+    <Task id="91" date="2025-12-22">
+        <Title>Controller Refactoring + Route Guncelleme</Title>
+        <Description>DashboardBaseController, Controllers/Modules klasoru, yeni Views klasorleri, route guncellemeleri</Description>
+    </Task>
+    <Task id="92" date="2025-12-22">
+        <Title>Finansman Talep Olusturma (Seller/Buyer)</Title>
+        <Description>FinancingApiController, MyRequests sayfasi, talep olusturma/duzenleme/yayinlama</Description>
+    </Task>
+    <Task id="93" date="2025-12-22">
+        <Title>Checkout Flow + Service Provider Sistemi</Title>
+        <Description>CheckoutService, ServiceProvider DTOs, 3 adimli checkout wizard, Provider teklifleri</Description>
+    </Task>
+    <Task id="94" date="2025-12-22">
+        <Title>Checkout Finansman Detay Formu</Title>
+        <Description>Checkout Step 2 finansman formu, vade, faiz, teklif son tarihi alanlari</Description>
+    </Task>
+    <Task id="95" date="2025-12-22">
+        <Title>Sepet Sistemi Yenileme + Coklu Sepet Destegi</Title>
+        <Description>Satici+depo bazli sepet izolasyonu, coklu sepet, cross-sell oneriler</Description>
+    </Task>
+    <Task id="96" date="2025-12-24">
+        <Title>Capability Refactoring - VendorCapabilities Tablosunu TypeDefinitions'a Tasima</Title>
+        <Description>VendorCapabilities tablosu DROP, Capabilities static class, navigation property'ler kaldirildi</Description>
+    </Task>
+    <Task id="97" date="2025-12-25">
+        <Title>VendorRole + IsVendorOwner Kaldirma + Modul Yetkilendirme Duzeltmesi</Title>
+        <Description>VendorRole/IsVendorOwner kaldirildi, RBAC tum yetkilendirme, Owner=Source.OwnerCreated</Description>
+    </Task>
+    <Task id="98" date="2025-12-25">
+        <Title>Team Sayfasi Liste Hatasi Duzeltmesi</Title>
+        <Description>TeamApiController RequireCapability kaldirildi, Source bazli role gosterimi</Description>
+    </Task>
+    <Task id="99" date="2025-12-25">
+        <Title>CapabilityProfile Sistemi Tamamlama</Title>
+        <Description>Satici/Alici/Yatirimci profil formlari, Admin onay sayfasi, Public profil gorunumu</Description>
+    </Task>
+    <Task id="100" date="2025-12-25">
+        <Title>KnockoutJS Binding Kalibina Uymayan Admin Dosyalari Duzeltildi</Title>
+        <Description>8 Admin JS dosyasi dogru KO binding kalibina gecirildi (element ID ile)</Description>
+    </Task>
+    <Task id="101" date="2025-12-26">
+        <Title>xUnit Test Altyapisi Kurulumu</Title>
+        <Description>Tests/Bridgo.Tests.csproj, AdminServiceTests (16 test), xUnit+Moq+FluentAssertions</Description>
+    </Task>
+</ArchivedTasks>

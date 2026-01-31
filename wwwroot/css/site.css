@@ -1,0 +1,492 @@
+/* ========================================
+   Bridgo B2B Platform - Main Stylesheet
+   ======================================== */
+
+/* Base Styles */
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+/* Form Focus States */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* ========================================
+   Dashboard Layout
+   ======================================== */
+:root {
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+    --transition-speed: 0.3s;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.dashboard-sidebar {
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    flex-shrink: 0;
+    transition: width var(--transition-speed) ease;
+    overflow-x: hidden;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+}
+
+.dashboard-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.dashboard-sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin: 0.125rem 0.5rem;
+    white-space: nowrap;
+    transition: all var(--transition-speed) ease;
+}
+
+.dashboard-sidebar .nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-sidebar .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.dashboard-sidebar .nav-link i {
+    width: 1.5rem;
+    display: inline-block;
+    text-align: center;
+}
+
+/* Collapsed Sidebar */
+.dashboard-sidebar.collapsed .nav-link {
+    padding: 0.75rem;
+    margin: 0.125rem 0.5rem;
+    text-align: center;
+}
+
+.dashboard-sidebar.collapsed .nav-link span,
+.dashboard-sidebar.collapsed .sidebar-section,
+.dashboard-sidebar.collapsed .sidebar-brand span,
+.dashboard-sidebar.collapsed .company-name,
+.dashboard-sidebar.collapsed .chevron-icon {
+    display: none;
+}
+
+.dashboard-sidebar.collapsed .nav-link i {
+    width: 100%;
+    font-size: 1.25rem;
+}
+
+/* Dashboard Main Content */
+.dashboard-main {
+    flex-grow: 1;
+    margin-left: var(--sidebar-width);
+    transition: margin-left var(--transition-speed) ease;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-main.expanded {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+.dashboard-header {
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Sidebar Brand */
+.sidebar-brand {
+    padding: 1rem;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand {
+    justify-content: center;
+    padding: 1rem 0.5rem;
+}
+
+/* Sidebar Section Headers */
+.sidebar-section {
+    padding: 0.5rem 1rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 1rem;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+}
+
+.sidebar-section:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar-section .bi-chevron-down,
+.nav-link .chevron-icon {
+    transition: transform 0.2s ease;
+}
+
+.sidebar-section.collapsed .bi-chevron-down,
+.nav-link.collapsed .chevron-icon {
+    transform: rotate(-90deg);
+}
+
+/* Capability Section Headers - daha belirgin gorunum */
+.sidebar-section.sidebar-capability {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin: 0.5rem 0.5rem 0 0.5rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.sidebar-section.sidebar-capability:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.sidebar-section.sidebar-capability i {
+    margin-right: 0.25rem;
+}
+
+/* Capability icerisindeki sub-section'lar - daha hafif */
+.sidebar-section.sidebar-subsection {
+    font-size: 0.7rem;
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Capability altindaki menuler icin indent */
+[id^="capability-"] .nav-link {
+    padding-left: 1.5rem;
+    font-size: 0.85rem;
+}
+
+[id^="capability-"] .sidebar-subsection + div .nav-link {
+    padding-left: 2rem;
+}
+
+/* Capability Tabs - artik kullanilmiyor ama geriye donuk uyumluluk */
+.capability-tabs {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.capability-tabs .nav-link {
+    border-radius: 0;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #6c757d;
+    padding: 1rem 1.5rem;
+}
+
+.capability-tabs .nav-link:hover {
+    border-bottom-color: #dee2e6;
+    color: #495057;
+}
+
+.capability-tabs .nav-link.active {
+    border-bottom-color: #0d6efd;
+    color: #0d6efd;
+    background: transparent;
+}
+
+/* Sidebar Submenu */
+.sidebar-submenu {
+    padding-left: 1rem;
+}
+
+.sidebar-submenu .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-sidebar.collapsed .sidebar-footer .nav-link {
+    padding: 0.75rem;
+}
+
+/* Tooltip for Collapsed Sidebar */
+.dashboard-sidebar.collapsed .nav-link {
+    position: relative;
+}
+
+.dashboard-sidebar.collapsed .nav-link::after {
+    content: attr(data-title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+    margin-left: 0.5rem;
+    z-index: 1001;
+}
+
+.dashboard-sidebar.collapsed .nav-link:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .dashboard-sidebar {
+        transform: translateX(-100%);
+        width: var(--sidebar-width);
+    }
+
+    .dashboard-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .dashboard-main {
+        margin-left: 0;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+}
+
+/* ========================================
+   Admin Layout
+   ======================================== */
+.admin-sidebar {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+}
+
+.admin-sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin: 0.125rem 0.5rem;
+}
+
+.admin-sidebar .nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-sidebar .nav-link i {
+    width: 1.5rem;
+}
+
+.admin-header {
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* ========================================
+   Component Styles
+   ======================================== */
+
+/* Capability Cards (Dashboard & Register) */
+.capability-card {
+    transition: all 0.2s;
+}
+
+.capability-card:hover {
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.capability-card.selected {
+    border-color: #0d6efd;
+    background: rgba(13, 110, 253, 0.05);
+}
+
+/* Clickable Cards */
+.card.cursor-pointer:hover {
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Delete Button Gap - UI Standard
+   Sil butonları ile diğer butonlar arasında boşluk
+   .btn-gap class'ı ekleyerek kullanılır
+   ======================================== */
+
+/* .btn-gap - Butonlar arasında boşluk için utility class */
+.btn-gap {
+    margin-left: 1rem !important;
+    border-top-left-radius: var(--bs-btn-border-radius, 0.375rem) !important;
+    border-bottom-left-radius: var(--bs-btn-border-radius, 0.375rem) !important;
+}
+
+/* btn-group-sm için daha küçük radius */
+.btn-group-sm > .btn-gap {
+    border-top-left-radius: var(--bs-btn-border-radius-sm, 0.25rem) !important;
+    border-bottom-left-radius: var(--bs-btn-border-radius-sm, 0.25rem) !important;
+}
+
+/* btn-group-lg için daha büyük radius */
+.btn-group-lg > .btn-gap {
+    border-top-left-radius: var(--bs-btn-border-radius-lg, 0.5rem) !important;
+    border-bottom-left-radius: var(--bs-btn-border-radius-lg, 0.5rem) !important;
+}
+
+/* ========================================
+   Catalog Category Tree
+   ======================================== */
+
+/* Category row hover effect */
+.category-row {
+    transition: background-color 0.15s ease;
+}
+
+.category-row:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+/* Category toggle button */
+.category-toggle {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Chevron rotation animation */
+.category-chevron {
+    transition: transform 0.2s ease;
+    font-size: 0.75rem;
+}
+
+.category-toggle[aria-expanded="true"] .category-chevron {
+    transform: rotate(90deg);
+}
+
+/* Active category highlight */
+.category-item a.active {
+    background-color: var(--bs-primary);
+    color: white !important;
+    border-color: var(--bs-primary);
+}
+
+.category-item a.active .badge {
+    background-color: white !important;
+    color: var(--bs-primary) !important;
+}
+
+.category-item a.active i {
+    color: white !important;
+}
+
+/* Category children indentation */
+.category-children {
+    border-left: 2px solid rgba(var(--bs-primary-rgb), 0.2);
+    margin-left: 10px;
+}
+
+/* Category name truncation */
+.category-name {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

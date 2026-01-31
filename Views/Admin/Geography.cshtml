@@ -1,0 +1,347 @@
+@{
+    ViewData["Title"] = Html.T("Admin.Geography.Title", "Cografi Veriler").ToString();
+    Layout = "_AdminLayout";
+}
+
+<div id="geography-app">
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">@Html.T("Admin.Geography.Countries", "Ulkeler")</h6>
+                        <h3 class="mb-0" data-bind="text: stats().countryCount || 0">-</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-globe text-primary fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">@Html.T("Admin.Geography.States", "Eyaletler/Iller")</h6>
+                        <h3 class="mb-0" data-bind="text: stats().stateCount || 0">-</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-map text-success fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">@Html.T("Admin.Geography.Translations", "Ceviriler")</h6>
+                        <h3 class="mb-0" data-bind="text: stats().countryTranslationCount || 0">-</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-translate text-warning fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#countriesTab" type="button">
+            <i class="bi bi-globe me-1"></i> @Html.T("Admin.Geography.Countries", "Ulkeler")
+            <span class="badge bg-primary ms-1" data-bind="text: countries().length">0</span>
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#statesTab" type="button">
+            <i class="bi bi-map me-1"></i> @Html.T("Admin.Geography.States", "Eyaletler/Iller")
+            <span class="badge bg-success ms-1" data-bind="text: filteredStates().length">0</span>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- Countries Tab -->
+    <div class="tab-pane fade show active" id="countriesTab" role="tabpanel">
+        <div class="card border-0 shadow-sm border-top-0 rounded-top-0">
+            <div class="card-header bg-white py-3">
+                <div class="row align-items-center g-2">
+                    <div class="col-auto">
+                        <select class="form-select form-select-sm" style="width: auto;" data-bind="value: countryStatusFilter">
+                            <option value="">Tumu</option>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Pasif</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <div class="input-group input-group-sm" style="max-width: 250px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" placeholder="Ulke ara..."
+                                   data-bind="value: countrySearch, valueUpdate: 'afterkeydown'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 60px;">ID</th>
+                                <th>@Html.T("Common.Name", "Ad")</th>
+                                <th>ISO2</th>
+                                <th>ISO3</th>
+                                <th>@Html.T("Admin.Geography.PhoneCode", "Telefon Kodu")</th>
+                                <th>@Html.T("Admin.Geography.Currency", "Para Birimi")</th>
+                                <th style="width: 80px;">@Html.T("Admin.Geography.StateCount", "Eyalet")</th>
+                                <th style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: filteredCountries">
+                            <tr>
+                                <td data-bind="text: id"></td>
+                                <td>
+                                    <!-- ko if: flagEmoji -->
+                                    <span data-bind="text: flagEmoji" class="me-1"></span>
+                                    <!-- /ko -->
+                                    <strong data-bind="text: name"></strong>
+                                    <!-- ko if: officialName && officialName !== name -->
+                                    <small class="text-muted d-block" data-bind="text: officialName"></small>
+                                    <!-- /ko -->
+                                </td>
+                                <td><code data-bind="text: iso2Code"></code></td>
+                                <td><code data-bind="text: iso3Code"></code></td>
+                                <td data-bind="text: phoneCode ? '+' + phoneCode : '-'"></td>
+                                <td data-bind="text: currencyCode || '-'"></td>
+                                <td>
+                                    <!-- ko if: stateCount > 0 -->
+                                    <a href="#" class="badge bg-info text-decoration-none"
+                                       data-bind="text: stateCount, click: function() { $parent.selectCountry($data); }"></a>
+                                    <!-- /ko -->
+                                    <!-- ko if: !stateCount -->
+                                    <span class="text-muted">-</span>
+                                    <!-- /ko -->
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-secondary" title="Aktif/Pasif"
+                                                data-bind="click: function() { $parent.toggleCountryActive($data); },
+                                                           css: { 'btn-outline-success': isActive, 'btn-outline-secondary': !isActive }">
+                                            <i class="bi" data-bind="css: { 'bi-check-circle': isActive, 'bi-x-circle': !isActive }"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" title="Cevirileri Duzenle"
+                                                data-bind="click: function() { $parent.editCountry($data); }">
+                                            <i class="bi bi-translate"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- ko if: filteredCountries().length === 0 -->
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-1"></i>
+                    <p class="mt-2">Ulke bulunamadi</p>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+
+    <!-- States Tab -->
+    <div class="tab-pane fade" id="statesTab" role="tabpanel">
+        <div class="card border-0 shadow-sm border-top-0 rounded-top-0">
+            <div class="card-header bg-white py-3">
+                <div class="row align-items-center g-2">
+                    <div class="col-auto">
+                        <select class="form-select" style="min-width: 200px;" data-bind="
+                            options: countriesWithStates,
+                            optionsText: 'name',
+                            optionsValue: 'id',
+                            optionsCaption: '-- Ulke Sec --',
+                            value: selectedCountryId">
+                        </select>
+                    </div>
+                    <div class="col">
+                        <div class="input-group" style="max-width: 300px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" placeholder="Eyalet ara..."
+                                   data-bind="value: stateSearch, valueUpdate: 'afterkeydown'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 60px;">ID</th>
+                                <th>@Html.T("Common.Name", "Ad")</th>
+                                <th>@Html.T("Admin.Geography.Country", "Ulke")</th>
+                                <th style="width: 100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: filteredStates">
+                            <tr>
+                                <td data-bind="text: id"></td>
+                                <td><strong data-bind="text: name"></strong></td>
+                                <td data-bind="text: countryName"></td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-secondary" title="Aktif/Pasif"
+                                                data-bind="click: function() { $parent.toggleStateActive($data); },
+                                                           css: { 'btn-outline-success': isActive, 'btn-outline-secondary': !isActive }">
+                                            <i class="bi" data-bind="css: { 'bi-check-circle': isActive, 'bi-x-circle': !isActive }"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" title="Cevirileri Duzenle"
+                                                data-bind="click: function() { $parent.editState($data); }">
+                                            <i class="bi bi-translate"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- ko if: selectedCountryId() && filteredStates().length === 0 -->
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-1"></i>
+                    <p class="mt-2">Bu ulke icin eyalet/il tanimlanmamis</p>
+                </div>
+                <!-- /ko -->
+                <!-- ko if: !selectedCountryId() -->
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-arrow-up fs-1"></i>
+                    <p class="mt-2">Eyaletleri gormek icin ulke secin</p>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Country Translations Modal -->
+<div class="modal fade" id="countryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-bind="text: editingCountry().flagEmoji"></span>
+                    <span data-bind="text: editingCountry().name"></span> - Ceviriler
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Country Info -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">ISO Kodlari</label>
+                        <div>
+                            <code data-bind="text: editingCountry().iso2Code"></code> /
+                            <code data-bind="text: editingCountry().iso3Code"></code>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Telefon Kodu</label>
+                        <div data-bind="text: editingCountry().phoneCode ? '+' + editingCountry().phoneCode : '-'"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Para Birimi</label>
+                        <div data-bind="text: editingCountry().currencyCode || '-'"></div>
+                    </div>
+                </div>
+
+                <!-- Translations -->
+                <h6 class="mb-3"><i class="bi bi-translate me-1"></i> Dil Cevirileri</h6>
+                <div data-bind="foreach: editingTranslations">
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-2">
+                            <label class="form-label mb-0" data-bind="text: languageName"></label>
+                            <small class="text-muted d-block" data-bind="text: languageCode"></small>
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" class="form-control form-control-sm" placeholder="Ad"
+                                   data-bind="value: name">
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" class="form-control form-control-sm" placeholder="Resmi Ad (opsiyonel)"
+                                   data-bind="value: officialName">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                <button type="button" class="btn btn-primary" data-bind="click: saveTranslations, enable: !saving()">
+                    <span data-bind="visible: saving()" class="spinner-border spinner-border-sm me-1"></span>
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- State Translations Modal -->
+<div class="modal fade" id="stateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-bind="text: editingState().name"></span> - Ceviriler
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- State Info -->
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <label class="form-label text-muted small">Ulke</label>
+                        <div data-bind="text: editingState().countryName"></div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-muted small">Kod</label>
+                        <div data-bind="text: editingState().code || '-'"></div>
+                    </div>
+                </div>
+
+                <!-- Translations -->
+                <h6 class="mb-3"><i class="bi bi-translate me-1"></i> Dil Cevirileri</h6>
+                <div data-bind="foreach: editingStateTranslations">
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-4">
+                            <label class="form-label mb-0" data-bind="text: languageName"></label>
+                            <small class="text-muted d-block" data-bind="text: languageCode"></small>
+                        </div>
+                        <div class="col-8">
+                            <input type="text" class="form-control form-control-sm" placeholder="Ad"
+                                   data-bind="value: name">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                <button type="button" class="btn btn-primary" data-bind="click: saveStateTranslations, enable: !savingState()">
+                    <span data-bind="visible: savingState()" class="spinner-border spinner-border-sm me-1"></span>
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+<script src="~/js/Admin/Geography.js"></script>
+}

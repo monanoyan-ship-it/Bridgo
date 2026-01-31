@@ -1,0 +1,191 @@
+@using Bridgo.Extensions
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="suppliers-app" class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-2">
+                <i class="bi bi-shop text-primary"></i>
+                @Html.T("Suppliers.Title", "Tedarikciler")
+            </h1>
+            <p class="text-muted">
+                @Html.T("Suppliers.Subtitle", "Guvenilir B2B tedarikciler ve ureticiler. Urun ve hizmet saglayanları kesfedin.")
+            </p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="@Html.T("Suppliers.SearchPlaceholder", "Firma adi, urun veya hizmet ara...")"
+                               data-bind="value: filter.search, valueUpdate: 'afterkeydown'" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" data-bind="value: filter.categoryId, options: categories, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Common.AllCategories", "Tum Kategoriler")'"></select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" data-bind="value: filter.countryId, options: countries, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Common.AllCountries", "Tum Ulkeler")'"></select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" data-bind="click: resetFilters">
+                        <i class="bi bi-x-circle"></i> @Html.T("Common.Reset", "Sifirla")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div data-bind="visible: !isLoading()">
+        <!-- Stats -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted" data-bind="text: totalCount() + ' tedarikci bulundu'"></span>
+            <select class="form-select form-select-sm w-auto" data-bind="value: filter.sortBy">
+                <option value="">@Html.T("Common.SortBy", "Sirala"): @Html.T("Suppliers.MostViewed", "En Cok Goruntulenme")</option>
+                <option value="name">@Html.T("Suppliers.ByName", "Isme Gore")</option>
+                <option value="newest">@Html.T("Common.Newest", "En Yeni")</option>
+                <option value="rating">@Html.T("Suppliers.TopRated", "En Yuksek Puan")</option>
+            </select>
+        </div>
+
+        <!-- Empty State -->
+        <div data-bind="visible: suppliers().length === 0" class="text-center py-5">
+            <i class="bi bi-shop display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">@Html.T("Suppliers.NoResults", "Tedarikci bulunamadi")</h5>
+            <p class="text-muted">@Html.T("Suppliers.TryDifferentFilters", "Farkli filtreler deneyin")</p>
+        </div>
+
+        <!-- Supplier Cards -->
+        <div class="row g-4" data-bind="foreach: suppliers">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm supplier-card">
+                    <!-- Logo/Image -->
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 140px;">
+                        <!-- ko if: logoPath -->
+                        <img data-bind="attr: { src: logoPath, alt: displayName || companyName }" class="img-fluid" style="max-height: 120px; max-width: 100%; object-fit: contain;" />
+                        <!-- /ko -->
+                        <!-- ko ifnot: logoPath -->
+                        <i class="bi bi-building display-3 text-muted"></i>
+                        <!-- /ko -->
+                    </div>
+                    <div class="card-body">
+                        <!-- Verified Badge -->
+                        <div class="mb-2" data-bind="visible: isVerified">
+                            <span class="badge bg-success"><i class="bi bi-patch-check-fill"></i> @Html.T("Suppliers.Verified", "Dogrulanmis")</span>
+                        </div>
+
+                        <!-- Company Name -->
+                        <h5 class="card-title">
+                            <a data-bind="attr: { href: '/Suppliers/' + slug }, text: displayName || companyName" class="text-decoration-none text-dark stretched-link"></a>
+                        </h5>
+
+                        <!-- Short Description -->
+                        <p class="card-text text-muted small" data-bind="text: shortDescription ? shortDescription.substring(0, 100) + '...' : ''"></p>
+
+                        <!-- Categories -->
+                        <div class="d-flex flex-wrap gap-1 mb-2" data-bind="visible: categoryNames && categoryNames.length > 0, foreach: categoryNames ? categoryNames.slice(0, 3) : []">
+                            <span class="badge bg-light text-dark" data-bind="text: $data"></span>
+                        </div>
+
+                        <!-- Location & Stats -->
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-secondary" data-bind="visible: countryName">
+                                <i class="bi bi-geo-alt"></i> <span data-bind="text: countryName"></span>
+                            </span>
+                            <!-- ko if: yearEstablished -->
+                            <span class="badge bg-info" data-bind="text: '@Html.T("Suppliers.Since", "Kuruluş")' + ': ' + yearEstablished"></span>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <!-- Rating -->
+                            <div data-bind="visible: averageRating > 0">
+                                <span class="text-warning">
+                                    <i class="bi bi-star-fill"></i>
+                                </span>
+                                <span data-bind="text: averageRating?.toFixed(1)"></span>
+                                <small class="text-muted" data-bind="text: '(' + (reviewCount || 0) + ')'"></small>
+                            </div>
+                            <div data-bind="visible: !averageRating || averageRating === 0">
+                                <small class="text-muted">@Html.T("Suppliers.NoRating", "Henuz degerlendirilmedi")</small>
+                            </div>
+                            <!-- Views -->
+                            <span class="badge bg-light text-dark" title="@Html.T("Common.Views", "Goruntulenme")">
+                                <i class="bi bi-eye"></i> <span data-bind="text: viewCount || 0"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="mt-4" data-bind="visible: totalPages() > 1">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" data-bind="css: { disabled: currentPage() <= 1 }">
+                    <a class="page-link" href="#" data-bind="click: function() { goToPage(currentPage() - 1); }">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                <!-- ko foreach: visiblePages -->
+                <li class="page-item" data-bind="css: { active: $data === $parent.currentPage() }">
+                    <a class="page-link" href="#" data-bind="text: $data, click: function() { $parent.goToPage($data); }"></a>
+                </li>
+                <!-- /ko -->
+                <li class="page-item" data-bind="css: { disabled: currentPage() >= totalPages() }">
+                    <a class="page-link" href="#" data-bind="click: function() { goToPage(currentPage() + 1); }">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- CTA for suppliers -->
+    <div class="card bg-success text-white mt-5">
+        <div class="card-body text-center py-4">
+            <h4><i class="bi bi-megaphone"></i> @Html.T("Suppliers.BuyerCTA.Title", "Tedarikci mi ariyorsunuz?")</h4>
+            <p class="mb-3">@Html.T("Suppliers.BuyerCTA.Text", "Ihtiyacinizi talep olarak yayinlayin, tedarikciler size ulassin!")</p>
+            <a href="/Demands" class="btn btn-light btn-lg">
+                <i class="bi bi-search"></i> @Html.T("Suppliers.BuyerCTA.Button", "Talepleri Incele")
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    .supplier-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .supplier-card .stretched-link::after {
+        z-index: 1;
+    }
+    .supplier-card .badge {
+        position: relative;
+        z-index: 2;
+    }
+</style>
+}
+
+@section Scripts {
+<script src="~/js/Suppliers/Index.js"></script>
+}

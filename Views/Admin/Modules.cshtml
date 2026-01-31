@@ -1,0 +1,362 @@
+@{
+    ViewData["Title"] = Html.T("Admin.Modules.Title", "Modul Yonetimi").ToString();
+    Layout = "_AdminLayout";
+}
+
+<div id="modules-app">
+<div class="row">
+    <!-- Capability Listesi -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">@Html.T("Admin.Menu.Capabilities", "Yetenekler")</h6>
+            </div>
+            <div class="list-group list-group-flush" data-bind="foreach: capabilities">
+                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                   data-bind="click: $parent.selectCapability, css: { active: $parent.selectedCapabilityId() === id }">
+                    <span>
+                        <i data-bind="class: icon" class="me-2"></i>
+                        <span data-bind="text: name"></span>
+                    </span>
+                    <span class="badge bg-primary rounded-pill" data-bind="text: moduleCount"></span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul Listesi -->
+    <div class="col-md-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <span data-bind="text: selectedCapabilityName"></span> @Html.T("Admin.Modules.OfCapability", "Modulleri")
+                </h6>
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Show Deleted Toggle (sadece Platform icin) -->
+                    <div class="form-check form-switch mb-0" data-bind="visible: isPlatformSelected()">
+                        <input class="form-check-input" type="checkbox" id="showDeletedToggle" data-bind="checked: showDeleted">
+                        <label class="form-check-label small text-muted" for="showDeletedToggle">
+                            <i class="bi bi-trash3 me-1"></i>@Html.T("Admin.Modules.ShowDeleted", "Cop Kutusu")
+                        </label>
+                    </div>
+                    <button class="btn btn-primary btn-sm" data-bind="click: showAddModal, visible: selectedCapabilityId() !== null && !showDeleted()">
+                        <i class="bi bi-plus-lg me-1"></i> @Html.T("Admin.Modules.AddNew", "Yeni Modul")
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <!-- Loading -->
+                <div class="text-center py-4" data-bind="visible: isLoading">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+
+                <!-- Module Tree View (Active Modules) -->
+                <div class="p-3" data-bind="visible: !isLoading() && modules().length > 0 && !showDeleted()">
+                    <div data-bind="template: { name: 'module-tree', data: { modules: modules, level: 0 } }"></div>
+                </div>
+
+                <!-- Deleted Modules View -->
+                <div class="p-3" data-bind="visible: !isLoading() && showDeleted()">
+                    <div class="alert alert-warning d-flex align-items-center mb-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <span>@Html.T("Admin.Modules.DeletedInfo", "Silinmis moduller. Geri yukleyebilir veya kalici olarak silebilirsiniz.")</span>
+                    </div>
+                    <!-- ko if: deletedModules().length > 0 -->
+                    <div data-bind="template: { name: 'deleted-module-tree', data: { modules: deletedModules, level: 0 } }"></div>
+                    <!-- /ko -->
+                    <!-- ko if: deletedModules().length === 0 -->
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle text-success fs-1"></i>
+                        <p class="text-muted mt-2">@Html.T("Admin.Modules.NoDeleted", "Silinmis modul bulunmuyor")</p>
+                    </div>
+                    <!-- /ko -->
+                </div>
+
+                <!-- Empty State (Active View) -->
+                <div class="text-center py-5" data-bind="visible: !isLoading() && modules().length === 0 && selectedCapabilityId() && !showDeleted()">
+                    <i class="bi bi-grid-3x3-gap text-muted fs-1"></i>
+                    <p class="text-muted mt-2">@Html.T("Admin.Modules.Empty", "Bu yetenekte henuz modul tanimlanmamis")</p>
+                </div>
+
+                <!-- No Selection -->
+                <div class="text-center py-5" data-bind="visible: !selectedCapabilityId()">
+                    <i class="bi bi-hand-index text-muted fs-1"></i>
+                    <p class="text-muted mt-2">@Html.T("Admin.Modules.SelectCapability", "Modulleri goruntulemek icin bir yetenek secin")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deleted Module Tree Template -->
+<script type="text/html" id="deleted-module-tree">
+    <ul class="list-unstyled" data-bind="style: { marginLeft: level > 0 ? '1.5rem' : '0' }">
+        <!-- ko foreach: modules -->
+        <li class="border border-danger rounded mb-2 p-2 bg-light opacity-75">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i data-bind="class: icon" class="me-2 text-danger"></i>
+                    <span class="text-decoration-line-through" data-bind="text: name"></span>
+                    <!-- ko if: displayName || displayNameResourceKey -->
+                    <span class="badge bg-secondary ms-2" data-bind="text: displayName || displayNameResourceKey"></span>
+                    <!-- /ko -->
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-success" title="@Html.T("Admin.Modules.Restore", "Geri Yukle")" data-bind="click: $root.restoreModule">
+                        <i class="bi bi-arrow-counterclockwise"></i> @Html.T("Admin.Modules.Restore", "Geri Yukle")
+                    </button>
+                    <button class="btn btn-outline-danger btn-gap" title="@Html.T("Admin.Modules.HardDelete", "Kalici Sil")" data-bind="click: $root.hardDeleteModule">
+                        <i class="bi bi-trash3-fill"></i> @Html.T("Admin.Modules.HardDelete", "Kalici Sil")
+                    </button>
+                </div>
+            </div>
+            <!-- ko if: children && children.length > 0 -->
+            <div class="mt-2" data-bind="template: { name: 'deleted-module-tree', data: { modules: children, level: $parent.level + 1 } }"></div>
+            <!-- /ko -->
+        </li>
+        <!-- /ko -->
+    </ul>
+</script>
+
+<!-- Module Tree Template -->
+<script type="text/html" id="module-tree">
+    <ul class="list-unstyled" data-bind="style: { marginLeft: level > 0 ? '1.5rem' : '0' }">
+        <!-- ko foreach: modules -->
+        <li class="border rounded mb-2 p-2 bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i data-bind="class: icon" class="me-2 text-primary"></i>
+                    <strong data-bind="text: name"></strong>
+                    <!-- ko if: displayName || displayNameResourceKey -->
+                    <span class="badge bg-info ms-2" data-bind="text: displayName || displayNameResourceKey"></span>
+                    <!-- /ko -->
+                    <!-- ko if: route -->
+                    <small class="text-muted ms-2"><i class="bi bi-arrow-right"></i> <span data-bind="text: route"></span></small>
+                    <!-- /ko -->
+                    <!-- ko if: !isMenuItem -->
+                    <span class="badge bg-secondary ms-2">@Html.T("Admin.Modules.Hidden", "Gizli")</span>
+                    <!-- /ko -->
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" title="@Html.T("Common.Edit", "Duzenle")" data-bind="click: $root.showEditModal">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-outline-success" title="@Html.T("Admin.Modules.AddChild", "Alt Modul Ekle")" data-bind="click: $root.showAddSubModal, visible: $root.isPlatformSelected() && isMenuSection">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-gap" title="@Html.T("Common.Delete", "Sil")" data-bind="click: $root.deleteModule">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- ko if: children && children.length > 0 -->
+            <div class="mt-2" data-bind="template: { name: 'module-tree', data: { modules: children, level: $parent.level + 1 } }"></div>
+            <!-- /ko -->
+        </li>
+        <!-- /ko -->
+    </ul>
+</script>
+
+<!-- Section Tree Template (for parent selection) -->
+<script type="text/html" id="section-tree-template">
+    <div data-bind="style: { marginLeft: level > 0 ? '1rem' : '0' }">
+        <!-- ko foreach: sections -->
+        <div class="form-check mb-1">
+            <input type="radio" class="form-check-input" name="parentSectionRadio"
+                   data-bind="attr: { id: 'sec_' + id }, checked: $root.parentModuleId, checkedValue: id">
+            <label class="form-check-label" data-bind="attr: { for: 'sec_' + id }">
+                <i data-bind="class: icon" class="me-1 text-primary"></i>
+                <span data-bind="text: name"></span>
+            </label>
+        </div>
+        <!-- Alt section'lar varsa recursive goster -->
+        <!-- ko if: children && children.length > 0 -->
+        <div data-bind="template: { name: 'section-tree-template', data: { sections: $root.filterSections(children), level: $parent.level + 1 } }"></div>
+        <!-- /ko -->
+        <!-- /ko -->
+    </div>
+</script>
+
+<!-- Platform Module Checkbox Tree Template (coklu secim) -->
+<script type="text/html" id="platform-module-checkbox-tree">
+    <div data-bind="style: { marginLeft: level > 0 ? '1.5rem' : '0' }">
+        <!-- ko foreach: modules -->
+        <div class="mb-1">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input"
+                       data-bind="attr: { id: 'pmc_' + id },
+                                  checked: $root.selectedModuleIds,
+                                  checkedValue: id,
+                                  event: { change: function(data, event) { $root.onModuleCheckChange(data, event.target.checked); } }">
+                <label class="form-check-label" data-bind="attr: { for: 'pmc_' + id }, css: { 'fw-bold text-primary': isMenuSection }">
+                    <i data-bind="class: icon" class="me-1"></i>
+                    <span data-bind="text: name"></span>
+                    <!-- ko if: isMenuSection && children && children.length > 0 -->
+                    <span class="badge bg-secondary ms-1" data-bind="text: children.length + ' modul'"></span>
+                    <!-- /ko -->
+                    <!-- ko if: route && !isMenuSection -->
+                    <small class="text-muted ms-1" data-bind="text: route"></small>
+                    <!-- /ko -->
+                </label>
+            </div>
+            <!-- Alt moduller -->
+            <!-- ko if: children && children.length > 0 -->
+            <div data-bind="template: { name: 'platform-module-checkbox-tree', data: { modules: children, level: $parent.level + 1 } }"></div>
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+    </div>
+</script>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="moduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-bind="text: modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form data-bind="submit: saveModule">
+                    <!-- Platform'dan Sec (sadece yeni eklerken ve platform degilse) -->
+                    <div class="mb-3" data-bind="visible: showPlatformSelect()">
+                        <label class="form-label">
+                            <i class="bi bi-lightbulb text-warning me-1"></i>
+                            @Html.T("Admin.Modules.SelectFromPlatform", "Platform'dan Sec (Onerilen)")
+                        </label>
+                        <div class="border rounded p-2 bg-light" style="max-height: 250px; overflow-y: auto;">
+                            <!-- Manuel giris secenegi -->
+                            <div class="form-check mb-2 pb-2 border-bottom">
+                                <input type="checkbox" class="form-check-input" id="platformManual"
+                                       data-bind="checked: isManualEntry">
+                                <label class="form-check-label text-muted" for="platformManual">
+                                    <i class="bi bi-pencil me-1"></i> Manuel giris yapacagim
+                                </label>
+                            </div>
+                            <!-- Platform modulleri tree (coklu secim) -->
+                            <div data-bind="visible: !isManualEntry()">
+                                <div data-bind="template: { name: 'platform-module-checkbox-tree', data: { modules: platformModulesTree(), level: 0 } }"></div>
+                            </div>
+                        </div>
+                        <small class="text-muted" data-bind="visible: !isManualEntry()">@Html.T("Admin.Modules.SelectFromPlatformHint", "Birden fazla modul secebilirsiniz. Section secildiginde alt moduller de eklenir.")</small>
+                    </div>
+                    <hr data-bind="visible: showPlatformSelect()" />
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Name", "Teknik Ad") <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" data-bind="value: formData.name" required>
+                            <small class="text-muted">Modul tanimlama/kod amacli</small>
+                        </div>
+                        <!-- Parent Section secimi (Platform capability) -->
+                        <div class="col-md-6 mb-3" data-bind="visible: isPlatformSelected()">
+                            <label class="form-label">@Html.T("Admin.Modules.ParentSection", "Ust Section")</label>
+                            <div class="border rounded p-2 bg-light" style="max-height: 180px; overflow-y: auto;">
+                                <!-- Root secenegi -->
+                                <div class="form-check mb-1">
+                                    <input type="radio" class="form-check-input" name="parentSectionRadio" id="parentRoot"
+                                           data-bind="checked: parentModuleId, checkedValue: null">
+                                    <label class="form-check-label text-muted" for="parentRoot">
+                                        <i class="bi bi-dash me-1"></i> Root (Section yok)
+                                    </label>
+                                </div>
+                                <!-- Section tree -->
+                                <div data-bind="template: { name: 'section-tree-template', data: { sections: sectionModulesTree(), level: 0 } }"></div>
+                            </div>
+                            <small class="text-muted">Bu modul hangi section altinda olacak?</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Modules.DisplayName", "Menude Gorunecek Ad")</label>
+                            <input type="text" class="form-control" data-bind="value: formData.displayName" placeholder="Siparisler">
+                            <small class="text-muted">ResourceKey yoksa bu ad kullanilir</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Modules.DisplayNameResourceKey", "Localization Key")</label>
+                            <input type="text" class="form-control" data-bind="value: formData.displayNameResourceKey" placeholder="Menu.Orders">
+                            <small class="text-muted">Cok dilli menu ismi icin</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("Admin.Table.Description", "Aciklama")</label>
+                        <textarea class="form-control" rows="2" data-bind="value: formData.description"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Icon", "Icon")</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i data-bind="class: formData.icon"></i>
+                                </span>
+                                <input type="text" class="form-control" data-bind="value: formData.icon" placeholder="bi-box" readonly>
+                                <button type="button" class="btn btn-outline-secondary" data-bind="click: toggleIconPicker" title="Icon Sec">
+                                    <i class="bi bi-grid-3x3"></i>
+                                </button>
+                            </div>
+                            <!-- Icon Picker Dropdown -->
+                            <div class="position-relative">
+                                <div class="border rounded bg-white shadow-sm p-2 position-absolute w-100" style="z-index: 1050; max-height: 200px; overflow-y: auto;"
+                                     data-bind="visible: showIconPicker">
+                                    <div class="row g-1">
+                                        <!-- ko foreach: availableIcons -->
+                                        <div class="col-3 col-md-2">
+                                            <button type="button" class="btn btn-light btn-sm w-100 p-2" data-bind="click: $root.selectIcon, attr: { title: label }">
+                                                <i data-bind="class: icon" class="fs-5"></i>
+                                            </button>
+                                        </div>
+                                        <!-- /ko -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Route", "Route")</label>
+                            <input type="text" class="form-control" data-bind="value: formData.route" placeholder="/Company/Products">
+                            <small class="text-muted">Menu Section icin bos birakin</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Order", "Sira")</label>
+                            <input type="number" class="form-control" data-bind="value: formData.displayOrder" min="1">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <!-- IsMenuSection: Sadece Platform capability veya manuel giris -->
+                        <div class="col-md-4" data-bind="visible: showIsMenuSection()">
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="isMenuSection" data-bind="checked: formData.isMenuSection">
+                                <label class="form-check-label" for="isMenuSection">
+                                    <i class="bi bi-folder me-1"></i>@Html.T("Admin.Modules.IsMenuSection", "Menu Section (Baslik)")
+                                </label>
+                                <div><small class="text-muted">Isaretlenirse alt moduller gruplar</small></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="isMenuItem" data-bind="checked: formData.isMenuItem">
+                                <label class="form-check-label" for="isMenuItem">@Html.T("Admin.Table.IsMenuItem", "Menude Goster")</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="moduleIsActive" data-bind="checked: formData.isActive">
+                                <label class="form-check-label" for="moduleIsActive">@Html.T("Common.Active", "Aktif")</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-primary" data-bind="click: saveModule, enable: !isSaving()">
+                    <span data-bind="visible: isSaving()" class="spinner-border spinner-border-sm me-1"></span>
+                    <span data-bind="text: isEditing() ? '@Html.T("Common.Update", "Guncelle")' : '@Html.T("Common.Save", "Kaydet")'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+<script src="~/js/Admin/Modules.js" asp-append-version="true"></script>
+}

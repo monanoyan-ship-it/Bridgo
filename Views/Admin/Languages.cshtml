@@ -1,0 +1,182 @@
+@{
+    ViewData["Title"] = Html.T("Admin.Languages.Title", "Dil Yonetimi").ToString();
+    Layout = "_AdminLayout";
+}
+
+<div id="languages-app">
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">@Html.T("Admin.Languages.AllLanguages", "Tum Diller")</h6>
+        <button class="btn btn-primary btn-sm" data-bind="click: showAddModal">
+            <i class="bi bi-plus-lg me-1"></i> @Html.T("Admin.Languages.AddNew", "Yeni Dil")
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;">@Html.T("Admin.Table.Order", "Sira")</th>
+                        <th>@Html.T("Admin.Languages.Language", "Dil")</th>
+                        <th>@Html.T("Admin.Languages.Culture", "Kultur Kodu")</th>
+                        <th>@Html.T("Admin.Languages.SeoCode", "SEO Kodu")</th>
+                        <th style="width: 100px;">@Html.T("Admin.Languages.ResourceCount", "Kaynak")</th>
+                        <th style="width: 100px;">@Html.T("Admin.Table.Status", "Durum")</th>
+                        <th style="width: 150px;">@Html.T("Admin.Table.Actions", "Islemler")</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: languages">
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-dark" data-bind="text: displayOrder"></span>
+                        </td>
+                        <td>
+                            <span data-bind="text: flagEmoji" class="me-2"></span>
+                            <span data-bind="text: name"></span>
+                            <small class="text-muted ms-1" data-bind="text: '(' + nativeName + ')', visible: nativeName"></small>
+                            <!-- ko if: isDefault -->
+                            <span class="badge bg-primary ms-2">@Html.T("Admin.Languages.Default", "Varsayilan")</span>
+                            <!-- /ko -->
+                        </td>
+                        <td><code data-bind="text: languageCulture"></code></td>
+                        <td><code data-bind="text: uniqueSeoCode"></code></td>
+                        <td>
+                            <a href="#" class="badge bg-info text-decoration-none" data-bind="text: resourceCount, click: $parent.goToResources"></a>
+                        </td>
+                        <td>
+                            <span class="badge" data-bind="text: isActive ? '@Html.T("Common.Active", "Aktif")' : '@Html.T("Common.Inactive", "Pasif")', css: isActive ? 'bg-success' : 'bg-secondary'"></span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" title="@Html.T("Common.Edit", "Duzenle")" data-bind="click: $parent.showEditModal">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-info" title="@Html.T("Admin.Languages.Resources", "Kaynaklar")" data-bind="click: $parent.goToResources">
+                                    <i class="bi bi-translate"></i>
+                                </button>
+                                <!-- ko if: isActive -->
+                                <button class="btn btn-outline-secondary" title="@Html.T("Common.Inactive", "Pasif Yap")" data-bind="click: $parent.toggleActive, visible: !isDefault">
+                                    <i class="bi bi-toggle-on"></i>
+                                </button>
+                                <!-- /ko -->
+                                <!-- ko if: !isActive -->
+                                <button class="btn btn-outline-success" title="@Html.T("Common.Active", "Aktif Yap")" data-bind="click: $parent.toggleActive">
+                                    <i class="bi bi-toggle-off"></i>
+                                </button>
+                                <!-- /ko -->
+                                <button class="btn btn-outline-warning" title="@Html.T("Admin.Languages.SetDefault", "Varsayilan Yap")" data-bind="click: $parent.setDefault, visible: !isDefault && isActive">
+                                    <i class="bi bi-star"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-gap" title="@Html.T("Common.Delete", "Sil")" data-bind="click: $parent.deleteLanguage, visible: !isDefault">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Loading -->
+        <div class="text-center py-4" data-bind="visible: isLoading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="text-center py-5" data-bind="visible: !isLoading() && languages().length === 0">
+            <i class="bi bi-globe text-muted fs-1"></i>
+            <p class="text-muted mt-2">@Html.T("Admin.Languages.Empty", "Henuz dil tanimlanmamis")</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="languageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-bind="text: isEditing() ? '@Html.T("Admin.Languages.Edit", "Dil Duzenle")' : '@Html.T("Admin.Languages.AddNew", "Yeni Dil")'"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form data-bind="submit: saveLanguage">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Languages.Name", "Dil Adi") <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" data-bind="value: formData.name" placeholder="English" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Languages.NativeName", "Yerel Adi")</label>
+                            <input type="text" class="form-control" data-bind="value: formData.nativeName" placeholder="English">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Languages.Culture", "Kultur Kodu") <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" data-bind="value: formData.languageCulture" placeholder="en-US" required>
+                            <small class="text-muted">Ornek: tr-TR, en-US, de-DE</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Languages.SeoCode", "SEO Kodu") <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" data-bind="value: formData.uniqueSeoCode" placeholder="en" required maxlength="5">
+                            <small class="text-muted">ISO 639-1: tr, en, de</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Languages.Iso3Code", "ISO3 Kodu")</label>
+                            <input type="text" class="form-control" data-bind="value: formData.iso3Code" placeholder="eng" maxlength="5">
+                            <small class="text-muted">ISO 639-2: tur, eng, deu</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Languages.FlagEmoji", "Bayrak Emoji")</label>
+                            <input type="text" class="form-control" data-bind="value: formData.flagEmoji" placeholder="&#x1F1F9;&#x1F1F7;">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Languages.FlagImage", "Bayrak Dosyasi")</label>
+                            <input type="text" class="form-control" data-bind="value: formData.flagImageFileName" placeholder="tr.png">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Order", "Siralama")</label>
+                            <input type="number" class="form-control" data-bind="value: formData.displayOrder" min="0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="isActive" data-bind="checked: formData.isActive">
+                                <label class="form-check-label" for="isActive">@Html.T("Common.Active", "Aktif")</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="rtl" data-bind="checked: formData.rtl">
+                                <label class="form-check-label" for="rtl">@Html.T("Admin.Languages.Rtl", "Sagdan Sola (RTL)")</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="isGeoTranslationEnabled" data-bind="checked: formData.isGeoTranslationEnabled">
+                                <label class="form-check-label" for="isGeoTranslationEnabled">@Html.T("Admin.Languages.GeoTranslation", "Cografi Ceviriler")</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-primary" data-bind="click: saveLanguage, enable: !isSaving()">
+                    <span data-bind="visible: isSaving()" class="spinner-border spinner-border-sm me-1"></span>
+                    <span data-bind="text: isEditing() ? '@Html.T("Common.Update", "Guncelle")' : '@Html.T("Common.Save", "Kaydet")'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+<script src="~/js/Admin/Languages.js" asp-append-version="true"></script>
+}

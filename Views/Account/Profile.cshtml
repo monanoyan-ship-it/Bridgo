@@ -1,0 +1,155 @@
+@model Bridgo.Models.Identity.ApplicationUser
+@{
+    ViewData["Title"] = Html.T("Account.Profile.Title", "Profil");
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="row">
+            <!-- Profil Bilgileri -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person-circle me-2"></i>@Html.T("Account.Profile.Info", "Profil Bilgileri")
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="avatar-lg bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
+                                <span class="text-primary fs-2">@(Model.FirstName?.FirstOrDefault().ToString().ToUpper())@(Model.LastName?.FirstOrDefault().ToString().ToUpper())</span>
+                            </div>
+                        </div>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th class="text-muted" style="width: 40%;">@Html.T("Account.Profile.Name", "Ad Soyad")</th>
+                                <td>@Model.FirstName @Model.LastName</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">@Html.T("Account.Fields.Email", "E-posta")</th>
+                                <td>@Model.Email</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">@Html.T("Account.Profile.Phone", "Telefon")</th>
+                                <td>@(Model.PhoneNumber ?? "-")</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">@Html.T("Account.Profile.LastLogin", "Son Giris")</th>
+                                <td>@(Model.LastLoginAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sifre Degistir -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-key me-2"></i>@Html.T("Account.Profile.ChangePassword", "Sifre Degistir")
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="changePasswordForm">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Account.Profile.CurrentPassword", "Mevcut Sifre") <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" id="currentPassword" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Account.Profile.NewPassword", "Yeni Sifre") <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                    <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                </div>
+                                <small class="text-muted">@Html.T("Account.Profile.PasswordHint", "En az 6 karakter")</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Account.Profile.ConfirmPassword", "Yeni Sifre Tekrar") <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100" id="btnChangePassword">
+                                <i class="bi bi-check-lg me-1"></i>@Html.T("Account.Profile.ChangePasswordBtn", "Sifreyi Degistir")
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geri Don -->
+        <div class="text-center">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>@Html.T("Common.Back", "Geri Don")
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+$(function() {
+    $('#changePasswordForm').on('submit', function(e) {
+        e.preventDefault();
+
+        var currentPassword = $('#currentPassword').val();
+        var newPassword = $('#newPassword').val();
+        var confirmPassword = $('#confirmPassword').val();
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            toastr.warning('@Html.T("Account.Profile.FillAllFields", "Lutfen tum alanlari doldurun")');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            toastr.warning('@Html.T("Account.Profile.PasswordMismatch", "Yeni sifreler eslesmedi")');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            toastr.warning('@Html.T("Account.Profile.PasswordTooShort", "Sifre en az 6 karakter olmali")');
+            return;
+        }
+
+        var $btn = $('#btnChangePassword');
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>@Html.T("Common.Saving", "Kaydediliyor...")');
+
+        $.ajax({
+            url: '/Account/ChangePassword',
+            method: 'POST',
+            contentType: 'application/json',
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            data: JSON.stringify({
+                currentPassword: currentPassword,
+                newPassword: newPassword,
+                confirmPassword: confirmPassword
+            })
+        })
+        .done(function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                $('#changePasswordForm')[0].reset();
+            } else {
+                toastr.error(response.message);
+            }
+        })
+        .fail(function() {
+            toastr.error('@Html.T("Common.Error", "Bir hata olustu")');
+        })
+        .always(function() {
+            $btn.prop('disabled', false).html('<i class="bi bi-check-lg me-1"></i>@Html.T("Account.Profile.ChangePasswordBtn", "Sifreyi Degistir")');
+        });
+    });
+});
+</script>
+}

@@ -1,0 +1,35 @@
+@using Bridgo.DTOs.Catalog
+@model Tuple<CatalogCategoryDto, int?>
+
+@{
+    var category = Model.Item1;
+    var activeCategoryId = Model.Item2;
+    var hasChildren = category.Children?.Any() == true;
+    var paddingClass = category.Level > 0 ? $"ps-{Math.Min(category.Level + 2, 5)}" : "";
+    var isActive = category.Id == activeCategoryId;
+}
+
+<div class="category-item">
+    <a href="/Catalog/Category/@category.Slug"
+       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center @paddingClass @(isActive ? "active" : "")"
+       data-category-id="@category.Id">
+        <span>
+            @if (!string.IsNullOrEmpty(category.Icon))
+            {
+                <i class="bi @category.Icon me-2"></i>
+            }
+            @category.Name
+        </span>
+        <span class="badge @(isActive ? "bg-light text-primary" : "bg-secondary") rounded-pill">@category.ProductCount</span>
+    </a>
+
+    @if (hasChildren)
+    {
+        <div class="category-children">
+            @foreach (var child in category.Children!)
+            {
+                @await Html.PartialAsync("_CategoryTreeItemActive", new Tuple<CatalogCategoryDto, int?>(child, activeCategoryId))
+            }
+        </div>
+    }
+</div>

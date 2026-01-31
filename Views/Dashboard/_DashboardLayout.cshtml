@@ -1,0 +1,769 @@
+@using Bridgo.Services.Interfaces
+@using Bridgo.Models.Identity
+@{
+    Layout = null;
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentPath = Context.Request.Path.ToString();
+
+    var capabilities = ViewBag.Capabilities as List<VendorCapabilityDto> ?? new List<VendorCapabilityDto>();
+    var modules = ViewBag.Modules as List<CapabilityModuleDto> ?? new List<CapabilityModuleDto>();
+    var platformModules = ViewBag.PlatformModules as List<CapabilityModuleDto> ?? new List<CapabilityModuleDto>();
+    var modulesByCapability = ViewBag.ModulesByCapability as Dictionary<int, List<CapabilityModuleDto>> ?? new Dictionary<int, List<CapabilityModuleDto>>();
+    var activeCapabilityId = ViewBag.ActiveCapabilityId as int?;
+    var vendor = ViewBag.Vendor;
+    var user = ViewBag.User as ApplicationUser;
+
+    // Capability collapsible sections kullanilacak
+    var showCapabilitySections = capabilities.Count >= 1;
+
+    // Root modulleri al (parent'i olmayan)
+    // NOT: Erisim kontrolu controller'da yapiliyor (Owner/Admin tum modulleri gorur, digerleri RBAC'a gore)
+    // IsMenuSection = true olanlar section header, false olanlar normal menu ogeleri
+    var rootPlatformModules = platformModules.Where(m => m.ParentId == null).OrderBy(m => m.DisplayOrder).ToList();
+
+    // Platform standalone moduller (Dashboard gibi)
+    var platformStandaloneModules = rootPlatformModules.Where(m => !m.IsMenuSection).ToList();
+
+    // Platform section moduller
+    var platformSectionModules = rootPlatformModules.Where(m => m.IsMenuSection).ToList();
+
+    // Eski yapiya uyumluluk (tek capability veya fallback icin)
+    var rootModules = modules.Where(m => m.ParentId == null).OrderBy(m => m.DisplayOrder).ToList();
+    var standaloneModules = rootModules.Where(m => !m.IsMenuSection).ToList();
+    var sectionModules = rootModules.Where(m => m.IsMenuSection).ToList();
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Bridgo Dashboard</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <nav class="dashboard-sidebar d-flex flex-column" id="dashboardSidebar">
+            <a href="/" class="sidebar-brand text-decoration-none">
+                <i class="bi bi-truck me-2"></i>
+                <span>Bridgo</span>
+            </a>
+
+            @if (vendor != null)
+            {
+                <div class="px-3 py-2 border-bottom border-primary-subtle company-name">
+                    <small class="text-white-50 d-block">@Html.T("Dashboard.Company")</small>
+                    <span class="text-white fw-medium text-truncate d-block">@vendor.CompanyName</span>
+                </div>
+            }
+
+            <div class="flex-grow-1 py-2 overflow-auto">
+                @{
+                    // Helper: Get localized name for module
+                    string GetModuleName(CapabilityModuleDto m) =>
+                        !string.IsNullOrEmpty(m.DisplayNameResourceKey) ? Html.T(m.DisplayNameResourceKey).ToString() :
+                        !string.IsNullOrEmpty(m.DisplayName) ? m.DisplayName : m.Name;
+
+                    // Helper: Get localized name for capability
+                    string GetCapabilityName(VendorCapabilityDto c) =>
+                        !string.IsNullOrEmpty(c.NameResourceKey) ? Html.T(c.NameResourceKey).ToString() : c.Name;
+
+                    // Helper: Route aktif mi? (sadece tam eslesme)
+                    bool IsRouteActive(string route)
+                    {
+                        if (string.IsNullOrEmpty(route)) return false;
+                        return currentPath.Equals(route, StringComparison.OrdinalIgnoreCase);
+                    }
+
+                    // Helper: Recursive olarak child'larda aktif route var mi?
+                    bool HasActiveChildRecursive(CapabilityModuleDto module)
+                    {
+                        foreach (var child in module.Children)
+                        {
+                            if (IsRouteActive(child.Route)) return true;
+                            if (child.Children.Any() && HasActiveChildRecursive(child)) return true;
+                        }
+                        return false;
+                    }
+
+                    // Helper method to render module menu item
+                    void RenderModuleItem(CapabilityModuleDto module)
+                    {
+                        var hasChildren = module.Children.Any();
+                        var isModuleActive = IsRouteActive(module.Route) || HasActiveChildRecursive(module);
+                        var moduleName = GetModuleName(module);
+                        var menuId = "menu-" + module.Id;
+
+                        if (hasChildren)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link d-flex justify-content-between align-items-center @(isModuleActive ? "active" : "collapsed")"
+                                   data-bs-toggle="collapse" href="#@menuId" role="button"
+                                   aria-expanded="@(isModuleActive ? "true" : "false")" data-title="@moduleName">
+                                    <span><i class="@module.Icon"></i> <span>@moduleName</span></span>
+                                    <i class="bi bi-chevron-down small chevron-icon"></i>
+                                </a>
+                                <div class="collapse @(isModuleActive ? "show" : "")" id="@menuId">
+                                    <ul class="nav flex-column sidebar-submenu">
+                                        @foreach (var child in module.Children)
+                                        {
+                                            var childActive = IsRouteActive(child.Route);
+                                            var childName = GetModuleName(child);
+                                            <li class="nav-item">
+                                                <a class="nav-link @(childActive ? "active" : "")" href="@child.Route" data-title="@childName">
+                                                    <i class="@child.Icon"></i> <span>@childName</span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @(isModuleActive ? "active" : "")" href="@module.Route" data-title="@moduleName">
+                                    <i class="@module.Icon"></i> <span>@moduleName</span>
+                                </a>
+                            </li>
+                        }
+                    }
+                }
+
+                <!-- PLATFORM STANDALONE MODULLER (Dashboard gibi) -->
+                @if (platformStandaloneModules.Any())
+                {
+                    <div class="sidebar-section">@Html.T("Dashboard.Section.Dashboard")</div>
+                    <ul class="nav flex-column">
+                        @foreach (var module in platformStandaloneModules)
+                        {
+                            RenderModuleItem(module);
+                        }
+                    </ul>
+                }
+
+                <!-- PLATFORM SECTION MODULLER (Account, Settings gibi) -->
+                @foreach (var sectionModule in platformSectionModules)
+                {
+                    var sectionName = GetModuleName(sectionModule);
+                    var hasActiveChild = HasActiveChildRecursive(sectionModule);
+                    var sectionId = "section-" + sectionModule.Id;
+
+                    <a class="sidebar-section d-flex justify-content-between align-items-center @(hasActiveChild ? "" : "collapsed")"
+                       data-bs-toggle="collapse" href="#@sectionId" role="button"
+                       aria-expanded="@(hasActiveChild ? "true" : "false")">
+                        <span>@sectionName</span>
+                        <i class="bi bi-chevron-down small"></i>
+                    </a>
+                    <div class="collapse @(hasActiveChild ? "show" : "")" id="@sectionId">
+                        <ul class="nav flex-column">
+                            @foreach (var module in sectionModule.Children)
+                            {
+                                RenderModuleItem(module);
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <!-- CAPABILITY BOLUMLERI - Her capability acilir kapanir section -->
+                @foreach (var cap in capabilities)
+                {
+                    if (!modulesByCapability.ContainsKey(cap.Id) || !modulesByCapability[cap.Id].Any())
+                        continue;
+
+                    var capModules = modulesByCapability[cap.Id];
+                    var capRootModules = capModules.Where(m => m.ParentId == null).OrderBy(m => m.DisplayOrder).ToList();
+                    var capName = GetCapabilityName(cap);
+                    var capSectionId = "capability-" + cap.Id;
+                    var hasActiveCapChild = capModules.Any(m => IsRouteActive(m.Route) || m.Children.Any(c => IsRouteActive(c.Route)));
+
+                    <a class="sidebar-section sidebar-capability d-flex justify-content-between align-items-center @(hasActiveCapChild ? "" : "collapsed")"
+                       data-bs-toggle="collapse" href="#@capSectionId" role="button"
+                       aria-expanded="@(hasActiveCapChild ? "true" : "false")">
+                        <span><i class="@cap.Icon me-1"></i> @capName</span>
+                        <i class="bi bi-chevron-down small"></i>
+                    </a>
+                    <div class="collapse @(hasActiveCapChild ? "show" : "")" id="@capSectionId">
+                        @foreach (var capRootModule in capRootModules)
+                        {
+                            if (capRootModule.IsMenuSection)
+                            {
+                                // Section modulu - alt ogeleri goster
+                                var innerSectionName = GetModuleName(capRootModule);
+                                var innerHasActiveChild = HasActiveChildRecursive(capRootModule);
+                                var innerSectionId = "cap-section-" + capRootModule.Id;
+
+                                <a class="sidebar-section sidebar-subsection d-flex justify-content-between align-items-center @(innerHasActiveChild ? "" : "collapsed")"
+                                   data-bs-toggle="collapse" href="#@innerSectionId" role="button"
+                                   aria-expanded="@(innerHasActiveChild ? "true" : "false")">
+                                    <span>@innerSectionName</span>
+                                    <i class="bi bi-chevron-down small"></i>
+                                </a>
+                                <div class="collapse @(innerHasActiveChild ? "show" : "")" id="@innerSectionId">
+                                    <ul class="nav flex-column">
+                                        @foreach (var module in capRootModule.Children)
+                                        {
+                                            RenderModuleItem(module);
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            else
+                            {
+                                // Normal menu ogesi
+                                <ul class="nav flex-column">
+                                    @{ RenderModuleItem(capRootModule); }
+                                </ul>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="sidebar-footer">
+                <!-- Hizmet Ekle Butonu -->
+                <a class="nav-link text-white-50" href="#" id="btnAddCapability" data-bs-toggle="modal" data-bs-target="#addCapabilityModal" data-title="@Html.T("Dashboard.AddCapability")">
+                    <i class="bi bi-plus-circle"></i> <span>@Html.T("Dashboard.AddCapability", "Hizmet Ekle")</span>
+                </a>
+                <a class="nav-link text-white-50" asp-controller="Home" asp-action="Index" data-title="@Html.T("Nav.Home")">
+                    <i class="bi bi-house"></i> <span>@Html.T("Dashboard.ReturnHome")</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="dashboard-main" id="dashboardMain">
+            <!-- Header -->
+            <header class="dashboard-header px-4 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <button class="sidebar-toggle me-3" id="sidebarToggle" title="Menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div>
+                        <h5 class="mb-0">@ViewData["Title"]</h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted me-2 d-none d-md-inline">
+                        @User.Identity?.Name
+                    </span>
+                    <!-- Language Dropdown -->
+                    <div class="dropdown" id="languageDropdown">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="languageBtn" title="@Html.T("Common.Language", "Dil")">
+                            <i class="bi bi-translate"></i>
+                            <span class="d-none d-md-inline ms-1" id="currentLanguageName">TR</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" id="languageList" style="min-width: 150px;">
+                            <div class="text-center py-2 text-muted small">
+                                <i class="bi bi-hourglass-split"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Notification Dropdown -->
+                    <div class="dropdown" id="notificationDropdown">
+                        <button class="btn btn-outline-secondary btn-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
+                            <i class="bi bi-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge">
+                                0
+                            </span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 320px; max-height: 400px;">
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                <h6 class="mb-0">Bildirimler</h6>
+                                <button class="btn btn-link btn-sm p-0" id="markAllReadBtn" style="font-size: 12px;">Tümünü okundu işaretle</button>
+                            </div>
+                            <div class="notification-list" id="notificationList" style="max-height: 300px; overflow-y: auto;">
+                                <div class="text-center py-4 text-muted" id="noNotifications">
+                                    <i class="bi bi-bell-slash fs-3 d-block mb-2"></i>
+                                    Bildirim yok
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-primary btn-sm" title="@Html.T("Account.Profile.Title", "Profil")">
+                        <i class="bi bi-person-circle"></i>
+                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> <span class="d-none d-md-inline">@Html.T("Dashboard.Logout")</span>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-grow-1 p-4 bg-light">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Shared Confirm Modal -->
+    <div class="modal fade" id="sharedConfirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">@Html.T("Common.Confirm")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmModalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel")</button>
+                    <button type="button" class="btn" id="confirmModalBtn">
+                        <i id="confirmModalIcon"></i> <span id="confirmModalBtnText">@Html.T("Common.Confirm")</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Capability Modal -->
+    <div class="modal fade" id="addCapabilityModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>@Html.T("Dashboard.AddCapability", "Hizmet Ekle")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">@Html.T("Dashboard.AddCapability.Description", "Sirketinize yeni bir hizmet eklemek icin asagidan secim yapin. Talebiniz admin onayina sunulacaktir.")</p>
+
+                    <!-- Available Capabilities -->
+                    <div id="availableCapabilities">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <div class="mt-2 text-muted">Yukleniyor...</div>
+                        </div>
+                    </div>
+
+                    <!-- My Requests -->
+                    <div class="mt-4">
+                        <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-clock-history me-2"></i>@Html.T("Dashboard.MyCapabilityRequests", "Taleplerim")</h6>
+                        <div id="myCapabilityRequests">
+                            <div class="text-center text-muted py-2">
+                                <small>Henuz talep yok</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/knockout/knockout-latest.js"></script>
+    <script src="~/lib/toastr/toastr.min.js"></script>
+    <script src="~/lib/signalr/signalr.min.js"></script>
+    <script src="~/js/Shared/confirm-modal.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+
+        // Sidebar Toggle
+        (function() {
+            var sidebar = document.getElementById('dashboardSidebar');
+            var main = document.getElementById('dashboardMain');
+            var toggle = document.getElementById('sidebarToggle');
+            var overlay = document.getElementById('sidebarOverlay');
+            var storageKey = 'Bridgo_sidebar_collapsed';
+
+            if (!sidebar || !main || !toggle) {
+                console.error('Sidebar elements not found');
+                return;
+            }
+
+            // Load saved state
+            var isCollapsed = localStorage.getItem(storageKey) === 'true';
+            if (isCollapsed && window.innerWidth > 768) {
+                sidebar.classList.add('collapsed');
+                main.classList.add('expanded');
+            }
+
+            // Toggle click
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Toggle clicked');
+                if (window.innerWidth <= 768) {
+                    // Mobile: slide in/out
+                    sidebar.classList.toggle('mobile-open');
+                    if (overlay) overlay.classList.toggle('show');
+                } else {
+                    // Desktop: collapse/expand
+                    sidebar.classList.toggle('collapsed');
+                    main.classList.toggle('expanded');
+                    localStorage.setItem(storageKey, sidebar.classList.contains('collapsed'));
+                }
+            });
+
+            // Overlay click (mobile)
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('show');
+                });
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('mobile-open');
+                    if (overlay) overlay.classList.remove('show');
+                }
+            });
+        })();
+
+        // Notification System with SignalR
+        (function() {
+            var badge = document.getElementById('notificationBadge');
+            var list = document.getElementById('notificationList');
+            var noNotifications = document.getElementById('noNotifications');
+            var markAllBtn = document.getElementById('markAllReadBtn');
+            var bellBtn = document.getElementById('notificationBell');
+            var unreadCount = 0;
+
+            // SignalR connection
+            var connection = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/notifications")
+                .withAutomaticReconnect()
+                .build();
+
+            // Handle incoming real-time notifications
+            connection.on("ReceiveNotification", function(notification) {
+                console.log("New notification received:", notification);
+
+                // Update badge
+                unreadCount++;
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.remove('d-none');
+
+                // Show toast notification
+                toastr.info(notification.message, notification.title, {
+                    onclick: function() {
+                        if (notification.actionUrl) {
+                            window.location.href = notification.actionUrl;
+                        }
+                    }
+                });
+
+                // Add to notification list if dropdown is open
+                if (list.querySelector('[data-notification-id]')) {
+                    var icon = notification.icon || 'bi-bell';
+                    var newItem = '<a href="' + (notification.actionUrl || '#') + '" class="dropdown-item d-flex py-2 border-bottom bg-light" data-notification-id="' + notification.id + '">' +
+                        '<div class="flex-shrink-0 me-2"><i class="' + icon + '"></i></div>' +
+                        '<div class="flex-grow-1">' +
+                        '<div class="fw-semibold" style="font-size: 13px;">' + notification.title + '</div>' +
+                        '<div class="text-muted small text-truncate" style="max-width: 250px;">' + notification.message + '</div>' +
+                        '<div class="text-muted" style="font-size: 11px;">simdi</div>' +
+                        '</div></a>';
+                    list.insertAdjacentHTML('afterbegin', newItem);
+                    noNotifications.classList.add('d-none');
+                }
+            });
+
+            // Start SignalR connection
+            connection.start()
+                .then(function() {
+                    console.log("SignalR connected for notifications");
+                })
+                .catch(function(err) {
+                    console.error("SignalR connection error:", err);
+                });
+
+            function loadUnreadCount() {
+                fetch('/api/notifications/unread-count')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        unreadCount = data.unreadCount;
+                        if (data.unreadCount > 0) {
+                            badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                            badge.classList.remove('d-none');
+                        } else {
+                            badge.classList.add('d-none');
+                        }
+                    })
+                    .catch(function() {});
+            }
+
+            function loadNotifications() {
+                fetch('/api/notifications?limit=10')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data || data.length === 0) {
+                            noNotifications.classList.remove('d-none');
+                            return;
+                        }
+                        noNotifications.classList.add('d-none');
+                        var html = data.map(function(n) {
+                            var unreadClass = n.isRead ? '' : 'bg-light';
+                            var icon = n.icon || 'bi-bell';
+                            return '<a href="' + (n.actionUrl || '#') + '" class="dropdown-item d-flex py-2 border-bottom ' + unreadClass + '" data-notification-id="' + n.id + '">' +
+                                '<div class="flex-shrink-0 me-2"><i class="' + icon + '"></i></div>' +
+                                '<div class="flex-grow-1">' +
+                                '<div class="fw-semibold" style="font-size: 13px;">' + n.title + '</div>' +
+                                '<div class="text-muted small text-truncate" style="max-width: 250px;">' + n.message + '</div>' +
+                                '<div class="text-muted" style="font-size: 11px;">' + n.timeAgo + '</div>' +
+                                '</div></a>';
+                        }).join('');
+                        list.innerHTML = html;
+
+                        // Click handler for notifications
+                        list.querySelectorAll('[data-notification-id]').forEach(function(el) {
+                            el.addEventListener('click', function(e) {
+                                var id = this.getAttribute('data-notification-id');
+                                fetch('/api/notifications/' + id + '/mark-read', { method: 'POST' });
+                            });
+                        });
+                    })
+                    .catch(function() {});
+            }
+
+            // Mark all as read
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fetch('/api/notifications/mark-all-read', { method: 'POST' })
+                        .then(function() {
+                            unreadCount = 0;
+                            badge.classList.add('d-none');
+                            loadNotifications();
+                        });
+                });
+            }
+
+            // Load notifications when dropdown opens
+            if (bellBtn) {
+                bellBtn.addEventListener('click', function() {
+                    loadNotifications();
+                });
+            }
+
+            // Initial load
+            loadUnreadCount();
+        })();
+
+        // Language Selector
+        (function() {
+            var languageBtn = document.getElementById('languageBtn');
+            var languageList = document.getElementById('languageList');
+            var currentLanguageName = document.getElementById('currentLanguageName');
+            var languagesLoaded = false;
+            var currentLanguageId = null;
+
+            function loadLanguages() {
+                if (languagesLoaded) return;
+
+                fetch('/api/localization/languages')
+                    .then(function(response) { return response.json(); })
+                    .then(function(languages) {
+                        languagesLoaded = true;
+                        if (!languages || languages.length === 0) {
+                            languageList.innerHTML = '<div class="dropdown-item text-muted small">Dil bulunamadi</div>';
+                            return;
+                        }
+
+                        // Get current language
+                        fetch('/api/localization/current')
+                            .then(function(response) { return response.json(); })
+                            .then(function(current) {
+                                currentLanguageId = current.id;
+                                if (current.uniqueSeoCode) {
+                                    currentLanguageName.textContent = current.uniqueSeoCode.toUpperCase();
+                                }
+
+                                // Build dropdown items
+                                var html = '';
+                                languages.forEach(function(lang) {
+                                    var isActive = lang.id === currentLanguageId;
+                                    var activeClass = isActive ? 'active bg-primary text-white' : '';
+                                    var checkIcon = isActive ? '<i class="bi bi-check2 ms-2"></i>' : '';
+                                    html += '<a href="#" class="dropdown-item d-flex justify-content-between align-items-center ' + activeClass + '" data-lang-id="' + lang.id + '" data-lang-code="' + lang.uniqueSeoCode + '">' +
+                                        '<span>' + lang.name + '</span>' + checkIcon +
+                                        '</a>';
+                                });
+                                languageList.innerHTML = html;
+
+                                // Add click handlers
+                                languageList.querySelectorAll('[data-lang-id]').forEach(function(item) {
+                                    item.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        var langId = this.getAttribute('data-lang-id');
+                                        changeLanguage(langId);
+                                    });
+                                });
+                            });
+                    })
+                    .catch(function(err) {
+                        console.error('Error loading languages:', err);
+                        languageList.innerHTML = '<div class="dropdown-item text-danger small">Hata olustu</div>';
+                    });
+            }
+
+            function changeLanguage(languageId) {
+                fetch('/api/localization/current/' + languageId, { method: 'POST' })
+                    .then(function(response) {
+                        if (response.ok) {
+                            // Also save to user profile
+                            fetch('/api/account/language', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ languageId: parseInt(languageId) })
+                            }).finally(function() {
+                                // Reload page to apply new language
+                                window.location.reload();
+                            });
+                        } else {
+                            toastr.error('Dil degistirilemedi');
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('Error changing language:', err);
+                        toastr.error('Dil degistirilemedi');
+                    });
+            }
+
+            // Load languages when dropdown opens
+            if (languageBtn) {
+                languageBtn.addEventListener('click', function() {
+                    loadLanguages();
+                });
+            }
+        })();
+
+        // Capability Request Modal
+        (function() {
+            var modal = document.getElementById('addCapabilityModal');
+            var availableContainer = document.getElementById('availableCapabilities');
+            var myRequestsContainer = document.getElementById('myCapabilityRequests');
+
+            if (!modal) return;
+
+            // Load when modal opens
+            modal.addEventListener('show.bs.modal', function() {
+                loadAvailableCapabilities();
+                loadMyRequests();
+            });
+
+            function loadAvailableCapabilities() {
+                fetch('/api/capability-requests/available')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data || data.length === 0) {
+                            availableContainer.innerHTML = '<div class="alert alert-info mb-0"><i class="bi bi-info-circle me-2"></i>Tum hizmetlere zaten sahipsiniz.</div>';
+                            return;
+                        }
+
+                        var html = '<div class="row g-3">';
+                        data.forEach(function(cap) {
+                            var btnClass = cap.hasPendingRequest ? 'btn-secondary disabled' : 'btn-outline-primary';
+                            var btnText = cap.hasPendingRequest ? 'Talep Edildi' : 'Talep Et';
+                            var btnIcon = cap.hasPendingRequest ? 'bi-hourglass-split' : 'bi-plus-lg';
+
+                            html += '<div class="col-md-6">' +
+                                '<div class="card h-100">' +
+                                '<div class="card-body">' +
+                                '<h6 class="card-title"><i class="' + (cap.icon || 'bi-box') + ' me-2"></i>' + cap.name + '</h6>' +
+                                '<p class="card-text small text-muted">' + (cap.description || '') + '</p>' +
+                                '</div>' +
+                                '<div class="card-footer bg-transparent border-0">' +
+                                '<button class="btn btn-sm ' + btnClass + '" data-cap-id="' + cap.id + '" data-cap-name="' + cap.name + '" ' + (cap.hasPendingRequest ? 'disabled' : '') + '>' +
+                                '<i class="' + btnIcon + ' me-1"></i>' + btnText + '</button>' +
+                                '</div></div></div>';
+                        });
+                        html += '</div>';
+                        availableContainer.innerHTML = html;
+
+                        // Add click handlers
+                        availableContainer.querySelectorAll('[data-cap-id]').forEach(function(btn) {
+                            if (!btn.disabled) {
+                                btn.addEventListener('click', function() {
+                                    requestCapability(this.getAttribute('data-cap-id'), this.getAttribute('data-cap-name'));
+                                });
+                            }
+                        });
+                    })
+                    .catch(function(err) {
+                        console.error('Error loading capabilities:', err);
+                        availableContainer.innerHTML = '<div class="alert alert-danger mb-0">Hizmetler yuklenemedi</div>';
+                    });
+            }
+
+            function loadMyRequests() {
+                fetch('/api/capability-requests/my')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data || data.length === 0) {
+                            myRequestsContainer.innerHTML = '<div class="text-center text-muted py-2"><small>Henuz talep yok</small></div>';
+                            return;
+                        }
+
+                        var html = '<div class="list-group list-group-flush">';
+                        data.forEach(function(req) {
+                            var statusClass = req.statusCssClass || 'bg-secondary';
+                            html += '<div class="list-group-item d-flex justify-content-between align-items-center px-0">' +
+                                '<div>' +
+                                '<i class="' + (req.capabilityIcon || 'bi-box') + ' me-2"></i>' +
+                                '<span>' + req.capabilityName + '</span>' +
+                                '<small class="text-muted ms-2">' + new Date(req.createdAt).toLocaleDateString('tr-TR') + '</small>' +
+                                '</div>' +
+                                '<span class="badge ' + statusClass + '">' + req.statusName + '</span>' +
+                                '</div>';
+                        });
+                        html += '</div>';
+                        myRequestsContainer.innerHTML = html;
+                    })
+                    .catch(function(err) {
+                        console.error('Error loading requests:', err);
+                    });
+            }
+
+            function requestCapability(capId, capName) {
+                if (!confirm('\"' + capName + '\" hizmeti icin talep olusturmak istiyor musunuz?')) return;
+
+                fetch('/api/capability-requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ capabilityId: parseInt(capId), notes: '' })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(result) {
+                    if (result.success) {
+                        toastr.success(result.message || 'Talep olusturuldu');
+                        loadAvailableCapabilities();
+                        loadMyRequests();
+                    } else {
+                        toastr.error(result.message || 'Talep olusturulamadi');
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Error creating request:', err);
+                    toastr.error('Talep olusturulamadi');
+                });
+            }
+        })();
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

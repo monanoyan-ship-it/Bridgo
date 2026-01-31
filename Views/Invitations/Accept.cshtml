@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = Html.T("Invitations.Accept.Title", "Daveti Kabul Et").ToString();
+    Layout = "_Layout";
+}
+
+<div id="accept-app" class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <!-- Invalid/Error State -->
+            @if (ViewBag.IsValid == false)
+            {
+                <div class="card shadow">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+                        <h3 class="mt-4">@Html.T("Invitations.Accept.Invalid", "Gecersiz Davet")</h3>
+                        <p class="text-muted">@ViewBag.Error</p>
+                        <div class="mt-4">
+                            <a href="/" class="btn btn-primary">
+                                <i class="bi bi-house"></i> @Html.T("Common.BackToHome", "Ana Sayfaya Don")
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Valid Invitation -->
+                <div class="text-center mb-4">
+                    <i class="bi bi-envelope-check text-success" style="font-size: 3rem;"></i>
+                    <h2 class="mt-3">@Html.T("Invitations.Accept.Title", "Daveti Kabul Et")</h2>
+                    <p class="text-muted">@Html.T("Invitations.Accept.Subtitle", "Asagidaki formu doldurarak ekibe katilin")</p>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-building text-primary me-2"></i>
+                            <div>
+                                <strong>@ViewBag.Member?.VendorName</strong>
+                                <br />
+                                <small class="text-muted">@ViewBag.Member?.Email</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Error Message -->
+                        <div data-bind="visible: errorMessage" class="alert alert-danger alert-dismissible fade show">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span data-bind="text: errorMessage"></span>
+                            <button type="button" class="btn-close" data-bind="click: function() { errorMessage(''); }"></button>
+                        </div>
+
+                        <!-- Success Message -->
+                        <div data-bind="visible: isSuccess" class="text-center py-4">
+                            <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">@Html.T("Invitations.Accept.Success.Title", "Kayit Basarili!")</h4>
+                            <p class="text-muted">@Html.T("Invitations.Accept.Success.Message", "Hesabiniz olusturuldu ve ekibe eklendiniz.")</p>
+                            <a href="/Account/Login" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right"></i> @Html.T("Account.Login.Title", "Giris Yap")
+                            </a>
+                        </div>
+
+                        <!-- Registration Form -->
+                        <form data-bind="visible: !isSuccess(), submit: register">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Account.Fields.FirstName", "Ad") <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" data-bind="value: firstName" required maxlength="100" placeholder="@Html.T("Account.Fields.FirstName.Placeholder", "Adiniz")" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Account.Fields.LastName", "Soyad") <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" data-bind="value: lastName" required maxlength="100" placeholder="@Html.T("Account.Fields.LastName.Placeholder", "Soyadiniz")" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Account.Fields.Password", "Sifre") <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input data-bind="attr: { type: showPassword() ? 'text' : 'password' }, value: password"
+                                           class="form-control" required minlength="6" placeholder="@Html.T("Account.Fields.Password.Placeholder", "En az 6 karakter")" />
+                                    <button class="btn btn-outline-secondary" type="button" data-bind="click: togglePassword">
+                                        <i data-bind="css: { 'bi-eye': !showPassword(), 'bi-eye-slash': showPassword() }"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">@Html.T("Account.Fields.Password.Requirements", "En az 6 karakter, buyuk harf, kucuk harf ve rakam icermeli")</div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">@Html.T("Account.Fields.ConfirmPassword", "Sifre Tekrar") <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" data-bind="value: confirmPassword" required placeholder="@Html.T("Account.Fields.ConfirmPassword.Placeholder", "Sifrenizi tekrar girin")" />
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" data-bind="disable: isLoading">
+                                    <span data-bind="visible: !isLoading()">
+                                        <i class="bi bi-person-plus"></i> @Html.T("Invitations.Accept.Submit", "Kaydol ve Ekibe Katil")
+                                    </span>
+                                    <span data-bind="visible: isLoading()">
+                                        <span class="spinner-border spinner-border-sm"></span> @Html.T("Common.Saving", "Kaydediliyor...")
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted small">
+                        @Html.T("Invitations.Accept.HasAccount", "Zaten hesabiniz var mi?") <a href="/Account/Login">@Html.T("Account.Login.Title", "Giris Yap")</a>
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.IsValid == true)
+{
+    @section Scripts {
+        <script>
+            var invitationToken = '@ViewBag.Token';
+        </script>
+        <script src="~/js/Invitations/Accept.js" asp-append-version="true"></script>
+    }
+}

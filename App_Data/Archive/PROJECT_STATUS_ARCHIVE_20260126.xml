@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    PROJECT STATUS ARCHIVE - 2026-01-26
+    Task 102-126 (2025-12-28 to 2026-01-26)
+    Archived from main PROJECT_STATUS.xml
+-->
+<ArchivedTasks>
+    <Task id="102" date="2025-12-28">
+        <Title>Incoterms Sistemi + Financing Gelistirmeleri</Title>
+        <Description>Incoterms enum (EXW, FCA, CPT, CIP, DAP, DPU, DDP, FAS, FOB, CFR, CIF), Order.Incoterm field, FinancingRequest genisletmeleri (InterestRateRange, ExpectedROI, MaxOfferCount)</Description>
+    </Task>
+    <Task id="103" date="2025-12-28">
+        <Title>ProductInquiry Entity Senkronizasyonu + Hata Duzeltmeleri</Title>
+        <Description>ProductInquiry entity DB ile senkronizasyon, FavoriteSuppliers DOM ID duzeltmesi, CompareProposals pattern uyumu</Description>
+    </Task>
+    <Task id="104" date="2025-12-28">
+        <Title>Pattern Uyumluluk Duzeltmeleri + API/Binding Hatalari</Title>
+        <Description>FavoriteSuppliers modal donusumu, DiscoverSuppliers link kaldirilmasi, MyDemands kategori API duzeltmesi, Checkout/Quotes KnockoutJS binding duzeltmesi</Description>
+    </Task>
+    <Task id="105" date="2025-12-28">
+        <Title>Quotes Sayfasi -> MyOrders Modal Donusumu</Title>
+        <Description>/Checkout/Quotes sayfasi kaldirildi, islevleri MyOrders modal'a tasindi, OrderListDto genisletildi, Quotes.cshtml/js silindi</Description>
+    </Task>
+    <Task id="106" date="2025-12-28">
+        <Title>Checkout Akis Duzeltmesi + Sanayi Urunleri Ekleme</Title>
+        <Description>Checkout sonrasi akis duzeltmesi (showQuotes parametresi kaldirildi), VendorId=1 icin 30 sanayi urunu eklendi</Description>
+    </Task>
+    <Task id="107" date="2025-12-29">
+        <Title>Birim (Unit) Alani Combobox Donusumu</Title>
+        <Description>UnitTypes enum, GET /api/types/units endpoint, CompareProposals/MyDemands/SupplierOffers unit input->select donusumu</Description>
+    </Task>
+    <Task id="108" date="2025-12-29">
+        <Title>Urun Paketleme Sistemi</Title>
+        <Description>ProductPackaging entity, PackagingLevels enum, Products/Index fiziksel sekmesine paketleme bilgileri eklendi</Description>
+    </Task>
+    <Task id="109" date="2025-12-29">
+        <Title>GS1 Standardina Uygun Birim ve Paketleme Birlestirilmesi</Title>
+        <Description>UnitTypes BaseUnits/PackagingUnits ayrildi, PackagingLevels kaldirildi, Product.SalesUnitId eklendi, API endpoint guncellemeleri</Description>
+    </Task>
+    <Task id="110" date="2025-12-30">
+        <Title>Sales Unit Entegrasyonu + Checkout/Cart Hata Duzeltmeleri</Title>
+        <Description>Cart sayfa fiyat gosterim duzeltmesi, Cart modulu Buyer'a eklendi, birim tipi cevirileri, Catalog Detail SalesUnit gosterimi</Description>
+    </Task>
+    <Task id="115" date="2025-12-30">
+        <Title>Katalog Faceted Search (Ozellik Filtreleme)</Title>
+        <Description>CatalogFacetDto, attribute filtreleme, Index/Category sidebar facet section, selectedAttributeValues observables</Description>
+    </Task>
+    <Task id="116" date="2025-12-30">
+        <Title>Pazarlik Asamalari Sistemi (Negotiation)</Title>
+        <Description>NegotiationRound entity, DemandResponse pazarlik alanlari, NegotiationService, NegotiationApiController, Buyer/Seller UI</Description>
+    </Task>
+    <Task id="120" date="2025-12-30">
+        <Title>Capability-Based Dashboard Sistemi + Company Dashboard</Title>
+        <Description>7 capability dashboard (Seller, Buyer, Carrier, Insurance, Customs, Survey, Investor), Company Dashboard, DashboardService, tab-based switcher</Description>
+    </Task>
+    <Task id="121" date="2026-01-26">
+        <Title>Gumruk Beyannamesi Entegrasyon Altyapisi</Title>
+        <Description>Product (Brand, Model), Vendor (EoriNumber, EInvoiceId, KepAddress), Order/OrderItem gumruk alanlari, GUMRUK_BEYANNAME_REHBERI.md</Description>
+    </Task>
+    <Task id="122" date="2026-01-26">
+        <Title>Evrim API Entegrasyonu + Servis Saglayici Is Takibi</Title>
+        <Description>EvrimApiService, CustomsDeclaration entity, MyLogisticsJobs/MyCustomsJobs/MyInsuranceJobs/MySurveyJobs sayfalari, RBAC modul kayitlari</Description>
+    </Task>
+    <Task id="123" date="2026-01-26">
+        <Title>Yatirimci MyInvestments Sayfasi</Title>
+        <Description>/Investment/MyInvestments sayfasi, aktif/tamamlanan yatirimlar, istatistikler, detay modal, timeline</Description>
+    </Task>
+    <Task id="124" date="2026-01-26">
+        <Title>Siparis Akisi Iyilestirmesi - Faz 1,2,3</Title>
+        <Description>Order.RequiresFinancing/SurveyTriggerStatus/AllServicesSelectedAt/FinancingRequestId, OrderServiceRequest bagimllik alanlari, IOrderOrchestrationService, gozetim ve finansman tetikleme</Description>
+    </Task>
+    <Task id="125" date="2026-01-26">
+        <Title>Siparis Akisi Iyilestirmesi - Faz 4 (Risk Skorlama)</Title>
+        <Description>IRiskScoringService, 7 faktorlu agirlikli risk hesaplama (0-100), risk seviyeleri (Low/Medium/High/VeryHigh), API endpoints</Description>
+    </Task>
+    <Task id="126" date="2026-01-26">
+        <Title>Siparis Akisi Iyilestirmesi - Faz 5 (UI Temel)</Title>
+        <Description>Secilmemis teklif uyarisi, finansman modallari, CheckoutSteps enum (7 adim), Order.CheckoutStep, checkout timeline UI, API checkout-progress endpoint</Description>
+    </Task>
+</ArchivedTasks>

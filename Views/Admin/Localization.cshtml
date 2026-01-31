@@ -1,0 +1,154 @@
+@{
+    ViewData["Title"] = Html.T("Admin.Localization.Title", "Ceviri Yonetimi").ToString();
+    Layout = "_AdminLayout";
+}
+
+<div id="localization-app">
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <h6 class="mb-0">@Html.T("Admin.Localization.Resources", "Ceviri Kaynaklari")</h6>
+            <select class="form-select form-select-sm w-auto" data-bind="value: selectedLanguageId, options: languages, optionsText: function(l) { return l.flagEmoji + ' ' + l.name; }, optionsValue: 'id'"></select>
+        </div>
+        <div class="d-flex gap-2">
+            <input type="search" class="form-control form-control-sm w-auto" style="min-width: 200px;"
+                   placeholder="@Html.T("Common.Search", "Ara...")" data-bind="value: searchQuery, valueUpdate: 'afterkeydown'">
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" title="@Html.T("Admin.Localization.Export", "Disa Aktar (XML)")" data-bind="click: exportResources">
+                    <i class="bi bi-download"></i>
+                </button>
+                <button class="btn btn-outline-success" title="@Html.T("Admin.Localization.ImportFromFile", "Dosyadan Yukle")" data-bind="click: importFromFile, enable: !isImporting()">
+                    <span data-bind="visible: isImporting()" class="spinner-border spinner-border-sm"></span>
+                    <i class="bi bi-file-earmark-arrow-up" data-bind="visible: !isImporting()"></i>
+                </button>
+            </div>
+            <button class="btn btn-primary btn-sm" data-bind="click: showAddModal">
+                <i class="bi bi-plus-lg me-1"></i> @Html.T("Admin.Localization.AddNew", "Yeni Kaynak")
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40%;">@Html.T("Admin.Localization.Key", "Anahtar")</th>
+                        <th>@Html.T("Admin.Localization.Value", "Deger")</th>
+                        <th style="width: 100px;">@Html.T("Admin.Table.Actions", "Islemler")</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: resources">
+                    <tr>
+                        <td>
+                            <code class="small" data-bind="text: resourceName"></code>
+                        </td>
+                        <td>
+                            <!-- ko if: $parent.editingResourceId() === id -->
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" data-bind="value: $parent.editingValue">
+                                <button class="btn btn-success" data-bind="click: $parent.saveInlineEdit">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                                <button class="btn btn-secondary" data-bind="click: $parent.cancelInlineEdit">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                            <!-- /ko -->
+                            <!-- ko if: $parent.editingResourceId() !== id -->
+                            <span class="small" data-bind="text: resourceValue"></span>
+                            <!-- /ko -->
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" data-bind="visible: $parent.editingResourceId() !== id">
+                                <button class="btn btn-outline-primary" title="@Html.T("Common.Edit", "Duzenle")" data-bind="click: $parent.startInlineEdit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-gap" title="@Html.T("Common.Delete", "Sil")" data-bind="click: $parent.deleteResource">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-top" data-bind="visible: totalPages() > 1">
+            <div class="text-muted small">
+                <span data-bind="text: totalCount"></span> @Html.T("Admin.Localization.TotalResources", "kaynak")
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" data-bind="css: { disabled: currentPage() === 1 }">
+                        <a class="page-link" href="#" data-bind="click: previousPage">&laquo;</a>
+                    </li>
+                    <!-- ko foreach: visiblePages -->
+                    <li class="page-item" data-bind="css: { active: $data === $parent.currentPage() }">
+                        <a class="page-link" href="#" data-bind="text: $data, click: function() { $parent.goToPage($data); }"></a>
+                    </li>
+                    <!-- /ko -->
+                    <li class="page-item" data-bind="css: { disabled: currentPage() === totalPages() }">
+                        <a class="page-link" href="#" data-bind="click: nextPage">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Loading -->
+        <div class="text-center py-4" data-bind="visible: isLoading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="text-center py-5" data-bind="visible: !isLoading() && resources().length === 0 && !searchQuery()">
+            <i class="bi bi-translate text-muted fs-1"></i>
+            <p class="text-muted mt-2">@Html.T("Admin.Localization.Empty", "Bu dil icin henuz kaynak tanimlanmamis")</p>
+        </div>
+
+        <!-- No Results -->
+        <div class="text-center py-5" data-bind="visible: !isLoading() && resources().length === 0 && searchQuery()">
+            <i class="bi bi-search text-muted fs-1"></i>
+            <p class="text-muted mt-2">@Html.T("Admin.Localization.NoResults", "Arama kriterine uygun kaynak bulunamadi")</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add Resource Modal -->
+<div class="modal fade" id="resourceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Html.T("Admin.Localization.AddNew", "Yeni Kaynak")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form data-bind="submit: saveResource">
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("Admin.Localization.Key", "Anahtar") <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" data-bind="value: newResourceName" placeholder="Common.Save" required>
+                        <small class="text-muted">Ornek: Common.Save, Admin.Users.Title, Dashboard.Welcome</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("Admin.Localization.Value", "Deger") <span class="text-danger">*</span></label>
+                        <textarea class="form-control" rows="3" data-bind="value: newResourceValue" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-primary" data-bind="click: saveResource, enable: !isSaving()">
+                    <span data-bind="visible: isSaving()" class="spinner-border spinner-border-sm me-1"></span>
+                    @Html.T("Common.Save", "Kaydet")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+<script src="~/js/Admin/Localization.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProjectStatus>
+    <Project>
+        <Name>Bridgo B2B Platform</Name>
+        <Framework>.NET 9</Framework>
+        <Database>PostgreSQL</Database>
+        <DatabaseName>BridgoDb</DatabaseName>
+        <LastUpdated>2026-01-27</LastUpdated>
+        <ArchiveNote>
+            Task 1-80: App_Data/Archive/PROJECT_STATUS_ARCHIVE.xml
+            Task 81-101: App_Data/Archive/PROJECT_STATUS_ARCHIVE_20251228.xml
+            Task 102-126: App_Data/Archive/PROJECT_STATUS_ARCHIVE_20260126.xml
+        </ArchiveNote>
+    </Project>
+
+    <CompletedTasks>
+        <!-- Onceki gorevler arsive tasindi: Task 1-126 -->
+        <!-- Son arsiv: App_Data/Archive/PROJECT_STATUS_ARCHIVE_20260126.xml -->
+        <Task id="127" completedAt="2026-01-27">
+            <Title>Siparis Akisi Iyilestirmesi - Faz 5 Ileri</Title>
+            <Description>
+                Detay: Docs/ORDER_FLOW_IMPROVEMENTS.md
+                Tamamlanan:
+                - Checkout Wizard Fullscreen Modal (4 adim)
+                - Siparis Timeline sayfasi (/Orders/Timeline/{id})
+                - Real-time teklif bildirimleri (SignalR)
+            </Description>
+        </Task>
+        <Task id="129" completedAt="2026-01-27">
+            <Title>Hardcoded String'leri Resource Key'lere Cevir</Title>
+            <Description>
+                Tum view dosyalari Html.T() ile donusturuldu:
+                - Team/Index.cshtml (~50 string)
+                - MyOrders.cshtml (stats, butonlar, wizard)
+                - SellerOrders.cshtml (~60 string)
+                - Services/MySurveyJobs.cshtml
+                - Services/MyLogisticsJobs.cshtml
+                - Services/MyCustomsJobs.cshtml
+                - Services/MyInsuranceJobs.cshtml
+                - Services/SurveyRequests.cshtml
+                - Services/LogisticsRequests.cshtml
+                - Services/CustomsRequests.cshtml
+                - Services/InsuranceRequests.cshtml
+                - Orders/Timeline.cshtml
+
+                resources.tr.xml: ~200+ yeni key eklendi
+                - ServiceRequests modulu (Title, Subtitle, Tab, Filter, Empty, Quote, Modal)
+                - ServiceJobs modulu
+                - Insurance modulu (Type, Coverage, Premium, Deductible, Exclusions)
+                - Logistics modulu (Weight, Volume, Package, Mode, Carrier, TransitStops)
+                - Customs modulu (Operation, HSCode)
+                - Survey modulu (Type, Location, PackageCount)
+                - OrderTimeline modulu
+                - Common extras (Pieces, Days, Select, Date, Seller, ShippingAddress)
+            </Description>
+        </Task>
+        <Task id="131" completedAt="2026-01-27">
+            <Title>Dil XML Senkronizasyonu ve Duplicate Temizligi</Title>
+            <Description>
+                resources.tr.xml:
+                - 19 duplicate key temizlendi (Common.*, OrderTimeline.*)
+                - OrderTimeline bolumune yeni key'ler eklendi (CreatedAt, ItemCount, ShipmentInfo, Cargo, InvalidId)
+
+                resources.en.xml:
+                - ~500 eksik ceviri eklendi
+                - TR ile tam senkronizasyon saglandi
+                - Tum moduller: Common, Team, MyOrders, SellerOrders, Checkout, OrderTimeline,
+                  ServiceJobs, ServiceRequests, Insurance, Logistics, Customs, Survey, Settings
+            </Description>
+        </Task>
+        <Task id="132" completedAt="2026-01-27">
+            <Title>Landing Page Modernizasyonu</Title>
+            <Description>
+                Home/Index.cshtml tam yenileme - Interactive and Bold + Marketplace Style:
+
+                Yeni Dosyalar:
+                - wwwroot/lib/aos/aos.css, aos.js (AOS animasyon kutuphanesi)
+                - wwwroot/css/landing.css (Landing page ozel stilleri)
+                - wwwroot/js/landing.js (Counter, tabs, carousel, AOS init)
+
+                Guncellenen Dosyalar:
+                - Views/Home/Index.cshtml (tam yenileme)
+                - Views/Shared/_Layout.cshtml (FullWidth modu eklendi)
+                - resources.tr.xml (~70 yeni landing key)
+                - resources.en.xml (~70 yeni landing key)
+
+                Yeni Section'lar:
+                1. Hero - Gradient bg, animated rotating text, glassmorphism search, trust logos
+                2. Stats - Animasyonlu sayaclar, modern kartlar
+                3. Categories - Marketplace style buyuk kartlar, hover efekti
+                4. Value Props - Alici/Satici tab'li section, feature cards
+                5. Featured Products - Modern urun kartlari
+                6. How It Works - Step-by-step animasyonlu
+                7. Testimonials - Koyu arka plan, testimonial kartlari
+                8. New Products - Grid gorunum
+                9. CTA - Gradient bg, buyuk butonlar
+
+                Ozellikler:
+                - AOS scroll animasyonlari
+                - Counter animation (sayilar scroll'da yukarı sayar)
+                - Glassmorphism efektleri
+                - Floating shapes animasyonlari
+                - Tab gecisleri (Alici/Satici)
+                - Mobile responsive
+            </Description>
+        </Task>
+    </CompletedTasks>
+
+    <InProgressTasks>
+    </InProgressTasks>
+
+    <PlannedTasks>
+        <!-- SOSYAL PLATFORM OZELLIKLERI (Yeni) -->
+        <Task id="133" priority="high">
+            <Title>Sosyal Platform - Faz 1: Temel Feed Ozellikleri</Title>
+            <Description>
+                Detay: Docs/SOCIAL_PLATFORM_ANALYSIS.md
+
+                Yapilacaklar:
+                - Post entity ve CRUD API
+                - Temel feed sayfasi (liste gorunumu)
+                - Begeni ve yorum sistemi
+                - Firma/kisi takip sistemi
+                - Bildirim altyapisi genisletme
+
+                Tahmini Sure: 4-6 hafta
+            </Description>
+        </Task>
+        <Task id="134" priority="high">
+            <Title>Sosyal Platform - Faz 2: Is Ilanlari Modulu</Title>
+            <Description>
+                Detay: Docs/SOCIAL_PLATFORM_ANALYSIS.md
+
+                Yapilacaklar:
+                - JobPosting entity ve API
+                - Is ilanlari sayfasi (/Jobs)
+                - Basvuru sistemi (JobApplication)
+                - Firma tarafinda basvuru yonetimi
+                - Email bildirimleri
+                - Is arayan/ise alan filtreleme
+
+                Tahmini Sure: 4-6 hafta
+            </Description>
+        </Task>
+        <Task id="135" priority="medium">
+            <Title>Sosyal Platform - Faz 3: Profesyonel Profil</Title>
+            <Description>
+                Detay: Docs/SOCIAL_PLATFORM_ANALYSIS.md
+
+                Yapilacaklar:
+                - Genisletilmis kullanici profili (UserProfile)
+                - Deneyim yonetimi (UserExperience)
+                - Beceri ve onaylama sistemi (UserSkill)
+                - "Is Ariyorum" modu
+                - CV export (PDF)
+                - LinkedIn benzeri profil sayfasi
+
+                Tahmini Sure: 3-4 hafta
+            </Description>
+        </Task>
+        <Task id="136" priority="medium">
+            <Title>Sosyal Platform - Faz 4: Gelismis Ozellikler</Title>
+            <Description>
+                Detay: Docs/SOCIAL_PLATFORM_ANALYSIS.md
+
+                Yapilacaklar:
+                - Feed algoritmasi (iliski, etkilesim, guncellik skoru)
+                - Hashtag sistemi
+                - Trend konular
+                - Sponsorlu icerik altyapisi
+                - Gelismis arama ve filtreleme
+                - Icerik moderasyonu
+
+                Tahmini Sure: 4-6 hafta
+            </Description>
+        </Task>
+        <Task id="137" priority="medium">
+            <Title>Sosyal Platform - Faz 5: Monetizasyon</Title>
+            <Description>
+                Detay: Docs/SOCIAL_PLATFORM_ANALYSIS.md
+
+                Yapilacaklar:
+                - Premium abonelik planlari (Firma/Bireysel/Recruiter)
+                - Reklam yonetim paneli
+                - Analitik dashboard
+                - Faturalandirma entegrasyonu
+                - Sponsorlu paylasim sistemi
+
+                Tahmini Sure: 3-4 hafta
+            </Description>
+        </Task>
+        <Task id="138" priority="low">
+            <Title>Guven ve Dogrulama Sistemi Gelistirme</Title>
+            <Description>
+                - Firma dogrulama seviyeleri (Temel, Dogrulanmis, Premium, Elite)
+                - Rozet sistemi (Basari, Sertifika, Topluluk)
+                - Firma skor sistemi (0-100)
+                - Ucuncu parti entegrasyonlar (ISO, GOTS vb.)
+            </Description>
+        </Task>
+
+        <!-- MEVCUT GOREVLER -->
+        <Task id="128" priority="low">
+            <Title>Diger Servisler icin Test Yaz</Title>
+            <Description>TeamService, CompanyService, ProductService gibi diger servisler icin testler yazilmali.</Description>
+        </Task>
+        <Task id="130" priority="low">
+            <Title>Excel Export</Title>
+            <Description>
+                - Raporlama sayfasina Excel export ozelligi
+                - Siparis listesi export
+                - Urun listesi export
+            </Description>
+        </Task>
+    </PlannedTasks>
+
+    <Architecture>
+        <Pattern>SPA Modal + Repository/Service Pattern</Pattern>
+        <KeyRules>
+            <Rule>IDler int (auto-increment) - GUID KULLANILMAZ</Rule>
+            <Rule>Her modul tek Index.cshtml + tek Index.js</Rule>
+            <Rule>Controllerda DbContext KULLANILMAZ - Service layer</Rule>
+            <Rule>Tum textler T() ile cekilir (cok dilli)</Rule>
+            <Rule>CDN KULLANILMAZ (offline uyumlu)</Rule>
+            <Rule>Native confirm() KULLANILMAZ - Bootstrap modal</Rule>
+            <Rule>Is verileri VendorIdye ait - UserId sadece audit</Rule>
+            <Rule>VendorId olmayan user sisteme giremez (Admin haric)</Rule>
+        </KeyRules>
+    </Architecture>
+
+    <FolderStructure>
+        <Folder name="Controllers">MVC ve API Controllerlar</Folder>
+        <Folder name="Controllers/Api">API Controllerlar</Folder>
+        <Folder name="Data">DbContext</Folder>
+        <Folder name="DTOs">Data Transfer Objects</Folder>
+        <Folder name="Extensions">Extension metodlar (T() helper)</Folder>
+        <Folder name="Middleware">Custom middlewareler (VendorRequired)</Folder>
+        <Folder name="Models/Entities">Domain modelleri (BaseEntityden turetilir)</Folder>
+        <Folder name="Models/Identity">Identity modelleri</Folder>
+        <Folder name="Repositories">Generic Repository + UnitOfWork</Folder>
+        <Folder name="Services">Business logic (Interface + Implementation)</Folder>
+        <Folder name="Views">Razor viewlar</Folder>
+        <Folder name="wwwroot/js">JavaScript dosyalari (modul bazli)</Folder>
+        <Folder name="wwwroot/lib">Yerel kutuphaneler</Folder>
+    </FolderStructure>
+
+    <Models>
+        <Model name="Vendor">
+            <Description>B2B Satici/Tedarikci sirketi</Description>
+            <Fields>Temel: CompanyName, Email, Phone</Fields>
+            <Fields>Ileri: TaxNumber, TradeRegistryNo, MersisNo, BankInfo</Fields>
+            <Fields>Durum: Status, IsProfileComplete, IsVerified</Fields>
+        </Model>
+        <Model name="Address">
+            <Description>Vendor adresleri</Description>
+            <Types>Billing, Shipping, Headquarters, Warehouse, Branch, Return</Types>
+        </Model>
+        <Model name="ApplicationUser">
+            <Description>Kullanici - Vendor altinda calisir</Description>
+            <Fields>VendorId, VendorRole (Owner, Admin, Supervisor, Manager, Employee)</Fields>
+        </Model>
+    </Models>
+
+    <DefaultCredentials>
+        <Admin>
+            <Email>admin@bridgo.com</Email>
+            <Password>Admin123!</Password>
+            <Note>Sistem admini - VendorId yok, VendorRequireddan muaf</Note>
+        </Admin>
+    </DefaultCredentials>
+
+    <ConnectionString>Host=localhost;Port=5432;Database=BridgoDb;Username=postgres;Password=1123Azs+-</ConnectionString>
+</ProjectStatus>

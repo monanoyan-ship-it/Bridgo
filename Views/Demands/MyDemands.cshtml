@@ -1,0 +1,482 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("MyDemands.Title", "Taleplerim").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="my-demands-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-megaphone text-primary me-2"></i>
+                @Html.T("MyDemands.Title", "Taleplerim")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("MyDemands.Subtitle", "Taleplerinizi ve urun isteklerinizi yonetin.")</p>
+        </div>
+        <button class="btn btn-primary" data-bind="click: openCreateModal">
+            <i class="bi bi-plus-circle me-1"></i> @Html.T("MyDemands.NewDemand", "Yeni Talep")
+        </button>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'demands' }, click: function() { setTab('demands'); }" href="#">
+                <i class="bi bi-megaphone"></i> @Html.T("MyDemands.Tab.Demands", "Taleplerim")
+                <span class="badge bg-primary ms-1" data-bind="text: demandCount"></span>
+                <!-- ko if: demandResponseCount() > 0 -->
+                <span class="badge bg-success ms-1" title="Gelen teklifler"><i class="bi bi-chat-dots"></i> <span data-bind="text: demandResponseCount"></span></span>
+                <!-- /ko -->
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'inquiries' }, click: function() { setTab('inquiries'); }" href="#">
+                <i class="bi bi-box-seam"></i> @Html.T("MyDemands.Tab.Inquiries", "Urun Isteklerim")
+                <span class="badge bg-info ms-1" data-bind="text: inquiryCount"></span>
+                <!-- ko if: inquiryResponseCount() > 0 -->
+                <span class="badge bg-success ms-1" title="Gelen teklifler"><i class="bi bi-chat-dots"></i> <span data-bind="text: inquiryResponseCount"></span></span>
+                <!-- /ko -->
+            </a>
+        </li>
+    </ul>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: TALEPLERIM (PublicDemands) -->
+    <!-- ========================================== -->
+    <div data-bind="visible: !isLoading() && activeTab() === 'demands'">
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" placeholder="@Html.T("Common.Search", "Ara...")"
+                                   data-bind="value: demandFilter.search, valueUpdate: 'afterkeydown'" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" data-bind="value: demandFilter.status">
+                            <option value="">@Html.T("Common.AllStatuses", "Tum Durumlar")</option>
+                            <option value="1">@Html.T("Demands.Status.Draft", "Taslak")</option>
+                            <option value="2">@Html.T("Demands.Status.Active", "Aktif")</option>
+                            <option value="3">@Html.T("Demands.Status.Closed", "Kapandi")</option>
+                            <option value="4">@Html.T("Demands.Status.Awarded", "Teklif Secildi")</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" data-bind="value: demandFilter.categoryId, options: categories, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Common.AllCategories", "Tum Kategoriler")'"></select>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-sm btn-outline-secondary" data-bind="click: resetDemandFilters">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div data-bind="visible: demands().length === 0" class="text-center py-5">
+            <i class="bi bi-megaphone display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">@Html.T("MyDemands.NoDemands", "Henuz talep olusturmadiniz")</h5>
+            <p class="text-muted">@Html.T("MyDemands.CreateFirst", "Yeni bir talep olusturarak baslayabilirsiniz.")</p>
+            <button class="btn btn-primary" data-bind="click: openCreateModal">
+                <i class="bi bi-plus-circle me-1"></i> @Html.T("MyDemands.NewDemand", "Yeni Talep")
+            </button>
+        </div>
+
+        <!-- Demands Table -->
+        <div class="card" data-bind="visible: demands().length > 0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 35%;">@Html.T("Common.Title", "Baslik")</th>
+                            <th>@Html.T("Common.Category", "Kategori")</th>
+                            <th>@Html.T("MyDemands.Responses", "Teklifler")</th>
+                            <th>@Html.T("Common.Status", "Durum")</th>
+                            <th>@Html.T("Common.Date", "Tarih")</th>
+                            <th style="width: 100px;">@Html.T("Common.Actions", "Islemler")</th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: demands">
+                        <tr>
+                            <td>
+                                <a href="#" data-bind="text: title, click: function() { $parent.viewDemandDetail($data); }" class="text-decoration-none fw-semibold"></a>
+                                <small class="d-block text-muted text-truncate" style="max-width: 250px;" data-bind="text: description"></small>
+                            </td>
+                            <td><span class="badge bg-light text-dark" data-bind="text: categoryName || '-'"></span></td>
+                            <td>
+                                <!-- ko if: responseCount > 0 -->
+                                <a href="#" class="badge bg-success text-decoration-none" data-bind="click: function() { $parent.viewDemandDetail($data); }">
+                                    <i class="bi bi-chat-dots"></i> <span data-bind="text: responseCount"></span> teklif
+                                </a>
+                                <!-- /ko -->
+                                <!-- ko if: responseCount === 0 -->
+                                <span class="text-muted">-</span>
+                                <!-- /ko -->
+                            </td>
+                            <td><span class="badge" data-bind="css: $parent.getDemandStatusClass(status), text: $parent.getDemandStatusText(status)"></span></td>
+                            <td><small data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></small></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" data-bind="click: function() { $parent.viewDemandDetail($data); }"><i class="bi bi-eye"></i></button>
+                                    <button class="btn btn-outline-secondary" data-bind="click: function() { $parent.editDemand($data); }, visible: status === 1"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-outline-danger" data-bind="click: function() { $parent.deleteDemand($data); }"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: URUN ISTEKLERIM (ProductInquiries) -->
+    <!-- ========================================== -->
+    <div data-bind="visible: !isLoading() && activeTab() === 'inquiries'">
+        <!-- Info -->
+        <div class="alert alert-info d-flex align-items-center mb-4">
+            <i class="bi bi-info-circle me-2"></i>
+            <div>
+                @Html.T("MyDemands.InquiriesInfo", "Urun sayfalarindan gonderdiginiz fiyat istekleri burada listelenir.")
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div data-bind="visible: inquiries().length === 0" class="text-center py-5">
+            <i class="bi bi-box-seam display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">@Html.T("MyDemands.NoInquiries", "Henuz urun istegi gondermediniz")</h5>
+            <p class="text-muted">@Html.T("MyDemands.NoInquiriesDesc", "Urun sayfalarindan 'Fiyat Iste' butonuyla istek gonderebilirsiniz.")</p>
+        </div>
+
+        <!-- Inquiries List -->
+        <div data-bind="visible: inquiries().length > 0, foreach: inquiries">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong data-bind="text: productName"></strong>
+                        <small class="text-muted ms-2">(<span data-bind="text: sellerCompanyName"></span>)</small>
+                    </div>
+                    <span class="badge" data-bind="css: $parent.getInquiryStatusClass(status), text: $parent.getInquiryStatusText(status)"></span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">@Html.T("Common.Quantity", "Miktar")</small>
+                            <span data-bind="text: quantity ? quantity + ' ' + (unit || 'Adet') : '-'"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">@Html.T("MyDemands.TargetPrice", "Hedef Fiyat")</small>
+                            <span data-bind="text: targetPrice ? targetPrice.toLocaleString('tr-TR') + ' ' + (currency || 'TRY') : '-'"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">@Html.T("MyDemands.Responses", "Teklifler")</small>
+                            <!-- ko if: responseCount > 0 -->
+                            <a href="#" class="badge bg-success text-decoration-none" data-bind="click: function() { $parent.viewInquiryDetail($data); }">
+                                <i class="bi bi-chat-dots"></i> <span data-bind="text: responseCount"></span> teklif
+                            </a>
+                            <!-- /ko -->
+                            <!-- ko if: responseCount === 0 -->
+                            <span class="text-muted">-</span>
+                            <!-- /ko -->
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-sm btn-outline-primary" data-bind="click: function() { $parent.viewInquiryDetail($data); }">
+                                <i class="bi bi-eye"></i> @Html.T("Common.Detail", "Detay")
+                            </button>
+                            <!-- ko if: status === 0 -->
+                            <button class="btn btn-sm btn-outline-danger" data-bind="click: function() { $parent.cancelInquiry($data); }">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent text-muted small">
+                    <i class="bi bi-calendar"></i> <span data-bind="text: new Date(createdAt).toLocaleString('tr-TR')"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Demand Detail Modal (with responses) -->
+<div class="modal fade" id="demandDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-megaphone me-2"></i>@Html.T("MyDemands.DemandDetail", "Talep Detayi")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" data-bind="with: selectedDemand">
+                <!-- Demand Info -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 data-bind="text: title"></h5>
+                    <span class="badge fs-6" data-bind="css: $parent.getDemandStatusClass(status), text: $parent.getDemandStatusText(status)"></span>
+                </div>
+                <p class="text-muted" data-bind="text: description"></p>
+                <div class="row mb-4">
+                    <div class="col-md-4" data-bind="visible: categoryName">
+                        <small class="text-muted">@Html.T("Common.Category", "Kategori")</small>
+                        <div data-bind="text: categoryName"></div>
+                    </div>
+                    <div class="col-md-4" data-bind="visible: quantity">
+                        <small class="text-muted">@Html.T("Common.Quantity", "Miktar")</small>
+                        <div data-bind="text: quantity + ' ' + (unit || 'Adet')"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">@Html.T("Common.Date", "Tarih")</small>
+                        <div data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></div>
+                    </div>
+                </div>
+
+                <!-- Responses Section -->
+                <hr />
+                <h6><i class="bi bi-chat-dots text-success me-2"></i>@Html.T("MyDemands.ReceivedResponses", "Gelen Teklifler") (<span data-bind="text: responseCount"></span>)</h6>
+
+                <div data-bind="visible: !$parent.demandResponses() || $parent.demandResponses().length === 0" class="text-center py-3 text-muted">
+                    <i class="bi bi-inbox"></i> @Html.T("MyDemands.NoResponsesYet", "Henuz teklif gelmedi")
+                </div>
+
+                <div data-bind="foreach: $parent.demandResponses">
+                    <div class="card mb-2">
+                        <div class="card-body py-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <strong data-bind="text: supplierName || 'Anonim'"></strong>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="text-success fw-bold" data-bind="text: unitPrice ? unitPrice.toLocaleString('tr-TR') + ' ' + (currency || 'TRY') : '-'"></span>
+                                </div>
+                                <div class="col-md-2">
+                                    <small class="text-muted" data-bind="text: leadTimeDays ? leadTimeDays + ' gun' : '-'"></small>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge" data-bind="css: $parents[1].getResponseStatusClass(status), text: $parents[1].getResponseStatusText(status)"></span>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <!-- ko if: status === 1 -->
+                                    <button class="btn btn-sm btn-success" data-bind="click: function() { $parents[1].acceptDemandResponse($data); }">
+                                        <i class="bi bi-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bind="click: function() { $parents[1].rejectDemandResponse($data); }">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                            <!-- ko if: notes -->
+                            <div class="mt-1 small text-muted" data-bind="text: notes"></div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inquiry Detail Modal (with responses) -->
+<div class="modal fade" id="inquiryDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>@Html.T("MyDemands.InquiryDetail", "Urun Istegi Detayi")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" data-bind="with: selectedInquiry">
+                <!-- Inquiry Info -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 data-bind="text: productName"></h5>
+                        <small class="text-muted" data-bind="text: sellerCompanyName"></small>
+                    </div>
+                    <span class="badge fs-6" data-bind="css: $parent.getInquiryStatusClass(status), text: $parent.getInquiryStatusText(status)"></span>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <small class="text-muted">@Html.T("Common.Quantity", "Miktar")</small>
+                        <div data-bind="text: quantity ? quantity + ' ' + (unit || 'Adet') : '-'"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">@Html.T("MyDemands.TargetPrice", "Hedef Fiyat")</small>
+                        <div data-bind="text: targetPrice ? targetPrice.toLocaleString('tr-TR') + ' ' + (currency || 'TRY') : '-'"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">@Html.T("MyDemands.TargetDelivery", "Hedef Teslimat")</small>
+                        <div data-bind="text: targetDeliveryDate ? new Date(targetDeliveryDate).toLocaleDateString('tr-TR') : '-'"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">@Html.T("Common.Date", "Tarih")</small>
+                        <div data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></div>
+                    </div>
+                </div>
+                <!-- ko if: notes -->
+                <div class="mb-3 p-2 bg-light rounded">
+                    <small class="text-muted">@Html.T("Common.Notes", "Notlar"):</small>
+                    <div data-bind="text: notes"></div>
+                </div>
+                <!-- /ko -->
+
+                <!-- Responses Section -->
+                <hr />
+                <h6><i class="bi bi-chat-dots text-success me-2"></i>@Html.T("MyDemands.ReceivedResponses", "Gelen Teklifler") (<span data-bind="text: responseCount"></span>)</h6>
+
+                <div data-bind="visible: !$parent.inquiryResponses() || $parent.inquiryResponses().length === 0" class="text-center py-3 text-muted">
+                    <i class="bi bi-inbox"></i> @Html.T("MyDemands.NoResponsesYet", "Henuz teklif gelmedi")
+                </div>
+
+                <div data-bind="foreach: $parent.inquiryResponses">
+                    <div class="card mb-2">
+                        <div class="card-body py-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <span class="text-success fw-bold">
+                                        <span data-bind="text: unitPrice ? unitPrice.toLocaleString('tr-TR') : '-'"></span>
+                                        <small data-bind="text: currency || 'TRY'"></small>
+                                    </span>
+                                    <small class="text-muted d-block" data-bind="text: offeredQuantity ? offeredQuantity + ' ' + (offeredUnit || 'Adet') : ''"></small>
+                                </div>
+                                <div class="col-md-2">
+                                    <small class="text-muted" data-bind="text: leadTimeDays ? leadTimeDays + ' gun' : '-'"></small>
+                                </div>
+                                <div class="col-md-2">
+                                    <small class="text-muted" data-bind="text: validUntil ? new Date(validUntil).toLocaleDateString('tr-TR') + ' e kadar' : ''"></small>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge" data-bind="css: $parents[1].getInquiryResponseStatusClass(status), text: $parents[1].getInquiryResponseStatusText(status)"></span>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <!-- ko if: status === 0 -->
+                                    <button class="btn btn-sm btn-success" data-bind="click: function() { $parents[1].acceptInquiryResponse($data); }">
+                                        <i class="bi bi-check"></i> @Html.T("Common.Accept", "Kabul")
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bind="click: function() { $parents[1].rejectInquiryResponse($data); }">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                            <!-- ko if: notes -->
+                            <div class="mt-1 small text-muted" data-bind="text: notes"></div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Demand Modal -->
+<div class="modal fade" id="demandModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-megaphone me-2"></i>
+                    <span data-bind="text: isEditing() ? '@Html.T("MyDemands.EditDemand", "Talep Duzenle")' : '@Html.T("MyDemands.NewDemand", "Yeni Talep")'"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="demandForm">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">@Html.T("Common.Title", "Baslik") *</label>
+                            <input type="text" class="form-control" data-bind="value: form.title" required maxlength="200" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Common.Category", "Kategori")</label>
+                            <select class="form-select" data-bind="value: form.categoryId, options: categories, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Common.SelectCategory", "Kategori Sec")'"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">@Html.T("Common.Quantity", "Miktar")</label>
+                            <input type="number" class="form-control" data-bind="value: form.quantity" min="1" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">@Html.T("Common.Unit", "Birim")</label>
+                            <select class="form-select" data-bind="options: units, optionsValue: 'id', optionsText: 'name', value: form.unitId, optionsCaption: 'Seciniz...'"></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">@Html.T("Common.Description", "Aciklama") *</label>
+                            <textarea class="form-control" rows="4" data-bind="value: form.description" required></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@Html.T("MyDemands.BudgetMin", "Min Butce")</label>
+                            <input type="number" class="form-control" data-bind="value: form.budgetMin" min="0" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@Html.T("MyDemands.BudgetMax", "Max Butce")</label>
+                            <input type="number" class="form-control" data-bind="value: form.budgetMax" min="0" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@Html.T("MyDemands.LeadTime", "Teslim Suresi (gun)")</label>
+                            <input type="number" class="form-control" data-bind="value: form.desiredLeadTimeDays" min="1" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("MyDemands.ExpiresAt", "Son Teklif Tarihi")</label>
+                            <input type="date" class="form-control" data-bind="value: form.expiresAt" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Html.T("Common.Country", "Ulke")</label>
+                            <select class="form-select" data-bind="value: form.countryId, options: countries, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Common.SelectCountry", "Ulke Sec")'"></select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="alert alert-danger w-100 mb-2" data-bind="visible: formError, text: formError"></div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-outline-primary" data-bind="click: saveDraft, disable: isSaving">
+                    <i class="bi bi-save"></i> @Html.T("MyDemands.SaveDraft", "Taslak")
+                </button>
+                <button type="button" class="btn btn-primary" data-bind="click: publishDemand, disable: isSaving">
+                    <i class="bi bi-send"></i> @Html.T("MyDemands.Publish", "Yayinla")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger me-2"></i>@Html.T("Common.Confirm", "Onay")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@Html.T("MyDemands.DeleteConfirm", "Bu talebi silmek istediginize emin misiniz?")</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-danger" data-bind="click: confirmDelete">
+                    <i class="bi bi-trash"></i> @Html.T("Common.Delete", "Sil")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/Dashboard/MyDemands.js"></script>
+}

@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = Html.T("Admin.Dashboard.Title", "Admin Dashboard").ToString();
+    Layout = "_AdminLayout";
+}
+
+<div id="admin-app">
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">@Html.T("Admin.Dashboard.TotalVendors", "Toplam Firma")</h6>
+                        <h3 class="mb-0" data-bind="text: vendorCount">-</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-building text-primary fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">@Html.T("Admin.Dashboard.TotalUsers", "Toplam Kullanici")</h6>
+                        <h3 class="mb-0" data-bind="text: userCount">-</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-people text-success fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">@Html.T("Admin.Dashboard.TotalCapabilities", "Yetenekler")</h6>
+                        <h3 class="mb-0" data-bind="text: capabilityCount">-</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-diagram-3 text-info fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">@Html.T("Admin.Dashboard.ActiveRoles", "Toplam Rol")</h6>
+                        <h3 class="mb-0" data-bind="text: roleCount">-</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-person-badge text-warning fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">@Html.T("Admin.Dashboard.RecentVendors", "Son Kayit Olan Firmalar")</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>@Html.T("Admin.Table.CompanyName", "Firma Adi")</th>
+                                <th>@Html.T("Admin.Table.Status", "Durum")</th>
+                                <th>@Html.T("Admin.Table.CreatedAt", "Tarih")</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: recentVendors">
+                            <tr>
+                                <td data-bind="text: companyName"></td>
+                                <td>
+                                    <span class="badge" data-bind="text: statusText, css: statusClass"></span>
+                                </td>
+                                <td data-bind="text: createdAt"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">@Html.T("Admin.Dashboard.CapabilityDistribution", "Yetenek Dagilimi")</h6>
+            </div>
+            <div class="card-body">
+                <div data-bind="foreach: capabilityStats">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>
+                            <i data-bind="class: icon"></i>
+                            <span data-bind="text: name" class="ms-2"></span>
+                        </span>
+                        <span class="badge bg-primary" data-bind="text: vendorCount"></span>
+                    </div>
+                    <div class="progress mb-3" style="height: 6px;">
+                        <div class="progress-bar" data-bind="style: { width: percentage + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+<script src="~/js/Admin/Index.js" asp-append-version="true"></script>
+}

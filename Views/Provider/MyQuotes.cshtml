@@ -1,0 +1,348 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Provider.MyQuotes.Title", "Tekliflerim").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="provider-myquotes-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-cash-coin text-primary me-2"></i>
+                @Html.T("Provider.MyQuotes.Title", "Tekliflerim")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Provider.MyQuotes.Subtitle", "Gonderdiginiz tekliflerin durumunu takip edin.")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <select class="form-select" style="width: auto;" data-bind="value: selectedStatus">
+                <option value="">@Html.T("Provider.MyQuotes.AllStatuses", "Tum Durumlar")</option>
+                <!-- ko foreach: quoteStatuses -->
+                <option data-bind="value: id, text: name"></option>
+                <!-- /ko -->
+            </select>
+            <button class="btn btn-outline-primary" data-bind="click: loadQuotes">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-file-text fs-1 opacity-50"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0" data-bind="text: totalCount">0</h3>
+                            <small>@Html.T("Provider.MyQuotes.Total", "Toplam")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card bg-warning h-100">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-hourglass-split fs-1 opacity-50"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0" data-bind="text: pendingCount">0</h3>
+                            <small>@Html.T("Provider.MyQuotes.Pending", "Bekliyor")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0" data-bind="text: acceptedCount">0</h3>
+                            <small>@Html.T("Provider.MyQuotes.Accepted", "Kabul Edildi")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-x-circle fs-1 opacity-50"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0" data-bind="text: rejectedCount">0</h3>
+                            <small>@Html.T("Provider.MyQuotes.Rejected", "Reddedildi")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div data-bind="visible: !isLoading() && quotes().length === 0" class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted"></i>
+        <h4 class="mt-3">@Html.T("Provider.MyQuotes.NoQuotes", "Henuz teklif vermediniz")</h4>
+        <p class="text-muted">@Html.T("Provider.MyQuotes.NoQuotesDesc", "Gelen talepleri inceleyerek teklif verebilirsiniz.")</p>
+        <a href="/Provider/Requests" class="btn btn-primary mt-2">
+            <i class="bi bi-inbox-fill me-2"></i>@Html.T("Provider.MyQuotes.ViewRequests", "Talepleri Incele")
+        </a>
+    </div>
+
+    <!-- Quotes Table -->
+    <div data-bind="visible: !isLoading() && quotes().length > 0" class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>@Html.T("Provider.MyQuotes.Order", "Siparis")</th>
+                        <th>@Html.T("Provider.MyQuotes.ServiceType", "Hizmet")</th>
+                        <th>@Html.T("Provider.MyQuotes.Buyer", "Alici")</th>
+                        <th class="text-end">@Html.T("Provider.MyQuotes.Amount", "Tutar")</th>
+                        <th>@Html.T("Provider.MyQuotes.Duration", "Sure")</th>
+                        <th>@Html.T("Provider.MyQuotes.Status", "Durum")</th>
+                        <th>@Html.T("Provider.MyQuotes.ValidUntil", "Gecerlilik")</th>
+                        <th class="text-end">@Html.T("Common.Actions", "Islemler")</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: quotes">
+                    <tr>
+                        <td>
+                            <span class="fw-medium" data-bind="text: orderNumber"></span>
+                            <div class="small text-muted" data-bind="text: $root.formatDate(createdAt)"></div>
+                        </td>
+                        <td>
+                            <span data-bind="text: serviceTypeName"></span>
+                        </td>
+                        <td data-bind="text: buyerName"></td>
+                        <td class="text-end">
+                            <span class="fw-bold" data-bind="text: $root.formatCurrency(quoteAmount, currency)"></span>
+                        </td>
+                        <td>
+                            <!-- ko if: estimatedDays -->
+                            <span data-bind="text: estimatedDays + ' gun'"></span>
+                            <!-- /ko -->
+                            <!-- ko ifnot: estimatedDays -->
+                            <span class="text-muted">-</span>
+                            <!-- /ko -->
+                        </td>
+                        <td>
+                            <span class="badge" data-bind="text: statusName, css: $root.getStatusClass(status)"></span>
+                            <!-- ko if: isSelected -->
+                            <span class="badge bg-success ms-1"><i class="bi bi-star-fill"></i></span>
+                            <!-- /ko -->
+                        </td>
+                        <td>
+                            <span data-bind="text: $root.formatDate(validUntil), css: { 'text-danger': $root.isExpiringSoon(validUntil) }"></span>
+                        </td>
+                        <td class="text-end">
+                            <!-- ko if: status === 1 -->
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" title="@Html.T("Common.Edit", "Duzenle")"
+                                        data-bind="click: function() { $root.editQuote($data); }">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" title="@Html.T("Provider.MyQuotes.Withdraw", "Geri Cek")"
+                                        data-bind="click: function() { $root.withdrawQuote($data); }">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <!-- /ko -->
+                            <!-- ko if: status !== 1 -->
+                            <button class="btn btn-sm btn-outline-secondary" title="@Html.T("Common.View", "Goruntule")"
+                                    data-bind="click: function() { $root.viewQuote($data); }">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <!-- /ko -->
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Edit Quote Modal -->
+    <div class="modal fade" id="editQuoteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil me-2"></i>
+                        @Html.T("Provider.MyQuotes.EditQuote", "Teklif Duzenle")
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Quote Summary -->
+                    <div class="bg-light rounded p-3 mb-4" data-bind="with: selectedQuote">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span data-bind="text: serviceTypeName"></span>
+                            <span data-bind="text: orderNumber"></span>
+                        </div>
+                        <div class="small text-muted" data-bind="text: buyerName"></div>
+                    </div>
+
+                    <!-- Edit Form -->
+                    <form data-bind="submit: saveQuote">
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Provider.Requests.QuoteAmount", "Teklif Tutari") *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" step="0.01" required
+                                       data-bind="value: editForm.quoteAmount">
+                                <select class="form-select" style="max-width: 100px;" data-bind="value: editForm.currency">
+                                    <option value="TRY">TRY</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Provider.Requests.EstimatedDays", "Tahmini Sure (Gun)")</label>
+                            <input type="number" class="form-control" min="1"
+                                   data-bind="value: editForm.estimatedDays">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Provider.Requests.ValidUntil", "Teklif Gecerlilik Tarihi")</label>
+                            <input type="date" class="form-control"
+                                   data-bind="value: editForm.validUntil">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Provider.Requests.IncludedServices", "Dahil Hizmetler")</label>
+                            <textarea class="form-control" rows="2"
+                                      data-bind="value: editForm.includedServices"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Provider.Requests.Notes", "Notlar")</label>
+                            <textarea class="form-control" rows="2"
+                                      data-bind="value: editForm.notes"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: saveQuote, disable: isSaving">
+                        <span data-bind="visible: !isSaving()">
+                            <i class="bi bi-check-circle me-2"></i>@Html.T("Common.Save", "Kaydet")
+                        </span>
+                        <span data-bind="visible: isSaving">
+                            <span class="spinner-border spinner-border-sm me-2"></span>@Html.T("Common.Processing", "Isleniyor...")
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Quote Modal -->
+    <div class="modal fade" id="viewQuoteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-eye me-2"></i>
+                        @Html.T("Provider.MyQuotes.QuoteDetails", "Teklif Detaylari")
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" data-bind="with: selectedQuote">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted small">@Html.T("Provider.MyQuotes.Order", "Siparis")</label>
+                            <div class="fw-medium" data-bind="text: orderNumber"></div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">@Html.T("Provider.MyQuotes.ServiceType", "Hizmet")</label>
+                            <div data-bind="text: serviceTypeName"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">@Html.T("Provider.MyQuotes.Buyer", "Alici")</label>
+                            <div data-bind="text: buyerName"></div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">@Html.T("Provider.MyQuotes.Amount", "Tutar")</label>
+                            <div class="fw-bold text-primary" data-bind="text: $root.formatCurrency(quoteAmount, currency)"></div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">@Html.T("Provider.MyQuotes.Status", "Durum")</label>
+                            <div>
+                                <span class="badge" data-bind="text: statusName, css: $root.getStatusClass(status)"></span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">@Html.T("Provider.MyQuotes.Duration", "Tahmini Sure")</label>
+                            <div data-bind="text: estimatedDays ? estimatedDays + ' gun' : '-'"></div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">@Html.T("Provider.MyQuotes.ValidUntil", "Gecerlilik")</label>
+                            <div data-bind="text: $root.formatDate(validUntil)"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">@Html.T("Provider.MyQuotes.SubmittedAt", "Gonderim Tarihi")</label>
+                            <div data-bind="text: $root.formatDateTime(createdAt)"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Withdraw Modal -->
+    <div class="modal fade" id="withdrawModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        @Html.T("Provider.MyQuotes.WithdrawTitle", "Teklif Geri Cek")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Html.T("Provider.MyQuotes.WithdrawConfirm", "Bu teklifi geri cekmek istediginize emin misiniz?")</p>
+                    <p class="small text-muted mb-0">@Html.T("Provider.MyQuotes.WithdrawNote", "Bu islem geri alinamaz.")</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-danger" data-bind="click: confirmWithdraw, disable: isWithdrawing">
+                        <span data-bind="visible: !isWithdrawing()">
+                            <i class="bi bi-x-lg me-2"></i>@Html.T("Provider.MyQuotes.Withdraw", "Geri Cek")
+                        </span>
+                        <span data-bind="visible: isWithdrawing">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Provider/MyQuotes.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,59 @@
+@model Bridgo.DTOs.Auth.LoginDto
+@{
+    ViewData["Title"] = Html.T("Account.Login.Title");
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-box-arrow-in-right"></i> @Html.T("Account.Login.Title")
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">@Html.T("Account.Fields.Email")</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="Email" class="form-control" placeholder="@Html.T("Account.Fields.Email.Placeholder")" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">@Html.T("Account.Fields.Password")</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input asp-for="Password" class="form-control" placeholder="******" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">@Html.T("Account.Login.RememberMe")</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-box-arrow-in-right"></i> @Html.T("Account.Login.Submit")
+                    </button>
+                </form>
+
+                <hr />
+                <div class="text-center">
+                    <span class="text-muted">@Html.T("Account.Login.NoAccount")</span>
+                    <a asp-action="Register" class="ms-2">@Html.T("Nav.Register")</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

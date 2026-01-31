@@ -1,0 +1,187 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Module.Notifications", "Bildirim Ayarlari").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid" id="notifications-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-bell text-primary me-2"></i>
+                @Html.T("Module.Notifications", "Bildirim Ayarlari")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Notifications.Subtitle", "Hangi bildirimleri almak istediginizi secin")</p>
+        </div>
+        <button class="btn btn-primary" data-bind="click: saveSettings, enable: !isSaving()">
+            <span data-bind="visible: isSaving"><i class="bi bi-hourglass-split me-1"></i></span>
+            <span data-bind="visible: !isSaving()"><i class="bi bi-check-lg me-1"></i></span>
+            @Html.T("Common.Save", "Kaydet")
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <!-- ko if: isLoading -->
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Yukleniyor...</p>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko ifnot: isLoading -->
+    <div class="row">
+        <!-- Siparis Bildirimleri -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-cart me-2"></i>
+                        @Html.T("Notifications.Orders", "Siparis Bildirimleri")
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailNewOrder" data-bind="checked: emailOnNewOrder">
+                        <label class="form-check-label" for="emailNewOrder">
+                            <strong>Yeni Siparis</strong>
+                            <br><small class="text-muted">Yeni siparis geldiginde e-posta al</small>
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailOrderStatus" data-bind="checked: emailOnOrderStatusChange">
+                        <label class="form-check-label" for="emailOrderStatus">
+                            <strong>Siparis Durumu</strong>
+                            <br><small class="text-muted">Siparis durumu degistiginde e-posta al</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Talep/Teklif Bildirimleri -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-chat-square-text me-2"></i>
+                        @Html.T("Notifications.Proposals", "Talep ve Teklif Bildirimleri")
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailNewInquiry" data-bind="checked: emailOnNewInquiry">
+                        <label class="form-check-label" for="emailNewInquiry">
+                            <strong>Urun Sorgusu</strong>
+                            <br><small class="text-muted">Urunlerinize sorgu geldiginde e-posta al</small>
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailNewDemand" data-bind="checked: emailOnNewDemand">
+                        <label class="form-check-label" for="emailNewDemand">
+                            <strong>Yeni Talep</strong>
+                            <br><small class="text-muted">Takip ettiginiz kategorilerde yeni talep geldiginde</small>
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailNewOffer" data-bind="checked: emailOnNewOffer">
+                        <label class="form-check-label" for="emailNewOffer">
+                            <strong>Teklif Yaniti</strong>
+                            <br><small class="text-muted">Taleplerinize teklif geldiginde e-posta al</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mesaj Bildirimleri -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-envelope me-2"></i>
+                        @Html.T("Notifications.Messages", "Mesaj Bildirimleri")
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailNewMessage" data-bind="checked: emailOnNewMessage">
+                        <label class="form-check-label" for="emailNewMessage">
+                            <strong>Yeni Mesaj</strong>
+                            <br><small class="text-muted">Yeni mesaj geldiginde e-posta al</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sistem Bildirimleri -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-gear me-2"></i>
+                        @Html.T("Notifications.System", "Sistem Bildirimleri")
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailMarketing" data-bind="checked: emailMarketing">
+                        <label class="form-check-label" for="emailMarketing">
+                            <strong>Pazarlama E-postalari</strong>
+                            <br><small class="text-muted">Kampanya ve duyurulardan haberdar ol</small>
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailWeeklyDigest" data-bind="checked: emailWeeklyDigest">
+                        <label class="form-check-label" for="emailWeeklyDigest">
+                            <strong>Haftalik Ozet</strong>
+                            <br><small class="text-muted">Haftalik aktivite ozeti al</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- In-App Bildirimleri -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-app-indicator me-2"></i>
+                        @Html.T("Notifications.InApp", "Uygulama Ici Bildirimler")
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="inAppOrders" data-bind="checked: inAppOrders">
+                                <label class="form-check-label" for="inAppOrders">Siparis Bildirimleri</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="inAppMessages" data-bind="checked: inAppMessages">
+                                <label class="form-check-label" for="inAppMessages">Mesaj Bildirimleri</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="inAppSystem" data-bind="checked: inAppSystem">
+                                <label class="form-check-label" for="inAppSystem">Sistem Bildirimleri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/NotificationSettings.js"></script>
+}

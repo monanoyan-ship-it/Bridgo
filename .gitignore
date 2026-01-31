@@ -1,0 +1,55 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# .NET Core
+*.dll
+*.exe
+*.pdb
+
+# User-specific files
+*.rsuser
+*.userprefs
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+appsettings.Development.json
+
+# Claude
+.claude/
+
+# User uploads (keep .gitkeep files)
+wwwroot/uploads/**/*
+!wwwroot/uploads/**/.gitkeep

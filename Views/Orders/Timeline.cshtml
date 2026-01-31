@@ -1,0 +1,349 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("OrderTimeline.Title", "Siparis Takip").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        /* Timeline Styles */
+        .order-timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+        .order-timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #0d6efd 0%, #e9ecef 100%);
+            border-radius: 2px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        .timeline-icon {
+            position: absolute;
+            left: -40px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            z-index: 1;
+        }
+        .timeline-icon.completed {
+            background: #198754;
+            color: white;
+        }
+        .timeline-icon.current {
+            background: #0d6efd;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        .timeline-icon.pending {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        .timeline-content {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .timeline-item.completed .timeline-content {
+            border-left: 3px solid #198754;
+        }
+        .timeline-item.current .timeline-content {
+            border-left: 3px solid #0d6efd;
+            background: #f8f9ff;
+        }
+        .timeline-item.pending .timeline-content {
+            border-left: 3px solid #e9ecef;
+            opacity: 0.7;
+        }
+        @@keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+        }
+
+        /* Participant Cards */
+        .participant-card {
+            transition: all 0.2s ease;
+        }
+        .participant-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Status Badge */
+        .status-badge-lg {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+        }
+    </style>
+}
+
+<div id="timeline-app">
+    <!-- Back Button & Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/Orders/MyOrders" class="btn btn-outline-secondary btn-sm mb-2">
+                <i class="bi bi-arrow-left me-1"></i>@Html.T("OrderTimeline.BackToOrders", "Siparislerime Don")
+            </a>
+            <h4 class="mb-0">
+                <i class="bi bi-clock-history text-primary me-2"></i>
+                @Html.T("OrderTimeline.Title", "Siparis Takip")
+                <span class="badge bg-light text-dark ms-2" data-bind="text: order()?.orderNumber"></span>
+            </h4>
+        </div>
+        <div data-bind="visible: order()">
+            <span class="status-badge-lg badge" data-bind="text: order()?.statusName, css: getStatusBadgeClass(order()?.status)"></span>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading()" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+    </div>
+
+    <!-- Error -->
+    <div data-bind="visible: !isLoading() && errorMessage()" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span data-bind="text: errorMessage"></span>
+    </div>
+
+    <!-- Content -->
+    <div data-bind="visible: !isLoading() && order()">
+        <div class="row">
+            <!-- Left: Timeline -->
+            <div class="col-lg-8">
+                <!-- Order Summary Card -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-box me-2"></i>@Html.T("OrderTimeline.OrderInfo", "Siparis Bilgileri")</h6>
+                        <small class="text-muted" data-bind="text: '@Html.T("OrderTimeline.CreatedAt", "Olusturulma"): ' + formatDateTime(order()?.createdAt)"></small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <td class="text-muted">@Html.T("Common.Seller", "Satici"):</td>
+                                        <td class="fw-medium" data-bind="text: order()?.sellerCompanyName"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">@Html.T("OrderTimeline.ItemCount", "Urun Sayisi"):</td>
+                                        <td data-bind="text: (order()?.items?.length || 0) + ' @Html.T("OrderTimeline.Items", "kalem")'"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">@Html.T("OrderTimeline.PaymentStatus", "Odeme Durumu"):</td>
+                                        <td>
+                                            <span class="badge" data-bind="text: order()?.paymentStatusName, css: getPaymentBadgeClass(order()?.paymentStatus)"></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <div class="text-muted small">@Html.T("OrderTimeline.TotalAmount", "Toplam Tutar")</div>
+                                <div class="fs-3 fw-bold text-primary" data-bind="text: formatCurrency(order()?.totalAmount) + ' ' + (order()?.currency || 'TRY')"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>@Html.T("OrderTimeline.History", "Siparis Gecmisi")</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- No History -->
+                        <div data-bind="visible: !history().length" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2 mb-0">@Html.T("OrderTimeline.NoHistory", "Henuz kayit yok.")</p>
+                        </div>
+
+                        <!-- Timeline Items -->
+                        <div class="order-timeline" data-bind="foreach: history">
+                            <div class="timeline-item" data-bind="css: { 'completed': isCompleted, 'current': isCurrent, 'pending': isPending }">
+                                <div class="timeline-icon" data-bind="css: { 'completed': isCompleted, 'current': isCurrent, 'pending': isPending }">
+                                    <!-- ko if: isCompleted -->
+                                    <i class="bi bi-check"></i>
+                                    <!-- /ko -->
+                                    <!-- ko if: isCurrent -->
+                                    <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+                                    <!-- /ko -->
+                                    <!-- ko if: isPending -->
+                                    <i class="bi bi-circle"></i>
+                                    <!-- /ko -->
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong data-bind="text: statusName"></strong>
+                                            <!-- ko if: notes -->
+                                            <p class="mb-0 mt-1 small text-muted" data-bind="text: notes"></p>
+                                            <!-- /ko -->
+                                        </div>
+                                        <small class="text-muted" data-bind="text: $parent.formatDateTime(changedAt)"></small>
+                                    </div>
+                                    <!-- ko if: changedBy -->
+                                    <small class="text-muted">
+                                        <i class="bi bi-person me-1"></i>
+                                        <span data-bind="text: changedBy"></span>
+                                    </small>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipments -->
+                <div class="card mt-4" data-bind="visible: order()?.shipments?.length > 0">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-truck me-2"></i>@Html.T("OrderTimeline.ShipmentInfo", "Kargo Bilgileri")</h6>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="foreach: order()?.shipments || []">
+                            <div class="border rounded p-3 mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong data-bind="text: carrierName || '@Html.T("OrderTimeline.Cargo", "Kargo")'"></strong>
+                                        <!-- ko if: trackingNumber -->
+                                        <span class="ms-2 text-muted">
+                                            <i class="bi bi-upc-scan me-1"></i>
+                                            <span data-bind="text: trackingNumber"></span>
+                                        </span>
+                                        <!-- /ko -->
+                                    </div>
+                                    <span class="badge" data-bind="text: statusName, css: $parent.getShipmentBadgeClass(status)"></span>
+                                </div>
+                                <!-- ko if: trackingUrl -->
+                                <a class="btn btn-sm btn-outline-primary mt-2" data-bind="attr: { href: trackingUrl }" target="_blank">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>@Html.T("OrderTimeline.Track", "Takip Et")
+                                </a>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Participants & Services -->
+            <div class="col-lg-4">
+                <!-- Delivery Address -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>@Html.T("Common.ShippingAddress", "Teslimat Adresi")</h6>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: order()?.shippingAddress">
+                            <strong data-bind="text: order()?.shippingAddress?.title"></strong>
+                            <p class="mb-1 small" data-bind="text: order()?.shippingAddress?.addressLine"></p>
+                            <small class="text-muted">
+                                <span data-bind="text: order()?.shippingAddress?.city"></span>,
+                                <span data-bind="text: order()?.shippingAddress?.countryName"></span>
+                            </small>
+                        </div>
+                        <div data-bind="visible: !order()?.shippingAddress" class="text-muted">
+                            @Html.T("OrderTimeline.NoAddress", "Adres bilgisi yok")
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Participants -->
+                <div class="card mb-4" data-bind="visible: order()?.participants?.length > 0">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-people me-2"></i>@Html.T("OrderTimeline.Participants", "Katilimcilar")</h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <div data-bind="foreach: order()?.participants || []">
+                            <div class="participant-card p-2 rounded mb-2 bg-light">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white p-2 me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi" data-bind="class: $parent.getParticipantIcon(role)"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-medium small" data-bind="text: vendorName"></div>
+                                        <small class="text-muted" data-bind="text: roleName"></small>
+                                    </div>
+                                    <span class="badge bg-secondary" data-bind="text: $parent.formatCurrency(amount) + ' ' + currency"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Requests -->
+                <div class="card" data-bind="visible: order()?.serviceRequests?.length > 0">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>@Html.T("OrderTimeline.ServiceRequests", "Hizmet Talepleri")</h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <div data-bind="foreach: order()?.serviceRequests || []">
+                            <div class="p-2 rounded mb-2 bg-light">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi me-2" data-bind="class: serviceTypeIcon"></i>
+                                        <span class="small" data-bind="text: serviceTypeName"></span>
+                                    </div>
+                                    <span class="badge" data-bind="text: statusName, css: $parent.getServiceStatusClass(status)"></span>
+                                </div>
+                                <!-- ko if: selectedQuoteAmount -->
+                                <div class="text-end mt-1">
+                                    <small class="text-success fw-bold" data-bind="text: $parent.formatCurrency(selectedQuoteAmount) + ' ' + currency"></small>
+                                </div>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card mt-4" data-bind="visible: canTakeAction()">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>@Html.T("Common.Actions", "Islemler")</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Confirm Delivery -->
+                        <button class="btn btn-success w-100 mb-2"
+                                data-bind="visible: canConfirmDelivery(), click: confirmDelivery, disable: isProcessing()">
+                            <i class="bi bi-check-circle me-1"></i>@Html.T("OrderTimeline.ConfirmDelivery", "Teslim Aldim")
+                        </button>
+                        <!-- Review -->
+                        <a class="btn btn-outline-primary w-100" href="/Orders/MyOrders"
+                           data-bind="visible: canReview()">
+                            <i class="bi bi-star me-1"></i>@Html.T("OrderTimeline.Review", "Degerlendirme Yap")
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/OrderTimeline.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var orderId = @(ViewBag.Id ?? 0);
+            if (orderId > 0) {
+                ko.applyBindings(new OrderTimelineViewModel(orderId), document.getElementById('timeline-app'));
+            } else {
+                document.getElementById('timeline-app').innerHTML = '<div class="alert alert-danger">@Html.T("OrderTimeline.InvalidId", "Gecersiz siparis ID")</div>';
+            }
+        });
+    </script>
+}

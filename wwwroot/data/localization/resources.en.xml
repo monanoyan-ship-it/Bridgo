@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- COMMON -->
+  <resource name="Common.AppName">Bridgo B2B Platform</resource>
+  <resource name="Common.Save">Save</resource>
+  <resource name="Common.Cancel">Cancel</resource>
+  <resource name="Common.Delete">Delete</resource>
+  <resource name="Common.Edit">Edit</resource>
+  <resource name="Common.Add">Add</resource>
+  <resource name="Common.Search">Search</resource>
+  <resource name="Common.Filter">Filter</resource>
+  <resource name="Common.Close">Close</resource>
+  <resource name="Common.Confirm">Confirm</resource>
+  <resource name="Common.Yes">Yes</resource>
+  <resource name="Common.No">No</resource>
+  <resource name="Common.Back">Back</resource>
+  <resource name="Common.Next">Continue</resource>
+  <resource name="Common.Loading">Loading...</resource>
+  <resource name="Common.NoData">No data found</resource>
+  <resource name="Common.Error">Error</resource>
+  <resource name="Common.Success">Success</resource>
+  <resource name="Common.Warning">Warning</resource>
+  <resource name="Common.Required">Required field</resource>
+  <resource name="Common.Actions">Actions</resource>
+  <resource name="Common.Status">Status</resource>
+  <resource name="Common.Active">Active</resource>
+  <resource name="Common.Inactive">Inactive</resource>
+  <resource name="Common.All">All</resource>
+  <resource name="Common.SelectAll">Select All</resource>
+  <resource name="Common.Clear">Clear</resource>
+  <resource name="Common.View">View</resource>
+  <resource name="Common.Update">Update</resource>
+  <resource name="Common.Saving">Saving...</resource>
+  <resource name="Common.Select">Select...</resource>
+
+  <!-- NAVIGATION -->
+  <resource name="Nav.Home">Home</resource>
+  <resource name="Nav.Dashboard">Dashboard</resource>
+  <resource name="Nav.AdminPanel">Admin Panel</resource>
+  <resource name="Nav.Profile">Profile</resource>
+  <resource name="Nav.Logout">Logout</resource>
+  <resource name="Nav.Login">Login</resource>
+  <resource name="Nav.Register">Sign Up</resource>
+
+  <!-- ACCOUNT / LOGIN -->
+  <resource name="Account.Login.Title">Login</resource>
+  <resource name="Account.Login.Submit">Login</resource>
+  <resource name="Account.Login.RememberMe">Remember me</resource>
+  <resource name="Account.Login.NoAccount">Don't have an account?</resource>
+  <resource name="Account.Login.InvalidAttempt">Invalid login attempt.</resource>
+  <resource name="Account.Login.LockedOut">Your account has been temporarily locked. Please try again later.</resource>
+  <resource name="Account.Fields.Email">Email</resource>
+  <resource name="Account.Fields.Email.Placeholder">example@email.com</resource>
+  <resource name="Account.Fields.Password">Password</resource>
+  <resource name="Account.Fields.Password.Placeholder">At least 6 characters</resource>
+  <resource name="Account.Fields.ConfirmPassword">Confirm Password</resource>
+
+  <!-- ACCOUNT / PROFILE -->
+  <resource name="Account.Profile.Title">Profile</resource>
+  <resource name="Account.Profile.Info">Profile Information</resource>
+  <resource name="Account.Profile.Name">Full Name</resource>
+  <resource name="Account.Profile.Phone">Phone</resource>
+  <resource name="Account.Profile.LastLogin">Last Login</resource>
+  <resource name="Account.Profile.ChangePassword">Change Password</resource>
+  <resource name="Account.Profile.CurrentPassword">Current Password</resource>
+  <resource name="Account.Profile.NewPassword">New Password</resource>
+  <resource name="Account.Profile.ConfirmPassword">Confirm New Password</resource>
+  <resource name="Account.Profile.PasswordHint">At least 6 characters</resource>
+  <resource name="Account.Profile.ChangePasswordBtn">Change Password</resource>
+  <resource name="Account.Profile.FillAllFields">Please fill in all fields</resource>
+  <resource name="Account.Profile.PasswordMismatch">New passwords do not match</resource>
+  <resource name="Account.Profile.PasswordTooShort">Password must be at least 6 characters</resource>
+
+  <!-- ADMIN -->
+  <resource name="Admin.Title">Admin Panel</resource>
+  <resource name="Admin.Section.Rbac">RBAC</resource>
+  <resource name="Admin.Section.System">System</resource>
+  <resource name="Admin.BackToSite">Back to Site</resource>
+  <resource name="Admin.Menu.Dashboard">Overview</resource>
+  <resource name="Admin.Menu.Capabilities">Capabilities</resource>
+  <resource name="Admin.Menu.Modules">Modules</resource>
+  <resource name="Admin.Menu.Roles">Roles</resource>
+  <resource name="Admin.Menu.Vendors">Vendors</resource>
+  <resource name="Admin.Menu.Users">Users</resource>
+  <resource name="Admin.Menu.Geography">Geography</resource>
+  <resource name="Admin.Menu.Languages">Languages</resource>
+  <resource name="Admin.Menu.Localization">Localization</resource>
+
+  <!-- ADMIN TABLE -->
+  <resource name="Admin.Table.Order">Order</resource>
+  <resource name="Admin.Table.Name">Name</resource>
+  <resource name="Admin.Table.Code">Code</resource>
+  <resource name="Admin.Table.Description">Description</resource>
+  <resource name="Admin.Table.Icon">Icon</resource>
+  <resource name="Admin.Table.Status">Status</resource>
+  <resource name="Admin.Table.Actions">Actions</resource>
+  <resource name="Admin.Table.VendorCount">Vendor Count</resource>
+  <resource name="Admin.Table.Capability">Capability</resource>
+  <resource name="Admin.Table.FullName">Full Name</resource>
+  <resource name="Admin.Table.Email">Email</resource>
+  <resource name="Admin.Table.Company">Company</resource>
+  <resource name="Admin.Table.VendorRole">Vendor Role</resource>
+  <resource name="Admin.Table.SystemRole">System Role</resource>
+  <resource name="Admin.Table.LastLogin">Last Login</resource>
+  <resource name="Admin.Table.FirstName">First Name</resource>
+  <resource name="Admin.Table.LastName">Last Name</resource>
+  <resource name="Admin.Table.Phone">Phone</resource>
+  <resource name="Admin.Table.Password">Password</resource>
+
+  <!-- ADMIN USERS -->
+  <resource name="Admin.Users.Title">User Management</resource>
+  <resource name="Admin.Users.AllUsers">All Users</resource>
+  <resource name="Admin.Users.AllRoles">All Roles</resource>
+  <resource name="Admin.Users.Add">Add User</resource>
+  <resource name="Admin.Users.Empty">No users found</resource>
+  <resource name="Admin.Users.Activate">Activate</resource>
+  <resource name="Admin.Users.Deactivate">Deactivate</resource>
+  <resource name="Admin.Users.NoCompany">No Company (System User)</resource>
+  <resource name="Admin.Users.IsSystemAdmin">System Administrator</resource>
+  <resource name="Admin.Users.PasswordHint">At least 6 characters, uppercase/lowercase letters and numbers</resource>
+
+  <!-- ADMIN VENDORS -->
+  <resource name="Admin.Vendors.Title">Vendor Management</resource>
+  <resource name="Admin.Vendors.AllVendors">All Vendors</resource>
+  <resource name="Admin.Vendors.AllStatuses">All Statuses</resource>
+  <resource name="Admin.Vendors.Empty">No vendors found</resource>
+  <resource name="Admin.Vendors.Approve">Approve</resource>
+  <resource name="Admin.Vendors.Suspend">Suspend</resource>
+  <resource name="Admin.Vendors.Reactivate">Reactivate</resource>
+
+  <!-- ADMIN LANGUAGES -->
+  <resource name="Admin.Languages.Title">Language Management</resource>
+  <resource name="Admin.Languages.AllLanguages">All Languages</resource>
+  <resource name="Admin.Languages.AddNew">New Language</resource>
+  <resource name="Admin.Languages.Edit">Edit Language</resource>
+  <resource name="Admin.Languages.Language">Language</resource>
+  <resource name="Admin.Languages.Name">Language Name</resource>
+  <resource name="Admin.Languages.NativeName">Native Name</resource>
+  <resource name="Admin.Languages.Culture">Culture Code</resource>
+  <resource name="Admin.Languages.SeoCode">SEO Code</resource>
+  <resource name="Admin.Languages.Iso3Code">ISO3 Code</resource>
+  <resource name="Admin.Languages.FlagEmoji">Flag Emoji</resource>
+  <resource name="Admin.Languages.FlagImage">Flag File</resource>
+  <resource name="Admin.Languages.Rtl">Right to Left (RTL)</resource>
+  <resource name="Admin.Languages.GeoTranslation">Geographic Translations</resource>
+  <resource name="Admin.Languages.Default">Default</resource>
+  <resource name="Admin.Languages.SetDefault">Set as Default</resource>
+  <resource name="Admin.Languages.Resources">Resources</resource>
+  <resource name="Admin.Languages.ResourceCount">Resources</resource>
+  <resource name="Admin.Languages.Empty">No languages defined yet</resource>
+
+  <!-- ADMIN LOCALIZATION -->
+  <resource name="Admin.Localization.Title">Localization Management</resource>
+  <resource name="Admin.Localization.Resources">Localization Resources</resource>
+  <resource name="Admin.Localization.AddNew">New Resource</resource>
+  <resource name="Admin.Localization.Key">Key</resource>
+  <resource name="Admin.Localization.Value">Value</resource>
+  <resource name="Admin.Localization.Export">Export</resource>
+  <resource name="Admin.Localization.Import">Import</resource>
+  <resource name="Admin.Localization.ImportFromFile">Load from File</resource>
+  <resource name="Admin.Localization.TotalResources">resources</resource>
+  <resource name="Admin.Localization.Empty">No resources defined for this language</resource>
+  <resource name="Admin.Localization.NoResults">No resources found matching search criteria</resource>
+
+  <!-- VENDOR ROLES -->
+  <resource name="VendorRole.Owner">Owner</resource>
+  <resource name="VendorRole.Admin">Admin</resource>
+  <resource name="VendorRole.Manager">Manager</resource>
+  <resource name="VendorRole.Employee">Employee</resource>
+
+  <!-- DASHBOARD -->
+  <resource name="Dashboard.Title">Dashboard</resource>
+  <resource name="Dashboard.Overview">Overview</resource>
+  <resource name="Dashboard.Company">Company</resource>
+  <resource name="Dashboard.ReturnHome">Return to Home</resource>
+  <resource name="Dashboard.Logout">Logout</resource>
+  <resource name="Dashboard.Menu">Menu</resource>
+  <resource name="Dashboard.Section.Dashboard">Dashboard</resource>
+  <resource name="Dashboard.Section.Actions">Actions</resource>
+  <resource name="Dashboard.Section.Account">Account</resource>
+  <resource name="Dashboard.Section.Apps">Apps</resource>
+  <resource name="Dashboard.Section.Settings">Settings</resource>
+  <resource name="Dashboard.Section.ServiceProviders">Service Providers</resource>
+</resources>

@@ -1,0 +1,337 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Warehouse.Title", "Depolar").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="warehouses-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-box-seam me-2"></i>@Html.T("Warehouse.Title", "Depolar")</h4>
+            <p class="text-muted mb-0">@Html.T("Warehouse.Description", "Depo ve stok lokasyonlarini yonetin")</p>
+        </div>
+        <button class="btn btn-primary" data-bind="click: openCreateModal">
+            <i class="bi bi-plus-circle me-1"></i> @Html.T("Warehouse.Add", "Yeni Depo")
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body py-2">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="@Html.T("Common.Search", "Ara...")"
+                               data-bind="value: searchQuery, valueUpdate: 'afterkeydown'" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" data-bind="value: filterType">
+                        <option value="">@Html.T("Warehouse.AllTypes", "Tum Tipler")</option>
+                        <!-- ko foreach: warehouseTypes -->
+                        <option data-bind="value: id, text: T(nameResourceKey)"></option>
+                        <!-- /ko -->
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" data-bind="value: filterStatus">
+                        <option value="">@Html.T("Common.AllStatus", "Tum Durumlar")</option>
+                        <option value="active">@Html.T("Common.Active", "Aktif")</option>
+                        <option value="inactive">@Html.T("Common.Inactive", "Pasif")</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <span class="text-muted small" data-bind="text: filteredWarehouses().length + ' @Html.T("Common.Records", "kayit")'"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+    </div>
+
+    <!-- Empty State -->
+    <div data-bind="visible: !isLoading() && filteredWarehouses().length === 0" class="text-center py-5">
+        <i class="bi bi-box-seam text-muted" style="font-size: 4rem;"></i>
+        <h5 class="mt-3">@Html.T("Warehouse.Empty", "Henuz depo eklenmemis")</h5>
+        <p class="text-muted">@Html.T("Warehouse.EmptyDescription", "Ilk deponuzu ekleyerek baslayabilirsiniz.")</p>
+        <button class="btn btn-primary" data-bind="click: openCreateModal">
+            <i class="bi bi-plus-circle me-1"></i> @Html.T("Warehouse.Add", "Yeni Depo")
+        </button>
+    </div>
+
+    <!-- Warehouse Table -->
+    <div data-bind="visible: !isLoading() && filteredWarehouses().length > 0" class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>@Html.T("Warehouse.Code", "Kod")</th>
+                        <th>@Html.T("Warehouse.Name", "Depo Adi")</th>
+                        <th>@Html.T("Warehouse.Type", "Tip")</th>
+                        <th>@Html.T("Warehouse.Location", "Lokasyon")</th>
+                        <th>@Html.T("Warehouse.Manager", "Sorumlu")</th>
+                        <th class="text-center">@Html.T("Warehouse.Products", "Urun")</th>
+                        <th class="text-center">@Html.T("Warehouse.Stock", "Stok")</th>
+                        <th class="text-center">@Html.T("Common.Status", "Durum")</th>
+                        <th class="text-end">@Html.T("Common.Actions", "Islemler")</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: filteredWarehouses">
+                    <tr data-bind="css: { 'table-primary': isDefault, 'opacity-50': !isActive }">
+                        <td>
+                            <span class="badge bg-secondary" data-bind="text: code"></span>
+                        </td>
+                        <td>
+                            <span class="fw-medium" data-bind="text: name"></span>
+                            <!-- ko if: isDefault -->
+                            <span class="badge bg-primary ms-1">@Html.T("Warehouse.Default", "Varsayilan")</span>
+                            <!-- /ko -->
+                        </td>
+                        <td>
+                            <i class="bi me-1" data-bind="class: $parent.getTypeIcon(warehouseTypeId)"></i>
+                            <span data-bind="text: T(warehouseTypeName)"></span>
+                        </td>
+                        <td>
+                            <!-- ko if: city || addressLine -->
+                            <i class="bi bi-geo-alt text-muted me-1"></i>
+                            <span data-bind="text: city"></span>
+                            <!-- ko if: addressLine -->
+                            <small class="text-muted" data-bind="text: ' - ' + addressLine"></small>
+                            <!-- /ko -->
+                            <!-- /ko -->
+                            <!-- ko ifnot: city || addressLine -->
+                            <span class="text-muted">-</span>
+                            <!-- /ko -->
+                        </td>
+                        <td>
+                            <!-- ko if: managerName -->
+                            <i class="bi bi-person text-muted me-1"></i>
+                            <span data-bind="text: managerName"></span>
+                            <!-- /ko -->
+                            <!-- ko ifnot: managerName -->
+                            <span class="text-muted">-</span>
+                            <!-- /ko -->
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-medium" data-bind="text: productCount">0</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-medium" data-bind="text: totalStockQuantity.toLocaleString()">0</span>
+                        </td>
+                        <td class="text-center">
+                            <!-- ko if: isActive -->
+                            <span class="badge bg-success">@Html.T("Common.Active", "Aktif")</span>
+                            <!-- /ko -->
+                            <!-- ko ifnot: isActive -->
+                            <span class="badge bg-secondary">@Html.T("Common.Inactive", "Pasif")</span>
+                            <!-- /ko -->
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" data-bind="click: $parent.openEditModal" title="@Html.T("Common.Edit", "Duzenle")">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <!-- ko if: !isDefault -->
+                                <button class="btn btn-outline-warning" data-bind="click: $parent.setAsDefault" title="@Html.T("Warehouse.SetDefault", "Varsayilan Yap")">
+                                    <i class="bi bi-star"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" data-bind="click: $parent.confirmDelete" title="@Html.T("Common.Delete", "Sil")">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <!-- /ko -->
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal fade" id="warehouseModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-box-seam me-2"></i>
+                        <span data-bind="text: isEditing() ? '@Html.T("Warehouse.Edit", "Depo Duzenle")' : '@Html.T("Warehouse.Add", "Yeni Depo")'"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Error Message -->
+                    <div data-bind="visible: modalError" class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <span data-bind="text: modalError"></span>
+                    </div>
+
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general">
+                                <i class="bi bi-info-circle me-1"></i> @Html.T("Common.General", "Genel")
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-location">
+                                <i class="bi bi-geo-alt me-1"></i> @Html.T("Warehouse.Location", "Lokasyon")
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-contact">
+                                <i class="bi bi-person me-1"></i> @Html.T("Warehouse.Contact", "Iletisim")
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- General Tab -->
+                        <div class="tab-pane fade show active" id="tab-general">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">@Html.T("Warehouse.Code", "Depo Kodu") <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" maxlength="20"
+                                           data-bind="value: form.code, css: { 'is-invalid': errors.code }"
+                                           placeholder="WH001" />
+                                    <div class="invalid-feedback" data-bind="text: errors.code"></div>
+                                    <small class="text-muted">@Html.T("Warehouse.CodeHint", "Benzersiz kod (otomatik buyuk harf)")</small>
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">@Html.T("Warehouse.Name", "Depo Adi") <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" maxlength="100"
+                                           data-bind="value: form.name, css: { 'is-invalid': errors.name }"
+                                           placeholder="@Html.T("Warehouse.NamePlaceholder", "Ana Depo")" />
+                                    <div class="invalid-feedback" data-bind="text: errors.name"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("Warehouse.Type", "Depo Tipi")</label>
+                                    <select class="form-select" data-bind="value: form.warehouseTypeId, options: warehouseTypes, optionsText: function(t) { return T(t.nameResourceKey); }, optionsValue: 'id'">
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("Warehouse.Priority", "Oncelik")</label>
+                                    <input type="number" class="form-control" min="0" max="100"
+                                           data-bind="value: form.priority" />
+                                    <small class="text-muted">@Html.T("Warehouse.PriorityHint", "Dusuk deger = yuksek oncelik")</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Warehouse.Description", "Aciklama")</label>
+                                <textarea class="form-control" rows="2" maxlength="500"
+                                          data-bind="value: form.description"
+                                          placeholder="@Html.T("Warehouse.DescriptionPlaceholder", "Depo hakkinda notlar...")"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">@Html.T("Warehouse.Capacity", "Kapasite")</label>
+                                    <input type="number" class="form-control" min="0" step="0.01"
+                                           data-bind="value: form.totalCapacity" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">@Html.T("Warehouse.CapacityUnit", "Birim")</label>
+                                    <select class="form-select" data-bind="value: form.capacityUnit">
+                                        <option value="">@Html.T("Common.Select", "Secin...")</option>
+                                        <option value="m3">m³</option>
+                                        <option value="pallet">@Html.T("Warehouse.Pallet", "Palet")</option>
+                                        <option value="unit">@Html.T("Warehouse.Unit", "Adet")</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="isDefault"
+                                               data-bind="checked: form.isDefault" />
+                                        <label class="form-check-label" for="isDefault">
+                                            @Html.T("Warehouse.IsDefault", "Varsayilan Depo")
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="isActive"
+                                               data-bind="checked: form.isActive" />
+                                        <label class="form-check-label" for="isActive">
+                                            @Html.T("Common.Active", "Aktif")
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location Tab -->
+                        <div class="tab-pane fade" id="tab-location">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Warehouse.Address", "Adres")</label>
+                                <select class="form-select" data-bind="value: form.addressId, options: addresses, optionsText: function(a) { return a.title + ' (' + a.city + (a.addressLine ? ', ' + a.addressLine : '') + ')'; }, optionsValue: 'id', optionsCaption: '@Html.T("Warehouse.SelectAddress", "Adres secin veya bos birakin...")'">
+                                </select>
+                                <small class="text-muted">@Html.T("Warehouse.AddressHint", "Firma adreslerinizden birini secebilirsiniz")</small>
+                            </div>
+                        </div>
+
+                        <!-- Contact Tab -->
+                        <div class="tab-pane fade" id="tab-contact">
+                            <div class="mb-3">
+                                <label class="form-label">@Html.T("Warehouse.Manager", "Depo Sorumlusu")</label>
+                                <select class="form-select" data-bind="value: form.managerUserId, options: teamMembers, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Common.Select", "Secin...")'">
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("Warehouse.Phone", "Telefon")</label>
+                                    <input type="tel" class="form-control" maxlength="20"
+                                           data-bind="value: form.contactPhone"
+                                           placeholder="+90 212 123 4567" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@Html.T("Warehouse.Email", "E-posta")</label>
+                                    <input type="email" class="form-control" maxlength="100"
+                                           data-bind="value: form.contactEmail"
+                                           placeholder="depo@firma.com" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        @Html.T("Common.Cancel", "Iptal")
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bind="click: save, disable: isSaving">
+                        <span data-bind="visible: isSaving" class="spinner-border spinner-border-sm me-1"></span>
+                        @Html.T("Common.Save", "Kaydet")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>@Html.T("Common.Confirm", "Onay")</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Html.T("Warehouse.DeleteConfirm", "Bu depoyu silmek istediginize emin misiniz?")</p>
+                    <p class="fw-bold" data-bind="text: deleteWarehouseName"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-danger" data-bind="click: deleteWarehouse">
+                        <i class="bi bi-trash me-1"></i> @Html.T("Common.Delete", "Sil")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Warehouses/Index.js"></script>
+}

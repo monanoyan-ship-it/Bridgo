@@ -1,0 +1,430 @@
+@using Bridgo.Extensions
+@using Bridgo.DTOs.Demand
+@model DemandDetailDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Model.MetaTitle ?? Model.Title;
+    ViewData["Description"] = Model.MetaDescription ?? Model.Description?.Substring(0, Math.Min(Model.Description?.Length ?? 0, 160));
+}
+
+@section Head {
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="@ViewData["Description"]" />
+    <meta name="robots" content="@(Model.IsIndexable ? "index, follow" : "noindex, nofollow")" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host/Demands/@Model.Slug" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="product" />
+    <meta property="og:title" content="@ViewData["Title"]" />
+    <meta property="og:description" content="@ViewData["Description"]" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host/Demands/@Model.Slug" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "Demand",
+        "name": "@Html.Raw(System.Text.Json.JsonEncodedText.Encode(Model.Title))",
+        "description": "@Html.Raw(System.Text.Json.JsonEncodedText.Encode(Model.Description ?? ""))",
+        "url": "@Context.Request.Scheme://@Context.Request.Host/Demands/@Model.Slug",
+        "dateCreated": "@Model.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ssZ")",
+        @if (Model.ExpiresAt.HasValue)
+        {
+            <text>"validThrough": "@Model.ExpiresAt.Value.ToString("yyyy-MM-ddTHH:mm:ssZ")",</text>
+        }
+        @if (!string.IsNullOrEmpty(Model.CountryName))
+        {
+            <text>"areaServed": {
+            "@@type": "Country",
+            "name": "@Model.CountryName"
+        },</text>
+        }
+        @if (Model.BudgetMin.HasValue || Model.BudgetMax.HasValue)
+        {
+            <text>"priceSpecification": {
+            "@@type": "PriceSpecification",
+            @if (Model.BudgetMin.HasValue)
+            {
+                <text>"minPrice": @Model.BudgetMin.Value,</text>
+            }
+            @if (Model.BudgetMax.HasValue)
+            {
+                <text>"maxPrice": @Model.BudgetMax.Value,</text>
+            }
+            "priceCurrency": "@(Model.BudgetCurrency ?? "TRY")"
+        },</text>
+        }
+        "category": "@(Model.CategoryName ?? "")",
+        "businessFunction": "http://purl.org/goodrelations/v1#ProvideService"
+    }
+    </script>
+}
+
+<div id="demand-detail-app" class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">@Html.T("Nav.Home", "Ana Sayfa")</a></li>
+            <li class="breadcrumb-item"><a href="/Demands">@Html.T("Demands.Title", "Talepler")</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Header Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <!-- Status & Category -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            @if (!string.IsNullOrEmpty(Model.CategoryName))
+                            {
+                                <span class="badge bg-primary mb-2">@Model.CategoryName</span>
+                            }
+                            @if (Model.HasReferenceProduct)
+                            {
+                                <span class="badge bg-info mb-2">
+                                    <i class="bi bi-link-45deg"></i> @Html.T("Demands.HasReferenceProduct", "Referans Urunlu")
+                                </span>
+                            }
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle"></i> @Html.T("Demands.Active", "Aktif")
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Title -->
+                    <h1 class="h3 mb-3">@Model.Title</h1>
+
+                    <!-- Quick Info -->
+                    <div class="row g-3 mb-4">
+                        @if (Model.Quantity.HasValue)
+                        {
+                            <div class="col-auto">
+                                <div class="bg-light rounded p-2 px-3">
+                                    <small class="text-muted d-block">@Html.T("Demands.Quantity", "Miktar")</small>
+                                    <strong>@Model.Quantity @(Model.Unit ?? "Adet")</strong>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.CountryName))
+                        {
+                            <div class="col-auto">
+                                <div class="bg-light rounded p-2 px-3">
+                                    <small class="text-muted d-block">@Html.T("Common.Location", "Konum")</small>
+                                    <strong><i class="bi bi-geo-alt"></i> @Model.CountryName @(!string.IsNullOrEmpty(Model.City) ? $", {Model.City}" : "")</strong>
+                                </div>
+                            </div>
+                        }
+                        @if (Model.DesiredLeadTimeDays.HasValue)
+                        {
+                            <div class="col-auto">
+                                <div class="bg-light rounded p-2 px-3">
+                                    <small class="text-muted d-block">@Html.T("Demands.LeadTime", "Teslim Suresi")</small>
+                                    <strong>@Model.DesiredLeadTimeDays @Html.T("Common.Days", "gun")</strong>
+                                </div>
+                            </div>
+                        }
+                        @if (Model.BudgetMin.HasValue || Model.BudgetMax.HasValue)
+                        {
+                            <div class="col-auto">
+                                <div class="bg-light rounded p-2 px-3">
+                                    <small class="text-muted d-block">@Html.T("Demands.Budget", "Butce")</small>
+                                    <strong class="text-success">
+                                        @if (Model.BudgetMin.HasValue) { @Model.BudgetMin.Value.ToString("N0") }
+                                        @if (Model.BudgetMin.HasValue && Model.BudgetMax.HasValue) { <text> - </text> }
+                                        @if (Model.BudgetMax.HasValue) { @Model.BudgetMax.Value.ToString("N0") }
+                                        @(Model.BudgetCurrency ?? "TRY")
+                                    </strong>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Description -->
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-4">
+                            <h5>@Html.T("Common.Description", "Aciklama")</h5>
+                            <p class="text-muted" style="white-space: pre-line;">@Model.Description</p>
+                        </div>
+                    }
+
+                    <!-- Reference Product -->
+                    @if (Model.ReferenceProductId.HasValue)
+                    {
+                        <div class="mb-4">
+                            <h5><i class="bi bi-link-45deg"></i> @Html.T("Demands.ReferenceProduct", "Referans Urun")</h5>
+                            <div class="card bg-light">
+                                <div class="card-body d-flex align-items-center gap-3">
+                                    @if (!string.IsNullOrEmpty(Model.ReferenceProductImage))
+                                    {
+                                        <img src="@Model.ReferenceProductImage" alt="@Model.ReferenceProductName" class="rounded" style="width: 80px; height: 80px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-image text-white fs-3"></i>
+                                        </div>
+                                    }
+                                    <div>
+                                        <h6 class="mb-1">@Model.ReferenceProductName</h6>
+                                        <small class="text-muted">@Html.T("Demands.ReferenceProductNote", "Bu urune benzer veya bu urunun modifikasyonu isteniyor")</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Modifications -->
+                    @if (Model.Modifications != null && Model.Modifications.Any())
+                    {
+                        <div class="mb-4">
+                            <h5><i class="bi bi-sliders"></i> @Html.T("Demands.Modifications", "Istenen Degisiklikler")</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>@Html.T("Demands.Property", "Ozellik")</th>
+                                            <th>@Html.T("Demands.Original", "Mevcut")</th>
+                                            <th>@Html.T("Demands.Desired", "Istenen")</th>
+                                            <th>@Html.T("Common.Notes", "Not")</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var mod in Model.Modifications)
+                                        {
+                                            <tr>
+                                                <td><strong>@mod.PropertyName</strong></td>
+                                                <td class="text-muted">@(mod.OriginalValue ?? "-")</td>
+                                                <td class="text-success">@mod.DesiredValue</td>
+                                                <td class="small">@(mod.Notes ?? "-")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.ModificationNotes))
+                    {
+                        <div class="mb-4">
+                            <h5>@Html.T("Demands.ModificationNotes", "Ek Notlar")</h5>
+                            <p class="text-muted" style="white-space: pre-line;">@Model.ModificationNotes</p>
+                        </div>
+                    }
+
+                    <!-- Attachments -->
+                    @if (Model.Attachments != null && Model.Attachments.Any())
+                    {
+                        <div class="mb-4">
+                            <h5><i class="bi bi-paperclip"></i> @Html.T("Demands.Attachments", "Ekler")</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var att in Model.Attachments)
+                                {
+                                    <a href="@att.FilePath" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-download"></i> @att.FileName
+                                        @if (att.FileSize.HasValue)
+                                        {
+                                            <small class="text-muted">(@((att.FileSize.Value / 1024).ToString("N0")) KB)</small>
+                                        }
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Tags -->
+                    @if (!string.IsNullOrEmpty(Model.Tags))
+                    {
+                        <div class="mb-4">
+                            <h5><i class="bi bi-tags"></i> @Html.T("Common.Tags", "Etiketler")</h5>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var tag in Model.Tags.Split(','))
+                                {
+                                    <span class="badge bg-light text-dark">@tag.Trim()</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center text-muted small">
+                        <span>
+                            <i class="bi bi-calendar"></i> @Model.CreatedAt.ToString("dd MMM yyyy")
+                            @if (Model.ExpiresAt.HasValue)
+                            {
+                                <text> | <i class="bi bi-clock"></i> @Html.T("Demands.ExpiresAt", "Son teklif"): @Model.ExpiresAt.Value.ToString("dd MMM yyyy")</text>
+                            }
+                        </span>
+                        <span>
+                            <i class="bi bi-eye"></i> @Model.ViewCount @Html.T("Common.Views", "goruntulenme") |
+                            <i class="bi bi-chat-dots"></i> @Model.ResponseCount @Html.T("Common.Responses", "teklif")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Response Form -->
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-send"></i> @Html.T("Demands.SubmitResponse", "Teklif Ver")</h5>
+                </div>
+                <div class="card-body">
+                    <form id="responseForm">
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Demands.CompanyName", "Firma Adi") *</label>
+                            <input type="text" class="form-control" data-bind="value: response.companyName" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Common.Email", "E-posta") *</label>
+                            <input type="email" class="form-control" data-bind="value: response.email" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Common.Phone", "Telefon")</label>
+                            <input type="tel" class="form-control" data-bind="value: response.phone" />
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">@Html.T("Demands.UnitPrice", "Birim Fiyat")</label>
+                                <input type="number" step="0.01" class="form-control" data-bind="value: response.unitPrice" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">@Html.T("Demands.TotalPrice", "Toplam Fiyat")</label>
+                                <input type="number" step="0.01" class="form-control" data-bind="value: response.totalPrice" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Demands.LeadTimeDays", "Teslim Suresi (gun)")</label>
+                            <input type="number" class="form-control" data-bind="value: response.leadTimeDays" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("Common.Notes", "Notlar")</label>
+                            <textarea class="form-control" rows="3" data-bind="value: response.notes"></textarea>
+                        </div>
+
+                        <div class="alert alert-danger" data-bind="visible: errorMessage, text: errorMessage"></div>
+                        <div class="alert alert-success" data-bind="visible: successMessage, text: successMessage"></div>
+
+                        <button type="submit" class="btn btn-success w-100" data-bind="click: submitResponse, disable: isSubmitting">
+                            <span data-bind="visible: !isSubmitting()">
+                                <i class="bi bi-send"></i> @Html.T("Common.Submit", "Gonder")
+                            </span>
+                            <span data-bind="visible: isSubmitting">
+                                <span class="spinner-border spinner-border-sm"></span> @Html.T("Common.Sending", "Gonderiliyor...")
+                            </span>
+                        </button>
+                    </form>
+
+                    <hr />
+
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-shield-check"></i>
+                        @Html.T("Demands.ResponseNote", "Teklifiniz talep sahibine iletilecektir. Kayitli uyeyseniz giris yaparak daha fazla ozellige erisebilirsiniz.")
+                    </p>
+                </div>
+            </div>
+
+            <!-- Company Info -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-building"></i> @Html.T("Demands.RequestedBy", "Talep Sahibi")</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0"><strong>@(Model.VendorName ?? "Anonim Firma")</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var demandId = @Model.Id;
+
+    function DemandDetailViewModel() {
+        var self = this;
+
+        self.isSubmitting = ko.observable(false);
+        self.errorMessage = ko.observable('');
+        self.successMessage = ko.observable('');
+
+        self.response = {
+            companyName: ko.observable(''),
+            contactName: ko.observable(''),
+            email: ko.observable(''),
+            phone: ko.observable(''),
+            unitPrice: ko.observable(null),
+            totalPrice: ko.observable(null),
+            leadTimeDays: ko.observable(null),
+            notes: ko.observable('')
+        };
+
+        self.submitResponse = function() {
+            self.errorMessage('');
+            self.successMessage('');
+
+            if (!self.response.companyName()) {
+                self.errorMessage('Firma adi zorunludur.');
+                return;
+            }
+            if (!self.response.email()) {
+                self.errorMessage('E-posta zorunludur.');
+                return;
+            }
+
+            self.isSubmitting(true);
+
+            fetch('/api/demands/public/' + demandId + '/respond', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    demandId: demandId,
+                    externalCompanyName: self.response.companyName(),
+                    externalContactName: self.response.contactName(),
+                    externalEmail: self.response.email(),
+                    externalPhone: self.response.phone(),
+                    unitPrice: self.response.unitPrice() ? parseFloat(self.response.unitPrice()) : null,
+                    totalPrice: self.response.totalPrice() ? parseFloat(self.response.totalPrice()) : null,
+                    leadTimeDays: self.response.leadTimeDays() ? parseInt(self.response.leadTimeDays()) : null,
+                    notes: self.response.notes(),
+                    currency: 'TRY'
+                })
+            })
+            .then(function(r) {
+                if (r.ok) return r.json();
+                return r.json().then(function(err) { throw new Error(err.message || 'Bir hata olustu.'); });
+            })
+            .then(function(data) {
+                self.successMessage('Teklifiniz basariyla gonderildi!');
+                // Reset form
+                self.response.companyName('');
+                self.response.email('');
+                self.response.phone('');
+                self.response.unitPrice(null);
+                self.response.totalPrice(null);
+                self.response.leadTimeDays(null);
+                self.response.notes('');
+            })
+            .catch(function(err) {
+                self.errorMessage(err.message);
+            })
+            .finally(function() {
+                self.isSubmitting(false);
+            });
+        };
+    }
+
+    $(document).ready(function() {
+        ko.applyBindings(new DemandDetailViewModel(), document.getElementById('demand-detail-app'));
+    });
+</script>
+}

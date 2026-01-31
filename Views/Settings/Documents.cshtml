@@ -1,0 +1,149 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Module.Documents", "Belgelerim").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid" id="documents-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-folder text-primary me-2"></i>
+                @Html.T("Module.Documents", "Belgelerim")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Documents.Subtitle", "KYC ve kurumsal belgelerinizi yonetin")</p>
+        </div>
+        <button class="btn btn-primary" data-bind="click: showUploadModal">
+            <i class="bi bi-upload me-1"></i>
+            Belge Yukle
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <!-- ko if: isLoading -->
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Yukleniyor...</p>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko ifnot: isLoading -->
+    <!-- Belge Listesi -->
+    <!-- ko if: allDocuments().length === 0 -->
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-folder fs-1"></i>
+        <p class="mt-2">Henuz belge yuklenmemis</p>
+        <button class="btn btn-primary" data-bind="click: showUploadModal">
+            <i class="bi bi-upload me-1"></i> Ilk Belgeyi Yukle
+        </button>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko if: allDocuments().length > 0 -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Belge Adi</th>
+                        <th>Kategori</th>
+                        <th>Tip</th>
+                        <th>Yukleme Tarihi</th>
+                        <th>Durum</th>
+                        <th class="text-end" style="width: 80px;">Islem</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: allDocuments">
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-file-earmark-pdf text-danger me-2 fs-5"></i>
+                                <span data-bind="text: fileName"></span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi me-1" data-bind="class: categoryIcon"></i>
+                                <span data-bind="text: categoryName"></span>
+                            </span>
+                        </td>
+                        <td data-bind="text: typeName || '-'"></td>
+                        <td class="text-muted" data-bind="text: uploadDate"></td>
+                        <td>
+                            <span class="badge" data-bind="text: statusText, css: statusClass"></span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.deleteDocument" title="Sil">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- Bilgi -->
+    <div class="card bg-light border-0 mt-4">
+        <div class="card-body py-2">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Belge Durumlari:</span>
+                <div class="d-flex gap-3">
+                    <span class="small"><span class="badge bg-warning me-1">Beklemede</span> Inceleme bekliyor</span>
+                    <span class="small"><span class="badge bg-success me-1">Onaylandi</span> Belge dogrulandi</span>
+                    <span class="small"><span class="badge bg-danger me-1">Reddedildi</span> Tekrar yukleyin</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- Belge Yukleme Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-upload me-2"></i>
+                    Belge Yukle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Belge Kategorisi <span class="text-danger">*</span></label>
+                    <select class="form-select" data-bind="value: uploadCategory">
+                        <option value="">Kategori Secin</option>
+                        <option value="identity">Kimlik Belgeleri</option>
+                        <option value="company">Firma Belgeleri</option>
+                        <option value="bank">Banka Belgeleri</option>
+                        <option value="auth">Yetki Belgeleri</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Belge Tipi <span class="text-danger">*</span></label>
+                    <select class="form-select" data-bind="value: uploadType, options: documentTypes, optionsText: 'name', optionsValue: 'id', optionsCaption: 'Belge Tipi Secin', enable: uploadCategory()"></select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Dosya <span class="text-danger">*</span></label>
+                    <input type="file" class="form-control" id="documentFile" accept=".pdf,.jpg,.jpeg,.png">
+                    <small class="text-muted">PDF, JPG veya PNG (Maks. 5MB)</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                <button type="button" class="btn btn-primary" data-bind="click: uploadDocument, enable: canUpload() && !isUploading()">
+                    <span data-bind="visible: isUploading"><i class="bi bi-hourglass-split me-1"></i></span>
+                    Yukle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/Documents.js"></script>
+}

@@ -1,0 +1,130 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Module.PersonalInfo", "Kisisel Bilgiler").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid" id="personal-info-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-person text-primary me-2"></i>
+                @Html.T("Module.PersonalInfo", "Kisisel Bilgiler")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("PersonalInfo.Subtitle", "Hesap bilgilerinizi guncelleyin")</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profil Resmi -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <!-- ko if: profileImageUrl -->
+                        <img data-bind="attr: { src: profileImageUrl }" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                        <!-- /ko -->
+                        <!-- ko ifnot: profileImageUrl -->
+                        <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                            <span class="text-white fs-1" data-bind="text: initials">AB</span>
+                        </div>
+                        <!-- /ko -->
+                    </div>
+                    <h5 data-bind="text: fullName">Kullanici Adi</h5>
+                    <p class="text-muted mb-3" data-bind="text: email">email@example.com</p>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" data-bind="click: selectImage">
+                            <i class="bi bi-camera me-1"></i> Resim Yukle
+                        </button>
+                        <!-- ko if: profileImageUrl -->
+                        <button class="btn btn-outline-danger btn-sm" data-bind="click: deleteImage">
+                            <i class="bi bi-trash me-1"></i> Resmi Sil
+                        </button>
+                        <!-- /ko -->
+                    </div>
+                    <input type="file" id="profileImageInput" accept="image/*" style="display: none;" data-bind="event: { change: uploadImage }">
+                </div>
+            </div>
+        </div>
+
+        <!-- Bilgi Formu -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">@Html.T("PersonalInfo.BasicInfo", "Temel Bilgiler")</h6>
+                </div>
+                <div class="card-body">
+                    <form data-bind="submit: savePersonalInfo">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">@Html.T("Common.FirstName", "Ad") <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" data-bind="value: firstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">@Html.T("Common.LastName", "Soyad") <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" data-bind="value: lastName" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">@Html.T("Common.Email", "E-posta")</label>
+                                <input type="email" class="form-control" data-bind="value: email" readonly>
+                                <small class="text-muted">@Html.T("PersonalInfo.EmailReadonly", "E-posta degistirilemez")</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">@Html.T("Common.Phone", "Telefon")</label>
+                                <input type="tel" class="form-control" data-bind="value: phoneNumber" placeholder="+90 5XX XXX XX XX">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">@Html.T("Common.Language", "Dil")</label>
+                                <select class="form-select" data-bind="value: languageId, options: languages, optionsText: 'name', optionsValue: 'id', optionsCaption: 'Dil Secin'"></select>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary" data-bind="enable: !isSaving()">
+                                <span data-bind="visible: isSaving"><i class="bi bi-hourglass-split me-1"></i></span>
+                                <span data-bind="visible: !isSaving()"><i class="bi bi-check-lg me-1"></i></span>
+                                @Html.T("Common.Save", "Kaydet")
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hesap Bilgileri -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">@Html.T("PersonalInfo.AccountInfo", "Hesap Bilgileri")</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">@Html.T("PersonalInfo.MemberSince", "Uyelik Tarihi")</p>
+                            <p class="fw-medium" data-bind="text: formatDate(createdAt)">-</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">@Html.T("PersonalInfo.LastLogin", "Son Giris")</p>
+                            <p class="fw-medium" data-bind="text: lastLoginAt ? formatDate(lastLoginAt) : 'Henuz giris yapilmadi'">-</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">@Html.T("PersonalInfo.UserId", "Kullanici ID")</p>
+                            <p class="fw-medium" data-bind="text: userId">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/PersonalInfo.js"></script>
+}

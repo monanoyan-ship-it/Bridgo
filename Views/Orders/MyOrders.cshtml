@@ -1,0 +1,1107 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("MyOrders.Title", "Siparislerim").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="my-orders-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-bag-check text-primary me-2"></i>
+                @Html.T("MyOrders.Title", "Siparislerim")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("MyOrders.Subtitle", "Verdiginiz siparisleri takip edin.")</p>
+        </div>
+        <!-- Stats -->
+        <div class="d-flex gap-3">
+            <div class="text-center px-3 border-end">
+                <div class="fs-4 fw-bold text-primary" data-bind="text: stats.activeCount">0</div>
+                <small class="text-muted">@Html.T("Common.Active", "Aktif")</small>
+            </div>
+            <div class="text-center px-3 border-end">
+                <div class="fs-4 fw-bold text-success" data-bind="text: stats.completedCount">0</div>
+                <small class="text-muted">@Html.T("Common.Completed", "Tamamlanan")</small>
+            </div>
+            <div class="text-center px-3">
+                <div class="fs-4 fw-bold text-info" data-bind="text: formatCurrency(stats.totalSpent)">0</div>
+                <small class="text-muted">@Html.T("Common.Total", "Toplam")</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'active' }, click: function() { setTab('active'); }" href="#">
+                <i class="bi bi-hourglass-split"></i> @Html.T("MyOrders.Tab.Active", "Aktif")
+                <span class="badge bg-primary ms-1" data-bind="text: activeOrderCount"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'completed' }, click: function() { setTab('completed'); }" href="#">
+                <i class="bi bi-check-circle"></i> @Html.T("MyOrders.Tab.Completed", "Tamamlanan")
+                <span class="badge bg-success ms-1" data-bind="text: completedOrderCount"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'cancelled' }, click: function() { setTab('cancelled'); }" href="#">
+                <i class="bi bi-x-circle"></i> @Html.T("MyOrders.Tab.Cancelled", "Iptal/Iade")
+                <span class="badge bg-secondary ms-1" data-bind="text: cancelledOrderCount"></span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- Order List -->
+    <div data-bind="visible: !isLoading()">
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" placeholder="@Html.T("Common.Search", "Siparis no veya satici ara...")"
+                                   data-bind="value: filter.search, valueUpdate: 'afterkeydown'" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" data-bind="value: filter.status">
+                            <option value="">@Html.T("Common.AllStatuses", "Tum Durumlar")</option>
+                            <option value="3">Onay Bekliyor</option>
+                            <option value="4">Onaylandi</option>
+                            <option value="5">Hazirlaniyor</option>
+                            <option value="7">Kargoya Verildi</option>
+                            <option value="8">Yolda</option>
+                            <option value="9">Gumrukte</option>
+                            <option value="11">Teslim Edildi</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" data-bind="value: filter.paymentStatus">
+                            <option value="">@Html.T("Common.AllPaymentStatuses", "Tum Odeme Durumlari")</option>
+                            <option value="0">@Html.T("PaymentStatus.Pending", "Odeme Bekliyor")</option>
+                            <option value="2">@Html.T("PaymentStatus.Paid", "Odendi")</option>
+                            <option value="3">@Html.T("PaymentStatus.Failed", "Basarisiz")</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-sm btn-outline-secondary" data-bind="click: resetFilters">
+                            <i class="bi bi-x-circle"></i> @Html.T("Common.Reset", "Sifirla")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div data-bind="visible: orders().length === 0" class="text-center py-5">
+            <i class="bi bi-bag-x text-muted" style="font-size: 4rem;"></i>
+            <h5 class="mt-3 text-muted">@Html.T("MyOrders.NoOrders", "Henuz siparis yok")</h5>
+            <p class="text-muted">@Html.T("MyOrders.NoOrdersHint", "Urunleri kesfetmek icin alisverise baslayin.")</p>
+        </div>
+
+        <!-- Order Cards -->
+        <div data-bind="foreach: orders">
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge me-2" data-bind="css: getStatusBadgeClass(status), text: statusText"></span>
+                        <span class="fw-bold" data-bind="text: orderNumber"></span>
+                        <span class="text-muted ms-2" data-bind="text: '(' + formatDate(createdAt) + ')'"></span>
+                    </div>
+                    <div>
+                        <span class="badge" data-bind="css: getPaymentBadgeClass(paymentStatus), text: paymentStatusText"></span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Left: Seller Info -->
+                        <div class="col-md-7">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-shop text-primary me-2"></i>
+                                <strong data-bind="text: sellerCompanyName"></strong>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="text-muted">
+                                    <i class="bi bi-box"></i>
+                                    <span data-bind="text: itemCount"></span> urun
+                                </span>
+                                <!-- ko if: shipmentCount > 0 -->
+                                <span class="text-muted">
+                                    <i class="bi bi-truck"></i>
+                                    <span data-bind="text: shipmentCount"></span> kargo
+                                </span>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <!-- Right: Summary & Actions -->
+                        <div class="col-md-5">
+                            <div class="bg-light rounded p-3">
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Toplam:</span>
+                                    <span class="text-primary" data-bind="text: formatCurrency(totalAmount) + ' ' + currency"></span>
+                                </div>
+                            </div>
+
+                            <!-- Shipment Status -->
+                            <!-- ko if: hasActiveShipment -->
+                            <div class="mt-3">
+                                <span class="badge bg-info">
+                                    <i class="bi bi-truck"></i> Kargoda
+                                </span>
+                            </div>
+                            <!-- /ko -->
+
+                            <!-- Actions -->
+                            <div class="mt-3 d-flex gap-2 flex-wrap">
+                                <button class="btn btn-sm btn-outline-primary" data-bind="click: $parent.viewOrderDetail">
+                                    <i class="bi bi-eye"></i> @Html.T("Common.Detail", "Detay")
+                                </button>
+                                <a class="btn btn-sm btn-outline-secondary" data-bind="attr: { href: '/Orders/Timeline/' + id }">
+                                    <i class="bi bi-clock-history"></i> @Html.T("MyOrders.Button.Track", "Takip")
+                                </a>
+                                <!-- ko if: hasPendingQuotes -->
+                                <button class="btn btn-sm btn-info" data-bind="click: $parent.showQuotesModal">
+                                    <i class="bi bi-clipboard-data"></i> @Html.T("MyOrders.Button.ViewQuotes", "Teklifleri Gor")
+                                    <span class="badge bg-warning text-dark ms-1" data-bind="text: pendingQuotesCount, visible: pendingQuotesCount > 0"></span>
+                                </button>
+                                <!-- /ko -->
+                                <!-- ko if: status === 11 -->
+                                <button class="btn btn-sm btn-success" data-bind="click: $parent.confirmDelivery">
+                                    <i class="bi bi-check-lg"></i> @Html.T("MyOrders.Button.ConfirmDelivery", "Teslim Aldim")
+                                </button>
+                                <!-- /ko -->
+                                <!-- ko if: status === 12 -->
+                                <button class="btn btn-sm btn-warning" data-bind="click: $parent.showReviewModal">
+                                    <i class="bi bi-star"></i> @Html.T("MyOrders.Button.Review", "Degerlendir")
+                                </button>
+                                <!-- /ko -->
+                                <!-- ko if: status === 3 || status === 4 -->
+                                <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.cancelOrder">
+                                    <i class="bi bi-x-lg"></i> @Html.T("Common.Cancel", "Iptal")
+                                </button>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav data-bind="visible: totalPages() > 1">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" data-bind="css: { disabled: currentPage() === 1 }">
+                    <a class="page-link" href="#" data-bind="click: prevPage">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                <!-- ko foreach: pageNumbers -->
+                <li class="page-item" data-bind="css: { active: $data === $parent.currentPage() }">
+                    <a class="page-link" href="#" data-bind="text: $data, click: function() { $parent.goToPage($data); }"></a>
+                </li>
+                <!-- /ko -->
+                <li class="page-item" data-bind="css: { disabled: currentPage() === totalPages() }">
+                    <a class="page-link" href="#" data-bind="click: nextPage">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-bag me-2"></i>@Html.T("MyOrders.Modal.Detail.Title", "Siparis Detayi")
+                    <span class="badge bg-primary ms-2" data-bind="text: selectedOrder()?.orderNumber"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" data-bind="with: selectedOrder">
+                <!-- Order Info -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Satici</h6>
+                        <p class="mb-0" data-bind="text: sellerCompanyName"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Siparis Tarihi</h6>
+                        <p class="mb-0" data-bind="text: formatDate(createdAt)"></p>
+                    </div>
+                </div>
+
+                <!-- Items -->
+                <h6 class="text-muted mb-3">Urunler</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Urun</th>
+                                <th class="text-end">Miktar</th>
+                                <th class="text-end">Birim Fiyat</th>
+                                <th class="text-end">Toplam</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: items">
+                            <tr>
+                                <td data-bind="text: productName"></td>
+                                <td class="text-end" data-bind="text: quantity + ' ' + unit"></td>
+                                <td class="text-end" data-bind="text: formatCurrency(unitPrice)"></td>
+                                <td class="text-end" data-bind="text: formatCurrency(totalPrice)"></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Toplam:</strong></td>
+                                <td class="text-end"><strong data-bind="text: formatCurrency(totalAmount) + ' ' + currency"></strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Shipments -->
+                <div data-bind="visible: shipments && shipments.length > 0">
+                    <h6 class="text-muted mb-3">Kargo Bilgileri</h6>
+                    <div data-bind="foreach: shipments" class="mb-4">
+                        <div class="card bg-light mb-2">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong data-bind="text: shipmentNumber"></strong>
+                                        <span class="ms-2" data-bind="text: carrierName"></span>
+                                    </div>
+                                    <span class="badge" data-bind="css: getShipmentBadgeClass(status), text: statusText"></span>
+                                </div>
+                                <div class="mt-2" data-bind="visible: trackingNumber">
+                                    <small class="text-muted">Takip No: </small>
+                                    <a href="#" data-bind="text: trackingNumber, attr: { href: trackingUrl }" target="_blank"></a>
+                                </div>
+                                <div class="mt-1" data-bind="visible: estimatedDeliveryDate">
+                                    <small class="text-muted">Tahmini Teslim: <span data-bind="text: formatDate(estimatedDeliveryDate)"></span></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status History -->
+                <h6 class="text-muted mb-3">Durum Gecmisi</h6>
+                <div class="timeline" data-bind="foreach: statusHistory">
+                    <div class="d-flex mb-2">
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-secondary rounded-circle p-2"><i class="bi bi-check"></i></span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <strong data-bind="text: newStatusText"></strong>
+                            <p class="text-muted mb-0 small" data-bind="text: formatDateTime(createdAt)"></p>
+                            <p class="mb-0 small" data-bind="text: notes, visible: notes"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-x-circle text-danger me-2"></i>@Html.T("MyOrders.Modal.Cancel.Title", "Siparis Iptali")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@Html.T("MyOrders.Modal.Cancel.Message", "Bu siparisi iptal etmek istediginizden emin misiniz?")</p>
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("MyOrders.Modal.Cancel.Reason", "Iptal Nedeni")</label>
+                    <textarea class="form-control" rows="3" data-bind="value: cancelReason" placeholder="@Html.T("MyOrders.Modal.Cancel.ReasonPlaceholder", "Iptal nedeninizi yazin...")"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Vazgec")</button>
+                <button type="button" class="btn btn-danger" data-bind="click: confirmCancelOrder, enable: !isProcessing()">
+                    <span data-bind="visible: isProcessing()" class="spinner-border spinner-border-sm me-1"></span>
+                    @Html.T("MyOrders.Modal.Cancel.Button", "Siparisi Iptal Et")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-star me-2"></i>Satici Degerlendirmesi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong data-bind="text: reviewForm.sellerCompanyName"></strong> saticiyi degerlendiriyorsunuz.
+                </div>
+
+                <!-- Overall Rating -->
+                <div class="mb-4 text-center">
+                    <label class="form-label fw-bold">Genel Puan <span class="text-danger">*</span></label>
+                    <div class="star-rating">
+                        <!-- ko foreach: [1, 2, 3, 4, 5] -->
+                        <button type="button" class="btn btn-link p-1"
+                                data-bind="click: function() { $parent.reviewForm.overallRating($data); },
+                                           css: { 'text-warning': $data <= $parent.reviewForm.overallRating(), 'text-muted': $data > $parent.reviewForm.overallRating() }">
+                            <i class="bi fs-2" data-bind="css: { 'bi-star-fill': $data <= $parent.reviewForm.overallRating(), 'bi-star': $data > $parent.reviewForm.overallRating() }"></i>
+                        </button>
+                        <!-- /ko -->
+                    </div>
+                    <small class="text-muted" data-bind="visible: reviewForm.overallRating() > 0">
+                        <span data-bind="text: reviewForm.overallRating"></span>/5 puan
+                    </small>
+                </div>
+
+                <!-- Detail Ratings -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Urun Kalitesi</label>
+                        <div class="btn-group w-100" role="group">
+                            <!-- ko foreach: [1, 2, 3, 4, 5] -->
+                            <button type="button" class="btn btn-sm"
+                                    data-bind="click: function() { $parent.reviewForm.qualityRating($data); },
+                                               css: { 'btn-warning': $data <= $parent.reviewForm.qualityRating(), 'btn-outline-secondary': $data > $parent.reviewForm.qualityRating() },
+                                               text: $data"></button>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Teslimat Suresi</label>
+                        <div class="btn-group w-100" role="group">
+                            <!-- ko foreach: [1, 2, 3, 4, 5] -->
+                            <button type="button" class="btn btn-sm"
+                                    data-bind="click: function() { $parent.reviewForm.deliveryRating($data); },
+                                               css: { 'btn-warning': $data <= $parent.reviewForm.deliveryRating(), 'btn-outline-secondary': $data > $parent.reviewForm.deliveryRating() },
+                                               text: $data"></button>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Iletisim</label>
+                        <div class="btn-group w-100" role="group">
+                            <!-- ko foreach: [1, 2, 3, 4, 5] -->
+                            <button type="button" class="btn btn-sm"
+                                    data-bind="click: function() { $parent.reviewForm.communicationRating($data); },
+                                               css: { 'btn-warning': $data <= $parent.reviewForm.communicationRating(), 'btn-outline-secondary': $data > $parent.reviewForm.communicationRating() },
+                                               text: $data"></button>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fiyat/Deger</label>
+                        <div class="btn-group w-100" role="group">
+                            <!-- ko foreach: [1, 2, 3, 4, 5] -->
+                            <button type="button" class="btn btn-sm"
+                                    data-bind="click: function() { $parent.reviewForm.valueRating($data); },
+                                               css: { 'btn-warning': $data <= $parent.reviewForm.valueRating(), 'btn-outline-secondary': $data > $parent.reviewForm.valueRating() },
+                                               text: $data"></button>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Title & Comment -->
+                <div class="mb-3">
+                    <label class="form-label">Degerlendirme Basligi</label>
+                    <input type="text" class="form-control" placeholder="Ornegin: Cok memnun kaldim"
+                           data-bind="value: reviewForm.title">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Yorumunuz</label>
+                    <textarea class="form-control" rows="3" placeholder="Deneyiminizi paylasin..."
+                              data-bind="value: reviewForm.comment"></textarea>
+                </div>
+
+                <!-- Pros & Cons -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-success"><i class="bi bi-plus-circle me-1"></i>Artilari</label>
+                        <textarea class="form-control" rows="2" placeholder="Begendiginiz yonler..."
+                                  data-bind="value: reviewForm.pros"></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-danger"><i class="bi bi-dash-circle me-1"></i>Eksileri</label>
+                        <textarea class="form-control" rows="2" placeholder="Gelistirilmesi gereken yonler..."
+                                  data-bind="value: reviewForm.cons"></textarea>
+                    </div>
+                </div>
+
+                <!-- Would Recommend -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="wouldRecommend"
+                           data-bind="checked: reviewForm.wouldRecommend">
+                    <label class="form-check-label" for="wouldRecommend">
+                        Bu saticiyi baskalarına tavsiye ederim
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                <button type="button" class="btn btn-warning" data-bind="click: submitReview, enable: !isSubmittingReview() && reviewForm.overallRating() > 0">
+                    <span data-bind="visible: isSubmittingReview" class="spinner-border spinner-border-sm me-1"></span>
+                    <i class="bi bi-send me-1" data-bind="visible: !isSubmittingReview()"></i>
+                    Degerlendirmeyi Gonder
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Wizard Modal (Fullscreen) -->
+<div class="modal fade" id="checkoutWizardModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen-md-down modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <!-- Header with Steps -->
+            <div class="modal-header bg-primary text-white py-2">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-cart-check fs-4 me-2"></i>
+                    <div>
+                        <h5 class="modal-title mb-0">@Html.T("Checkout.Title", "Siparis Tamamlama")</h5>
+                        <small data-bind="text: quotesData()?.orderNumber"></small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Wizard Steps Indicator -->
+            <div class="bg-light border-bottom py-3 px-4">
+                <div class="d-flex justify-content-between position-relative wizard-steps">
+                    <!-- Step 1: Delivery Address -->
+                    <div class="wizard-step text-center" data-bind="css: { 'active': wizardStep() === 1, 'completed': wizardStep() > 1 }">
+                        <div class="wizard-step-icon">
+                            <i class="bi" data-bind="css: wizardStep() > 1 ? 'bi-check-lg' : 'bi-geo-alt'"></i>
+                        </div>
+                        <div class="wizard-step-label">@Html.T("Checkout.Step.Delivery", "Teslimat")</div>
+                    </div>
+                    <!-- Step 2: Quote Selection -->
+                    <div class="wizard-step text-center" data-bind="css: { 'active': wizardStep() === 2, 'completed': wizardStep() > 2 }">
+                        <div class="wizard-step-icon">
+                            <i class="bi" data-bind="css: wizardStep() > 2 ? 'bi-check-lg' : 'bi-clipboard-data'"></i>
+                        </div>
+                        <div class="wizard-step-label">@Html.T("Checkout.Step.Quotes", "Teklifler")</div>
+                    </div>
+                    <!-- Step 3: Financing -->
+                    <div class="wizard-step text-center" data-bind="css: { 'active': wizardStep() === 3, 'completed': wizardStep() > 3 }">
+                        <div class="wizard-step-icon">
+                            <i class="bi" data-bind="css: wizardStep() > 3 ? 'bi-check-lg' : 'bi-cash-coin'"></i>
+                        </div>
+                        <div class="wizard-step-label">@Html.T("Checkout.Step.Financing", "Finansman")</div>
+                    </div>
+                    <!-- Step 4: Summary & Payment -->
+                    <div class="wizard-step text-center" data-bind="css: { 'active': wizardStep() === 4, 'completed': wizardStep() > 4 }">
+                        <div class="wizard-step-icon">
+                            <i class="bi" data-bind="css: wizardStep() > 4 ? 'bi-check-lg' : 'bi-credit-card'"></i>
+                        </div>
+                        <div class="wizard-step-label">@Html.T("Checkout.Step.Payment", "Odeme")</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- Loading -->
+                <div data-bind="visible: isLoadingQuotes()" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Yukleniyor...</p>
+                </div>
+
+                <!-- Wizard Content -->
+                <div data-bind="visible: !isLoadingQuotes()">
+
+                    <!-- ==================== STEP 1: Delivery Address ==================== -->
+                    <div data-bind="visible: wizardStep() === 1">
+                        <h5 class="mb-4"><i class="bi bi-geo-alt text-primary me-2"></i>Teslimat Adresi</h5>
+
+                        <!-- Current Address -->
+                        <div class="card mb-4" data-bind="visible: wizardData().shippingAddress">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1" data-bind="text: wizardData().shippingAddress?.title"></h6>
+                                        <p class="mb-1" data-bind="text: wizardData().shippingAddress?.fullAddress"></p>
+                                        <small class="text-muted">
+                                            <span data-bind="text: wizardData().shippingAddress?.city"></span>,
+                                            <span data-bind="text: wizardData().shippingAddress?.countryName"></span>
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-success"><i class="bi bi-check"></i> Secili</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address List -->
+                        <div data-bind="visible: wizardData().availableAddresses && wizardData().availableAddresses.length > 1">
+                            <h6 class="text-muted mb-3">Diger Adresler</h6>
+                            <div class="row g-3" data-bind="foreach: wizardData().availableAddresses">
+                                <!-- ko if: id !== $parent.wizardData().shippingAddress?.id -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 border cursor-pointer" data-bind="click: function() { $parent.selectShippingAddress($data); }, css: { 'border-primary': id === $parent.selectedShippingAddressId() }">
+                                        <div class="card-body py-2">
+                                            <h6 class="mb-1" data-bind="text: title"></h6>
+                                            <small class="text-muted" data-bind="text: fullAddress"></small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+
+                        <!-- Order Items Summary -->
+                        <div class="card mt-4 bg-light">
+                            <div class="card-header py-2">
+                                <h6 class="mb-0"><i class="bi bi-box me-2"></i>Siparis Icerigi</h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span><span data-bind="text: quotesData()?.serviceRequests?.length || 0"></span> hizmet talebi</span>
+                                    <strong class="text-primary" data-bind="text: formatCurrency(quotesData()?.productTotal) + ' ' + (quotesData()?.currency || 'TRY')"></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== STEP 2: Quote Selection ==================== -->
+                    <div data-bind="visible: wizardStep() === 2">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0"><i class="bi bi-clipboard-data text-primary me-2"></i>Hizmet Teklifleri</h5>
+                            <div class="d-flex align-items-center">
+                                <div class="progress me-3" style="width: 100px; height: 8px;">
+                                    <div class="progress-bar bg-success" data-bind="style: { width: quotesProgress() + '%' }"></div>
+                                </div>
+                                <small class="text-muted" data-bind="text: quotesSelectedCount() + '/' + quotesTotalCount() + ' secildi'"></small>
+                            </div>
+                        </div>
+
+                        <!-- Service Requests -->
+                        <div data-bind="foreach: (quotesData() && quotesData().serviceRequests) || []">
+                            <div class="card mb-3">
+                                <div class="card-header d-flex align-items-center py-2">
+                                    <i class="bi me-2 fs-5" data-bind="class: serviceTypeIcon"></i>
+                                    <h6 class="mb-0" data-bind="text: serviceTypeName"></h6>
+                                    <span class="badge ms-2" data-bind="text: statusName, css: $parent.getServiceStatusClass(status)"></span>
+                                    <!-- ko if: selectedQuoteId -->
+                                    <span class="ms-auto text-success fw-bold">
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+                                        <span data-bind="text: $parent.formatCurrency(selectedQuoteAmount) + ' ' + ($parent.quotesData()?.currency || 'TRY')"></span>
+                                    </span>
+                                    <!-- /ko -->
+                                </div>
+                                <div class="card-body py-3">
+                                    <!-- No Quotes -->
+                                    <!-- ko if: !quotes || quotes.length === 0 -->
+                                    <div class="text-center py-3 text-muted">
+                                        <div class="spinner-border spinner-border-sm me-2"></div>
+                                        Servis saglayicilardan teklif bekleniyor...
+                                    </div>
+                                    <!-- /ko -->
+
+                                    <!-- Quotes List -->
+                                    <!-- ko if: quotes && quotes.length > 0 -->
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0 table-sm">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Saglayici</th>
+                                                    <th class="text-center">Teklif</th>
+                                                    <th class="text-center">Sure</th>
+                                                    <th class="text-center">Gecerlilik</th>
+                                                    <th class="text-end">Islem</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody data-bind="foreach: quotes">
+                                                <tr data-bind="css: { 'table-success': isSelected }">
+                                                    <td>
+                                                        <div class="fw-medium" data-bind="text: providerName"></div>
+                                                        <!-- ko if: providerRating -->
+                                                        <small class="text-warning">
+                                                            <i class="bi bi-star-fill"></i>
+                                                            <span data-bind="text: providerRating.toFixed(1)"></span>
+                                                        </small>
+                                                        <!-- /ko -->
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <strong class="text-primary" data-bind="text: $parents[1].formatCurrency(quoteAmount) + ' ' + currency"></strong>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span data-bind="text: estimatedDays ? estimatedDays + ' gun' : '-'"></span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <small data-bind="text: validUntil ? $parents[1].formatDate(validUntil) : '-'"></small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <!-- ko if: status === 1 && !isSelected -->
+                                                        <button class="btn btn-sm btn-primary" data-bind="click: function() { $parents[1].selectQuote($parent.id, id); }">
+                                                            <i class="bi bi-check"></i> Sec
+                                                        </button>
+                                                        <!-- /ko -->
+                                                        <!-- ko if: isSelected -->
+                                                        <span class="text-success"><i class="bi bi-check-circle-fill"></i> Secildi</span>
+                                                        <!-- /ko -->
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Service Requests -->
+                        <div data-bind="visible: !quotesData()?.serviceRequests?.length" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">Hizmet talebi bulunmuyor.</p>
+                        </div>
+                    </div>
+
+                    <!-- ==================== STEP 3: Financing ==================== -->
+                    <div data-bind="visible: wizardStep() === 3">
+                        <h5 class="mb-4"><i class="bi bi-cash-coin text-primary me-2"></i>Finansman Secenegi</h5>
+
+                        <!-- Order Total Summary -->
+                        <div class="card mb-4 bg-light">
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="fs-5 fw-bold" data-bind="text: formatCurrency(financingStatus().itemsTotal || quotesData()?.productTotal)"></div>
+                                        <small class="text-muted">Urun Tutari</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="fs-5 fw-bold" data-bind="text: formatCurrency(financingStatus().servicesTotal || 0)"></div>
+                                        <small class="text-muted">Hizmet Tutari</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="fs-5 fw-bold text-primary" data-bind="text: formatCurrency(financingStatus().totalAmount || quotesTotalWithServices())"></div>
+                                        <small class="text-muted">Toplam</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financing Already Requested -->
+                        <div data-bind="visible: financingStatus().existingFinancingRequestId" class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Finansman talebi olusturuldu!</strong>
+                            <p class="mb-0 mt-2 small">Yatirimcilar talebinizi inceleyip teklif verecekler.</p>
+                        </div>
+
+                        <!-- Financing Option -->
+                        <div data-bind="visible: !financingStatus().existingFinancingRequestId">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="wantFinancing" data-bind="checked: wantFinancing">
+                                        <label class="form-check-label fw-bold" for="wantFinancing">
+                                            Finansman destegi istiyorum
+                                        </label>
+                                    </div>
+
+                                    <div data-bind="visible: wantFinancing" class="mt-3">
+                                        <div class="alert alert-info small">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Siparisiniz icin yatirimcilardan finansman talep edebilirsiniz.
+                                            Onaylanirsa odemenizi vade sonunda yapabilirsiniz.
+                                        </div>
+
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Vade (Gun)</label>
+                                                <select class="form-select" data-bind="value: financingDays">
+                                                    <option value="30">30 Gun</option>
+                                                    <option value="60">60 Gun</option>
+                                                    <option value="90">90 Gun</option>
+                                                    <option value="120">120 Gun</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Max Faiz Orani (%)</label>
+                                                <input type="number" class="form-control" placeholder="Ornegin: 5" data-bind="value: financingMaxRate" step="0.5" min="0" max="50">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== STEP 4: Summary & Payment ==================== -->
+                    <div data-bind="visible: wizardStep() === 4">
+                        <h5 class="mb-4"><i class="bi bi-credit-card text-primary me-2"></i>Siparis Ozeti ve Odeme</h5>
+
+                        <!-- Order Summary -->
+                        <div class="card mb-4">
+                            <div class="card-header py-2">
+                                <h6 class="mb-0">Siparis Detaylari</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td>Urun Toplami</td>
+                                            <td class="text-end" data-bind="text: formatCurrency(quotesData()?.productTotal) + ' ' + (quotesData()?.currency || 'TRY')"></td>
+                                        </tr>
+                                        <!-- ko foreach: quotesData()?.serviceRequests || [] -->
+                                        <!-- ko if: selectedQuoteAmount -->
+                                        <tr>
+                                            <td>
+                                                <i class="bi me-1" data-bind="class: serviceTypeIcon"></i>
+                                                <span data-bind="text: serviceTypeName"></span>
+                                            </td>
+                                            <td class="text-end" data-bind="text: $parent.formatCurrency(selectedQuoteAmount) + ' ' + ($parent.quotesData()?.currency || 'TRY')"></td>
+                                        </tr>
+                                        <!-- /ko -->
+                                        <!-- /ko -->
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td class="fw-bold">Genel Toplam</td>
+                                            <td class="text-end fw-bold text-primary fs-5" data-bind="text: formatCurrency(quotesTotalWithServices()) + ' ' + (quotesData()?.currency || 'TRY')"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Financing Summary -->
+                        <div data-bind="visible: wantFinancing() || financingStatus().existingFinancingRequestId" class="card mb-4 border-info">
+                            <div class="card-header bg-info text-white py-2">
+                                <h6 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Finansman Talebi</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted">Talep Tutari</small>
+                                        <div class="fw-bold" data-bind="text: formatCurrency(quotesTotalWithServices()) + ' ' + (quotesData()?.currency || 'TRY')"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Vade</small>
+                                        <div class="fw-bold" data-bind="text: financingDays() + ' Gun'"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Address -->
+                        <div class="card mb-4">
+                            <div class="card-header py-2">
+                                <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Teslimat Adresi</h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <div data-bind="text: wizardData().shippingAddress?.title" class="fw-medium"></div>
+                                <small class="text-muted" data-bind="text: wizardData().shippingAddress?.fullAddress"></small>
+                            </div>
+                        </div>
+
+                        <!-- Terms -->
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="acceptTerms" data-bind="checked: acceptTerms">
+                            <label class="form-check-label" for="acceptTerms">
+                                <a href="#" target="_blank">Satis sozlesmesini</a> okudum ve kabul ediyorum.
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Empty state -->
+                <div data-bind="visible: !isLoadingQuotes() && !quotesData()" class="text-center py-5">
+                    <i class="bi bi-exclamation-circle text-muted" style="font-size: 3rem;"></i>
+                    <p class="mt-3 text-muted">Siparis bilgisi bulunamadi.</p>
+                </div>
+            </div>
+
+            <!-- Footer with Navigation -->
+            <div class="modal-footer justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" data-bind="visible: wizardStep() > 1, click: wizardPrevStep">
+                        <i class="bi bi-arrow-left me-1"></i>Geri
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bind="visible: wizardStep() === 1" data-bs-dismiss="modal">
+                        Kapat
+                    </button>
+                </div>
+                <div>
+                    <!-- Step 1: Next -->
+                    <button type="button" class="btn btn-primary" data-bind="visible: wizardStep() === 1, click: wizardNextStep">
+                        Devam <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                    <!-- Step 2: Next (with validation) -->
+                    <button type="button" class="btn btn-primary" data-bind="visible: wizardStep() === 2, click: wizardStep2Next">
+                        Devam <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                    <!-- Step 3: Next -->
+                    <button type="button" class="btn btn-primary" data-bind="visible: wizardStep() === 3, click: wizardNextStep">
+                        Devam <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                    <!-- Step 4: Complete -->
+                    <button type="button" class="btn btn-success" data-bind="visible: wizardStep() === 4, click: completeWizard, disable: isCompletingCheckout() || !acceptTerms()">
+                        <span data-bind="visible: !isCompletingCheckout()">
+                            <i class="bi bi-check-circle me-1"></i>Siparisi Onayla
+                        </span>
+                        <span data-bind="visible: isCompletingCheckout()">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Isleniyor...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unselected Quotes Warning Modal -->
+<div class="modal fade" id="unselectedQuotesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Secilmemis Teklifler</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Asagidaki hizmetler icin teklif secmediniz:</p>
+                <ul class="list-group mb-3" data-bind="foreach: unselectedServices">
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="bi me-2" data-bind="class: icon"></i>
+                        <span data-bind="text: name"></span>
+                        <span class="badge bg-warning text-dark ms-auto" data-bind="text: quoteCount + ' teklif mevcut', visible: quoteCount > 0"></span>
+                        <span class="badge bg-secondary ms-auto" data-bind="visible: quoteCount === 0">Teklif bekleniyor</span>
+                    </li>
+                </ul>
+                <div class="alert alert-info small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Teklif secmeden devam ederseniz, bu hizmetler siparisinize dahil edilmeyecektir.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Geri Don</button>
+                <button type="button" class="btn btn-warning" data-bind="click: confirmProceedWithoutAllQuotes">
+                    <i class="bi bi-arrow-right me-1"></i>Yine de Devam Et
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financing Option Modal -->
+<div class="modal fade" id="financingOptionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-cash-coin me-2"></i>Finansman Secenegi</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="display-6 text-primary" data-bind="text: formatCurrency(financingStatus().totalAmount) + ' ' + (financingStatus().currency || 'TRY')"></div>
+                    <div class="text-muted">Toplam Siparis Tutari</div>
+                </div>
+
+                <div class="card bg-light mb-3">
+                    <div class="card-body py-2">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="fw-bold" data-bind="text: formatCurrency(financingStatus().itemsTotal)"></div>
+                                <small class="text-muted">Urun Tutari</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="fw-bold" data-bind="text: formatCurrency(financingStatus().servicesTotal)"></div>
+                                <small class="text-muted">Hizmet Tutari</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-primary">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>Finansman Destegi</strong>
+                    <p class="mb-0 mt-2 small">
+                        Siparisiniz icin yatirimcilardan finansman talep edebilirsiniz.
+                        Finansman talebiniz onaylanirsa, odemenizi vade sonunda yapabilirsiniz.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" data-bind="click: skipFinancing">
+                    <i class="bi bi-x me-1"></i>Hayir, Devam Et
+                </button>
+                <button type="button" class="btn btn-primary" data-bind="click: requestFinancing, disable: isRequestingFinancing()">
+                    <span data-bind="visible: !isRequestingFinancing()">
+                        <i class="bi bi-cash-coin me-1"></i>Finansman Talep Et
+                    </span>
+                    <span data-bind="visible: isRequestingFinancing()">
+                        <span class="spinner-border spinner-border-sm me-1"></span>Isleniyor...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financing Success Modal -->
+<div class="modal fade" id="financingSuccessModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Finansman Talebi Olusturuldu</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h5>Finansman talebiniz basariyla olusturuldu!</h5>
+                <p class="text-muted">
+                    Yatirimcilar talebinizi inceleyip teklif verecekler.
+                    Teklifler geldiginde size bildirim gonderilecektir.
+                </p>
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Finansman talebinizi <strong>Yatirim > Taleplerim</strong> sayfasindan takip edebilirsiniz.
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Tamam</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* Wizard Steps */
+        .wizard-steps {
+            counter-reset: step;
+        }
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 12%;
+            right: 12%;
+            height: 3px;
+            background: #e9ecef;
+            z-index: 0;
+        }
+        .wizard-step {
+            position: relative;
+            flex: 1;
+        }
+        .wizard-step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        .wizard-step.active .wizard-step-icon {
+            background: #0d6efd;
+            color: white;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+        }
+        .wizard-step.completed .wizard-step-icon {
+            background: #198754;
+            color: white;
+        }
+        .wizard-step-label {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            color: #6c757d;
+        }
+        .wizard-step.active .wizard-step-label {
+            color: #0d6efd;
+            font-weight: 600;
+        }
+        .wizard-step.completed .wizard-step-label {
+            color: #198754;
+        }
+
+        /* Card hover for address selection */
+        .card.cursor-pointer {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .card.cursor-pointer:hover {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+        }
+
+        /* Modal fullscreen improvements */
+        #checkoutWizardModal .modal-body {
+            min-height: 400px;
+        }
+
+        /* Legacy checkout timeline (keep for compatibility) */
+        .checkout-timeline {
+            overflow: hidden;
+        }
+        .checkout-timeline::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: #e9ecef;
+            z-index: 0;
+        }
+        .checkout-step-icon {
+            position: relative;
+            z-index: 1;
+            border: 2px solid transparent;
+        }
+        .checkout-step-icon.bg-success {
+            border-color: #198754;
+        }
+        .checkout-step-icon.bg-primary {
+            border-color: #0d6efd;
+            animation: pulse 2s infinite;
+        }
+        .checkout-step-icon.bg-light {
+            border-color: #dee2e6;
+        }
+        @@keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="~/js/Dashboard/MyOrders.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            ko.applyBindings(new MyOrdersViewModel(), document.getElementById('my-orders-app'));
+        });
+    </script>
+}

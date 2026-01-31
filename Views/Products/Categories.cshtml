@@ -1,0 +1,425 @@
+@{
+    ViewData["Title"] = Html.T("Categories.Title", "Urun Kategorileri").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="categories-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-folder2-open me-2"></i>@Html.T("Categories.Title", "Urun Kategorileri")</h4>
+            <p class="text-muted mb-0">@Html.T("Categories.Description", "Platform genelinde tanimli urun kategorilerini inceleyin")</p>
+        </div>
+        <button class="btn btn-primary" data-bind="click: showRequestModal">
+            <i class="bi bi-plus-lg"></i> @Html.T("Categories.RequestNew", "Yeni Kategori Talep Et")
+        </button>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-categories" type="button">
+                <i class="bi bi-folder2-open me-1"></i> @Html.T("Categories.Tab.Browse", "Kategoriler")
+                <span class="badge bg-primary ms-1" data-bind="text: stats().totalCategories"></span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-requests" type="button">
+                <i class="bi bi-list-check me-1"></i> @Html.T("Categories.Tab.MyRequests", "Taleplerim")
+                <span class="badge bg-warning ms-1" data-bind="text: pendingRequestCount, visible: pendingRequestCount() > 0"></span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Categories Tab -->
+        <div class="tab-pane fade show active" id="tab-categories">
+            <!-- Search & Filter -->
+            <div class="card mb-4">
+                <div class="card-body py-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control"
+                                       placeholder="@Html.T("Categories.Search.Placeholder", "Kategori ara...")"
+                                       data-bind="value: searchQuery, valueUpdate: 'afterkeydown'" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" data-bind="value: filterLevel">
+                                <option value="">@Html.T("Categories.Filter.AllLevels", "Tum Seviyeler")</option>
+                                <option value="0">@Html.T("Categories.Filter.MainOnly", "Sadece Ana Kategoriler")</option>
+                                <option value="1">@Html.T("Categories.Filter.SubOnly", "Sadece Alt Kategoriler")</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-secondary w-100" data-bind="click: resetFilters">
+                                <i class="bi bi-x-circle"></i> @Html.T("Common.Reset", "Sifirla")
+                            </button>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary" data-bind="click: expandAll, enable: categories().length > 0" title="@Html.T("Categories.ExpandAll", "Tumunu Ac")">
+                                    <i class="bi bi-arrows-expand"></i>
+                                </button>
+                                <button class="btn btn-outline-primary" data-bind="click: collapseAll, enable: categories().length > 0" title="@Html.T("Categories.CollapseAll", "Tumunu Kapat")">
+                                    <i class="bi bi-arrows-collapse"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4" data-bind="visible: !isLoading()">
+                <div class="col-md-3">
+                    <div class="card border-0 bg-primary bg-opacity-10">
+                        <div class="card-body py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-folder2-open fs-2 text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h3 class="mb-0" data-bind="text: stats().totalCategories">0</h3>
+                                    <small class="text-muted">@Html.T("Categories.Stats.Total", "Toplam Kategori")</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-success bg-opacity-10">
+                        <div class="card-body py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-folder fs-2 text-success"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h3 class="mb-0" data-bind="text: stats().mainCategories">0</h3>
+                                    <small class="text-muted">@Html.T("Categories.Stats.Main", "Ana Kategori")</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-info bg-opacity-10">
+                        <div class="card-body py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-folder-symlink fs-2 text-info"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h3 class="mb-0" data-bind="text: stats().subCategories">0</h3>
+                                    <small class="text-muted">@Html.T("Categories.Stats.Sub", "Alt Kategori")</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-warning bg-opacity-10">
+                        <div class="card-body py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-box-seam fs-2 text-warning"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h3 class="mb-0" data-bind="text: stats().totalProducts">0</h3>
+                                    <small class="text-muted">@Html.T("Categories.Stats.Products", "Toplam Urun")</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div data-bind="visible: isLoading" class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+            </div>
+
+            <!-- Category Tree -->
+            <div class="card" data-bind="visible: !isLoading()">
+                <div class="card-body p-0">
+                    <!-- Empty State -->
+                    <div data-bind="visible: filteredCategories().length === 0" class="text-center py-5">
+                        <i class="bi bi-folder-x text-muted" style="font-size: 3rem;"></i>
+                        <p class="mt-3 text-muted" data-bind="visible: searchQuery() || filterLevel()">
+                            @Html.T("Categories.Empty.Filtered", "Aramanizla eslesen kategori bulunamadi")
+                        </p>
+                        <p class="mt-3 text-muted" data-bind="visible: !searchQuery() && !filterLevel()">
+                            @Html.T("Categories.Empty", "Henuz kategori tanimlanmamis")
+                        </p>
+                        <button class="btn btn-primary mt-2" data-bind="click: showRequestModal, visible: !searchQuery() && !filterLevel()">
+                            <i class="bi bi-plus-lg"></i> @Html.T("Categories.RequestNew", "Yeni Kategori Talep Et")
+                        </button>
+                    </div>
+
+                    <!-- Category List -->
+                    <div class="p-3" data-bind="visible: filteredCategories().length > 0">
+                        <div class="category-tree" data-bind="template: { name: 'category-template', foreach: filteredCategories }"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info mt-4" data-bind="visible: !isLoading() && categories().length > 0">
+                <i class="bi bi-info-circle me-2"></i>
+                @Html.T("Categories.Info", "Kategoriler platform yoneticisi tarafindan yonetilmektedir. Ihtiyaciniz olan bir kategori yoksa talep olusturabilirsiniz.")
+            </div>
+        </div>
+
+        <!-- Requests Tab -->
+        <div class="tab-pane fade" id="tab-requests">
+            <!-- Filter -->
+            <div class="card mb-4">
+                <div class="card-body py-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-4">
+                            <select class="form-select" data-bind="value: requestStatusFilter">
+                                <option value="">@Html.T("Common.All", "Tum Durumlar")</option>
+                                <option value="1">@Html.T("CategoryRequest.Status.Pending", "Beklemede")</option>
+                                <option value="2">@Html.T("CategoryRequest.Status.Approved", "Onaylandi")</option>
+                                <option value="3">@Html.T("CategoryRequest.Status.Rejected", "Reddedildi")</option>
+                                <option value="4">@Html.T("CategoryRequest.Status.Duplicate", "Mevcut")</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 text-end">
+                            <button class="btn btn-primary" data-bind="click: showRequestModal">
+                                <i class="bi bi-plus-lg me-1"></i> @Html.T("CategoryRequest.NewRequest", "Yeni Talep")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="text-center py-5" data-bind="visible: isLoadingRequests">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+            </div>
+
+            <!-- Empty State -->
+            <div class="text-center py-5" data-bind="visible: !isLoadingRequests() && requests().length === 0">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <p class="mt-3 text-muted">@Html.T("CategoryRequest.NoRequests", "Henuz kategori talebiniz yok")</p>
+                <button class="btn btn-primary mt-2" data-bind="click: showRequestModal">
+                    <i class="bi bi-plus-lg"></i> @Html.T("CategoryRequest.NewRequest", "Yeni Talep")
+                </button>
+            </div>
+
+            <!-- Request List -->
+            <div class="card" data-bind="visible: !isLoadingRequests() && requests().length > 0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>@Html.T("CategoryRequest.RequestedName", "Talep Edilen Kategori")</th>
+                                <th>@Html.T("CategoryRequest.SuggestedParent", "Onerilen Ust Kategori")</th>
+                                <th>@Html.T("Common.Status", "Durum")</th>
+                                <th>@Html.T("Common.Date", "Tarih")</th>
+                                <th style="width: 100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: requests">
+                            <tr>
+                                <td>
+                                    <span data-bind="text: requestedName" class="fw-medium"></span>
+                                    <small class="text-muted d-block" data-bind="text: description, visible: description"></small>
+                                </td>
+                                <td>
+                                    <span data-bind="text: suggestedParentCategoryName || '-'"></span>
+                                </td>
+                                <td>
+                                    <span class="badge" data-bind="css: statusBadgeClass, text: statusName"></span>
+                                </td>
+                                <td>
+                                    <small data-bind="text: formattedDate"></small>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-danger"
+                                                data-bind="visible: statusId === 1, click: $parent.cancelRequest"
+                                                title="@Html.T("Common.Cancel", "Iptal")">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary"
+                                                data-bind="click: $parent.showDetailModal"
+                                                title="@Html.T("Common.Detail", "Detay")">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Request Modal -->
+    <div class="modal fade" data-bind="css: { show: showCreateModal }, style: { display: showCreateModal() ? 'block' : 'none' }" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-folder-plus me-2"></i>@Html.T("CategoryRequest.NewRequest", "Yeni Kategori Talebi")</h5>
+                    <button type="button" class="btn-close" data-bind="click: closeRequestModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("CategoryRequest.RequestedName", "Kategori Adi") <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" data-bind="value: newRequest.requestedName, valueUpdate: 'afterkeydown'" placeholder="@Html.T("CategoryRequest.NamePlaceholder", "Ornegin: Endustriyel Pompalar")">
+                    </div>
+
+                    <!-- Benzer Kategoriler Uyarisi -->
+                    <div class="alert alert-warning mb-3" data-bind="visible: similarCategories().length > 0">
+                        <h6 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>@Html.T("CategoryRequest.SimilarFound", "Benzer Kategoriler Bulundu")</h6>
+                        <p class="mb-2 small">@Html.T("CategoryRequest.SimilarFoundDesc", "Asagidaki kategoriler aradiginiz kategoriyle benzer. Lutfen kontrol edin:")</p>
+                        <ul class="mb-0 small" data-bind="foreach: similarCategories">
+                            <li><span data-bind="text: fullPath"></span></li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("CategoryRequest.SuggestedParent", "Ust Kategori (Opsiyonel)")</label>
+                        <select class="form-select" data-bind="value: newRequest.suggestedParentCategoryId, options: parentCategoryOptions, optionsText: 'displayName', optionsValue: 'id', optionsCaption: '@Html.T("Common.Select", "Seciniz")'"></select>
+                        <small class="text-muted">@Html.T("CategoryRequest.SuggestedParentHint", "Hangi kategorinin altina eklenmesini oneriyorsunuz?")</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("CategoryRequest.Description", "Aciklama")</label>
+                        <textarea class="form-control" rows="3" data-bind="value: newRequest.description"
+                                  placeholder="@Html.T("CategoryRequest.DescriptionPlaceholder", "Bu kategoriye neden ihtiyac duyuyorsunuz?")"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bind="click: closeRequestModal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: createRequest, disable: isSaving">
+                        <span data-bind="visible: isSaving"><span class="spinner-border spinner-border-sm me-1"></span></span>
+                        <span data-bind="visible: !isSaving()"><i class="bi bi-send me-1"></i></span>
+                        @Html.T("Common.Send", "Gonder")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade" data-bind="css: { show: showCreateModal }, style: { display: showCreateModal() ? 'block' : 'none' }"></div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" data-bind="css: { show: showDetailModalFlag }, style: { display: showDetailModalFlag() ? 'block' : 'none' }" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>@Html.T("CategoryRequest.Detail", "Talep Detayi")</h5>
+                    <button type="button" class="btn-close" data-bind="click: closeDetailModal"></button>
+                </div>
+                <div class="modal-body" data-bind="with: selectedRequest">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.RequestedName", "Talep Edilen")</dt>
+                        <dd class="col-sm-8 fw-medium" data-bind="text: requestedName"></dd>
+
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.Description", "Aciklama")</dt>
+                        <dd class="col-sm-8" data-bind="text: description || '-'"></dd>
+
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.SuggestedParent", "Onerilen Ust")</dt>
+                        <dd class="col-sm-8" data-bind="text: suggestedParentCategoryName || '-'"></dd>
+
+                        <dt class="col-sm-4">@Html.T("Common.Status", "Durum")</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge" data-bind="css: statusBadgeClass, text: statusName"></span>
+                        </dd>
+
+                        <dt class="col-sm-4">@Html.T("Common.Date", "Tarih")</dt>
+                        <dd class="col-sm-8" data-bind="text: formattedDate"></dd>
+
+                        <!-- ko if: reviewedAt -->
+                        <dt class="col-sm-4 mt-3 pt-3 border-top">@Html.T("CategoryRequest.ReviewedAt", "Inceleme Tarihi")</dt>
+                        <dd class="col-sm-8 mt-3 pt-3 border-top" data-bind="text: formattedReviewDate"></dd>
+
+                        <!-- ko if: reviewNote -->
+                        <dt class="col-sm-4">@Html.T("CategoryRequest.ReviewNote", "Admin Notu")</dt>
+                        <dd class="col-sm-8" data-bind="text: reviewNote"></dd>
+                        <!-- /ko -->
+                        <!-- /ko -->
+                    </dl>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bind="click: $root.closeDetailModal">@Html.T("Common.Close", "Kapat")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade" data-bind="css: { show: showDetailModalFlag }, style: { display: showDetailModalFlag() ? 'block' : 'none' }"></div>
+</div>
+
+<!-- Category Item Template -->
+<script type="text/html" id="category-template">
+    <div class="category-item border rounded mb-2">
+        <div class="d-flex align-items-center p-2 bg-white" data-bind="css: { 'bg-light': level === 0 }">
+            <!-- Expand/Collapse Toggle -->
+            <button class="btn btn-sm btn-link p-0 me-2" style="width: 24px;"
+                    data-bind="visible: children && children.length > 0, click: function() { $root.toggleExpand($data); }">
+                <i class="bi" data-bind="css: { 'bi-chevron-down': expanded, 'bi-chevron-right': !expanded }"></i>
+            </button>
+            <span class="me-2" style="width: 24px;" data-bind="visible: !children || children.length === 0"></span>
+
+            <!-- Icon -->
+            <span class="me-2" data-bind="visible: icon">
+                <i data-bind="attr: { 'class': 'bi ' + icon + ' text-primary' }"></i>
+            </span>
+            <span class="me-2" data-bind="visible: !icon">
+                <i class="bi bi-folder text-muted"></i>
+            </span>
+
+            <!-- Name & Info -->
+            <div class="flex-grow-1">
+                <span class="fw-medium" data-bind="text: name"></span>
+                <!-- ko if: children && children.length > 0 -->
+                <span class="badge bg-light text-muted ms-2" data-bind="text: children.length + ' alt kategori'"></span>
+                <!-- /ko -->
+                <!-- ko if: productCount > 0 -->
+                <span class="badge bg-info ms-1" data-bind="text: productCount + ' urun'"></span>
+                <!-- /ko -->
+            </div>
+
+            <!-- Level Badge -->
+            <span class="badge bg-primary me-2" data-bind="visible: level === 0">@Html.T("Categories.Level.Main", "Ana")</span>
+            <span class="badge bg-secondary me-2" data-bind="visible: level === 1">@Html.T("Categories.Level.Sub", "Alt")</span>
+            <span class="badge bg-light text-dark me-2" data-bind="visible: level >= 2, text: 'Seviye ' + (level + 1)"></span>
+
+            <!-- Quick Action -->
+            <a class="btn btn-sm btn-outline-primary"
+               data-bind="attr: { href: '/Products?category=' + id }"
+               title="@Html.T("Categories.ViewProducts", "Bu kategorideki urunleri gor")">
+                <i class="bi bi-box-seam"></i>
+            </a>
+        </div>
+
+        <!-- Children (Recursive) -->
+        <!-- ko if: expanded && children && children.length > 0 -->
+        <div class="ps-4 border-top bg-light bg-opacity-50" data-bind="template: { name: 'category-template', foreach: children }"></div>
+        <!-- /ko -->
+    </div>
+</script>
+
+<style>
+    .category-tree .category-item {
+        transition: all 0.2s ease;
+    }
+    .category-tree .category-item:hover > .d-flex {
+        background-color: rgba(var(--bs-primary-rgb), 0.05) !important;
+    }
+    .category-tree .ps-4 .category-item {
+        border-left: 3px solid var(--bs-primary) !important;
+        border-left-opacity: 0.3;
+    }
+</style>
+
+@section Scripts {
+    <script src="~/js/Products/Categories.js" asp-append-version="true"></script>
+}

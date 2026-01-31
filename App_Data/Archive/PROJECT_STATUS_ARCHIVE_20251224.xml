@@ -1,0 +1,877 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProjectStatusArchive>
+    <ArchiveInfo>
+        <CreatedDate>2025-12-24</CreatedDate>
+        <TaskRange>Task 81-98</TaskRange>
+        <Description>20-23 Aralik 2025 tarihlerinde tamamlanan gorevler</Description>
+    </ArchiveInfo>
+
+    <CompletedTasks>
+        <Task id="81" date="2025-12-20">
+            <Title>Mesajlasma Sistemi</Title>
+            <Description>
+                Firma-firma mesajlasma sistemi olusturuldu.
+
+                ENTITY LER:
+                - MessageThread: BuyerVendorId, SellerVendorId, Subject, LastMessageAt, BuyerUnread, SellerUnread
+                - Message: ThreadId, SenderVendorId, Content, SentAt, IsRead, ReadAt
+                - Migration: AddMessagingSystem
+
+                SERVIS:
+                - IMessagingService + MessagingService
+                - Thread CRUD, mesaj gonderme, okundu bildirimi
+                - Okunmamis mesaj sayaci
+
+                API (MessagingApiController):
+                - GET /api/messages/threads
+                - GET /api/messages/threads/{id}
+                - POST /api/messages/threads
+                - POST /api/messages/threads/{id}/messages
+                - POST /api/messages/threads/{id}/mark-read
+                - GET /api/messages/unread-count
+
+                SAYFA:
+                - Views/Dashboard/Messages.cshtml
+                - wwwroot/js/Dashboard/Messages.js
+                - Thread listesi + mesaj detay gorunumu
+                - Yeni mesaj modal
+                - Real-time bildirim entegrasyonu
+
+                ROUTE:
+                - /Dashboard/Messages
+            </Description>
+        </Task>
+        <Task id="82" date="2025-12-20">
+            <Title>Raporlama Sayfasi</Title>
+            <Description>
+                Satici ve Alici perspektifinden raporlama sayfasi:
+
+                DTO LAR (DTOs/Report/ReportDtos.cs):
+                - SalesOverviewDto: Gelir, siparis sayilari, urun durumu
+                - PurchaseOverviewDto: Harcama, siparis sayilari, talep durumu
+                - SalesByPeriodDto, PurchaseByPeriodDto: Donemsel veriler
+                - TopProductDto, TopCustomerDto, TopSupplierDto, TopPurchasedProductDto
+
+                SERVIS:
+                - IReportService/ReportService
+                - Seller: GetSellerReportAsync, GetSellerOverviewAsync, GetSalesByPeriodAsync
+                  GetTopProductsAsync, GetTopCustomersAsync
+                - Buyer: GetBuyerReportAsync, GetBuyerOverviewAsync, GetPurchasesByPeriodAsync
+                  GetTopSuppliersAsync, GetTopPurchasedProductsAsync
+
+                API (Controllers/Api/ReportsApiController.cs):
+                - GET /api/reports/seller - Satici rapor ozeti
+                - GET /api/reports/seller/overview - Satici genel bakis
+                - GET /api/reports/seller/sales-by-period - Donemsel satislar
+                - GET /api/reports/seller/top-products - En cok satan urunler
+                - GET /api/reports/seller/top-customers - En iyi musteriler
+                - GET /api/reports/buyer - Alici rapor ozeti
+                - GET /api/reports/buyer/overview - Alici genel bakis
+                - GET /api/reports/buyer/purchases-by-period - Donemsel satin almalar
+                - GET /api/reports/buyer/top-suppliers - En cok alisveris yapilan tedarikciler
+                - GET /api/reports/buyer/top-products - En cok alinan urunler
+
+                SAYFA:
+                - Views/Dashboard/Reports.cshtml
+                - wwwroot/js/Dashboard/Reports.js
+                - Satici/Alici tab degisimi
+                - Tarih filtresi (baslangic, bitis, periyot: gun/hafta/ay/yil)
+                - Ozet kartlari (gelir/harcama, siparis, stok/talep, teklif)
+                - Chart.js ile satis/satin alma grafikleri (bar + line combo)
+                - En cok satan/alinan urunler listesi
+                - En iyi musteriler/tedarikciler tablosu
+
+                ROUTE:
+                - /Dashboard/Reports
+            </Description>
+        </Task>
+        <Task id="83" date="2025-12-20">
+            <Title>Billing Page: Adres Secimi ve API Endpointleri</Title>
+            <Description>
+                Billing (Fatura ve Banka Bilgileri) sayfasi icin eksik API endpointleri eklendi:
+
+                ENTITY DEGISIKLIKLERI:
+                - Vendor.BillingAddressId: Secilen fatura adresi ID si (int?)
+                - Migration: AddBillingAddressIdToVendor
+
+                API ENDPOINTLER (CompanyApiController):
+                - GET /api/company/billing-info: Fatura bilgilerini getir
+                - PUT /api/company/billing-info: Fatura bilgilerini kaydet (BillingAddressId dahil)
+                - GET /api/company/bank-accounts: Banka hesaplarini listele
+                - POST /api/company/bank-accounts: Banka hesabi ekle
+                - DELETE /api/company/bank-accounts/{id}: Banka hesabi sil
+                - GET /api/company/payments: Odeme gecmisini listele (StripePayments)
+
+                DTO LAR (CompanyApiController.cs icinde):
+                - BillingInfoDto: companyName, taxOffice, taxNumber, billingAddressId
+                - BankAccountDto: bankName, accountHolder, iban, swiftCode, isDefault
+
+                UI DEGISIKLIKLERI (Billing.cshtml + Billing.js):
+                - Fatura adresi dropdownu (mevcut adreslerden sec)
+                - Secilen adres onizlemesi
+                - Adres yoksa uyari mesaji ve link
+                - API URLleri /api/vendor/* yerine /api/company/* olarak guncellendi
+            </Description>
+        </Task>
+        <Task id="84" date="2025-12-21">
+            <Title>Team ve Verifications Sayfalari</Title>
+            <Description>
+                Dashboard/Team ve Dashboard/Verifications sayfalari yeniden yapilandirildi:
+
+                TEAM SAYFASI:
+                - Aktif uyeler, kurumsal uyeler, bekleyen davetler
+                - Davet gonderme, yeniden gonderme, iptal
+                - Uye ekleme/duzenleme/silme (CRUD)
+                - VendorUserRole bazli rol atama
+
+                VERIFICATIONS SAYFASI (2 Tab):
+                - Kisisel Dogrulama: E-posta, telefon, kimlik dogrulama
+                - Kurumsal Dogrulama: Temsilciler, ortaklar, hissedarlar, UBO
+                - TeamMemberType (TypeItem pattern): Employee, Representative, Partner, Shareholder, Director, UBO
+                - MemberVerificationStatus (TypeItem pattern): Pending, InProgress, Verified, Rejected
+                - Kurumsal uye ekleme/duzenleme/silme/dogrulama
+
+                ENTITY DEGISIKLIKLERI (VendorTeamMember):
+                - MemberTypeId: int (enum yerine TypeItem)
+                - Title, Phone, IdentityNumber, SharePercentage
+                - IsAuthorizedSignatory, IsLegalRepresentative
+                - VerificationStatusId
+                - Migration: EnhanceTeamMemberForVerification, RenameMemberTypeToMemberTypeId
+
+                API ENDPOINTLER (TeamApiController):
+                - GET /api/team/members
+                - POST /api/team/members
+                - PUT /api/team/members/{id}
+                - DELETE /api/team/members/{id}
+                - POST /api/team/members/{id}/verify
+                - Route: [Route("api/team")] - explicit
+
+                TYPE API (TypesApiController):
+                - GET /api/types/team-member-type
+                - GET /api/types/member-verification-status
+            </Description>
+        </Task>
+        <Task id="85" date="2025-12-21">
+            <Title>Buyer Favoriler + Bildirim Sistemi</Title>
+            <Description>
+                TASK 54.1 - BUYER FAVORI TEDARIKCI EK OZELLIKLERI:
+
+                FavoriteSuppliers Sayfasi Iyilestirmeleri:
+                - Native confirm() kullanilmaz showDeleteConfirm() duzeltildi
+                - Hizli Teklif Iste butonu eklendi (MessageThread olusturur)
+                - Teklif isteme modali (konu + mesaj)
+
+                VendorReview - Siparis Degerlendirmesi:
+                - MyOrders sayfasina Degerlendir butonu (status === 12)
+                - Review modali: Genel puan (yildiz), alt puanlar (kalite, teslimat, iletisim, deger)
+                - Baslik, yorum, artilari, eksileri, tavsiye eder miyim
+                - API: POST /api/buyer/reviews
+
+                Diger Duzeltmeler:
+                - MyOrders confirmDelivery: native confirm() kullanilmaz showConfirmModal()
+
+                TASK 56 - BILDIRIM SISTEMI:
+                (Zaten mevcut - dogrulandi)
+
+                - Notification entity (tum bildirim tipleri)
+                - NotificationService
+                - NotificationsApiController
+                - SignalR NotificationHub (real-time)
+                - Header bildirim dropdown + badge
+                - NotificationSettings sayfasi (e-posta + uygulama ici tercihleri)
+            </Description>
+        </Task>
+        <Task id="86" date="2025-12-21">
+            <Title>User Identity Role Sistemi</Title>
+            <Description>
+                Tum kullanicilara temel Identity rolu atama sistemi eklendi.
+
+                SORUN:
+                - Admin kullanicilar Identity rolu (Admin) aliyordu
+                - Normal kullanicilar hicbir Identity rolu almiyordu
+                - Guvenlik kontrolleri tutarsizdi
+
+                COZUM:
+                - User rolu eklendi (tum kayitli kullanicilar icin)
+                - Admin kullanicilar: User + Admin rolleri
+                - Normal kullanicilar: User rolu
+
+                DEGISIKLIKLER:
+                - Program.cs: User rolu seed eklendi
+                - AccountController.Register: User rolu atama
+                - AccountController.RegisterWithJoinRequest: User rolu atama
+                - AdminService.CreateUserAsync: User rolu atama
+                - Migration: AddUserRoleToExistingUsers (mevcut kullanicilara User rolu)
+
+                KULLANIM:
+                - [Authorize(Roles = "User")] - Admin dahil tum kullanicilar
+                - [Authorize(Roles = "Admin")] - Sadece admin kullanicilar
+                - [Authorize(Roles = "User,Admin")] - Her ikisi de (gereksiz, User yeterli)
+            </Description>
+        </Task>
+        <Task id="87" date="2025-12-21">
+            <Title>Capability-Based Authorization</Title>
+            <Description>
+                Vendor capability bazli yetkilendirme sistemi eklendi.
+
+                DOSYALAR:
+                - Authorization/RequireCapabilityAttribute.cs
+                - Authorization/CapabilityAuthorizationHandler.cs
+                - Services/CustomUserClaimsPrincipalFactory.cs (guncellendi)
+                - Program.cs (handler kaydedildi)
+                - DEVELOPMENT_PATTERNS.md (pattern dokumantasyonu)
+
+                KULLANIM:
+                [RequireCapability(VendorCapabilities.Seller)]
+                [RequireCapability(VendorCapabilities.Buyer)]
+                [RequireCapability("Seller", "Buyer")]
+
+                CAPABILITIES:
+                - Platform, Seller, Buyer, Carrier, Insurance, Customs
+
+                OZELLIKLER:
+                - Controller veya Action seviyesinde kullanilabilir
+                - Birden fazla capability OR mantigi ile kontrol edilir
+                - System Admin tum kontrollerden muaf
+                - Claim-based (performansli, DB sorgusu yok)
+            </Description>
+        </Task>
+        <Task id="88" date="2025-12-22">
+            <Title>Yatirim/Finansman Sistemi (Investment)</Title>
+            <Description>
+                Yatirimcilar icin finansman talep-teklif sistemi kuruldu.
+
+                ENTITY LER:
+                - FinancingRequest: Finansman talebi entity
+                  - FinancingType: Invoice(1), Order(2), Project(3)
+                  - RequesterVendorId, RequestedAmount, Currency, DurationDays
+                  - CollateralType, CollateralDescription, MaxInterestRate
+                  - RiskScore, RiskNotes, Status, FundedAmount
+                  - Status: Draft(1), Open(2), OffersReceived(3), PartiallyFunded(4),
+                    FullyFunded(5), Repaid(6), Defaulted(7), Cancelled(8)
+                - InvestmentOffer: Yatirimci teklifi entity
+                  - FinancingRequestId, InvestorVendorId, InvestorUserId
+                  - OfferedAmount, InterestRate, TotalRepaymentAmount
+                  - Status: Pending(1), Accepted(2), Rejected(3), Withdrawn(4), Expired(5), Funded(6)
+                  - IsFundTransferred, IsRepaid, Transfer/Repayment takibi
+                - Migration: AddInvestmentSystem
+
+                TYPE DEFINITIONS:
+                - FinancingTypes: Invoice, Order, Project
+                - FinancingRequestStatuses: Draft, Open, OffersReceived, PartiallyFunded, FullyFunded, Repaid, Defaulted, Cancelled
+                - CollateralTypes: Invoice, Order, Inventory, Receivables, None
+                - InvestmentOfferStatuses: Pending, Accepted, Rejected, Withdrawn, Expired, Funded
+
+                API (InvestmentApiController):
+                - GET /api/investment/opportunities - Aktif talepleri listele
+                - GET /api/investment/opportunities/{id} - Talep detayi
+                - POST /api/investment/opportunities/{id}/offer - Teklif ver
+                - POST /api/investment/offers/{id}/withdraw - Teklifi geri cek
+                - GET /api/investment/my-offers - Verdiklerim
+                - GET /api/investment/types/financing - Finansman tipleri
+                - GET /api/investment/types/collateral - Teminat tipleri
+                - GET /api/investment/types/request-status - Talep durumlari
+                - GET /api/investment/types/offer-status - Teklif durumlari
+
+                SAYFA:
+                - Views/Dashboard/InvestmentOpportunities.cshtml
+                - wwwroot/js/Dashboard/InvestmentOpportunities.js
+                - Firsatlar tab: Aktif finansman talepleri
+                - Tekliflerim tab: Verdigi teklifler
+                - Teklif modali: Tutar, faiz, hesaplama
+                - Detay modali: Talep detaylari, risk, teminat
+
+                ROUTE:
+                - /Dashboard/InvestmentOpportunities (PlatformModules Id=53)
+                - Yatirimci (Id=8) capability'sine bagli
+            </Description>
+        </Task>
+        <Task id="89" date="2025-12-22">
+            <Title>Odeme Sonrasi Buyer Capability ve Sidebar Capability Sections</Title>
+            <Description>
+                Iki onemli gelistirme yapildi:
+
+                1. ODEME SONRASI BUYER CAPABILITY EKLEME:
+                - Stripe odeme basarili oldugunda (webhook: payment_intent.succeeded)
+                - BuyerVendor'a Buyer capability'si yoksa otomatik eklenir
+                - Ayrica Buyer default role owner'a atanir
+
+                SERVIS DEGISIKLIKLERI:
+                - ICompanyService.EnsureVendorCapabilityWithDefaultRoleAsync(vendorId, capabilityCode)
+                - CompanyService: Capability ekle + default role ata
+                - StripeService.EnsureBuyerCapabilityAsync: Webhook sonrasi tetiklenir
+
+                2. SIDEBAR CAPABILITY COLLAPSIBLE SECTIONS:
+                - Capability'ler ustte tab degil, sidebar'da acilir-kapanir section olarak gosterilir
+                - Her capability kendi modulleriyle birlikte collapse/expand edilebilir
+                - Platform modulleri ayri section olarak kalir (Dashboard, Account, Settings)
+
+                CONTROLLER DEGISIKLIKLERI:
+                - DashboardController.LoadViewDataAsync:
+                  - modulesByCapability: Her capability icin ayri modul listesi
+                  - PlatformModules: Ortak moduller (tum capability'ler icin)
+
+                LAYOUT DEGISIKLIKLERI:
+                - _DashboardLayout.cshtml:
+                  - Ustteki capability tabs kaldirildi
+                  - Capability'ler sidebar-capability class ile ozel stil
+                  - Alt section'lar sidebar-subsection ile indent
+
+                CSS DEGISIKLIKLERI:
+                - site.css: .sidebar-capability ve .sidebar-subsection stilleri
+                - Capability section'lari daha belirgin (bg, font-weight)
+            </Description>
+        </Task>
+        <Task id="90" date="2025-12-22">
+            <Title>Capability Request Modulu + Rol Permission UI Guncelleme</Title>
+            <Description>
+                Capability talep sistemi ve rol yetkilendirme UI guncellemesi yapildi.
+
+                1. CAPABILITY REQUEST SISTEMI:
+
+                ENTITY:
+                - CapabilityRequest: VendorId, CapabilityId, RequestedByUserId, Status, Notes
+                - AdminNotes, ProcessedByUserId, ProcessedAt
+                - Migration: AddCapabilityRequest
+
+                TYPE DEFINITIONS:
+                - CapabilityRequestStatuses: Pending(1), Approved(2), Rejected(3)
+
+                SERVIS:
+                - ICapabilityRequestService / CapabilityRequestService
+                - CreateRequestAsync, GetMyRequestsAsync, GetAvailableCapabilitiesAsync
+                - GetPendingRequestsAsync, ApproveRequestAsync, RejectRequestAsync
+
+                API (CapabilityRequestApiController):
+                - GET /api/capability-request/available - Mevcut olmayan capability'ler
+                - GET /api/capability-request/my-requests - Benim taleplerim
+                - POST /api/capability-request - Yeni talep olustur
+                - GET /api/capability-request/pending - Admin: Bekleyen talepler
+                - POST /api/capability-request/{id}/approve - Admin: Onayla
+                - POST /api/capability-request/{id}/reject - Admin: Reddet
+
+                DASHBOARD UI:
+                - Sidebar footer'a "Hizmet Ekle" butonu eklendi
+                - Modal: Capability secimi + not
+                - Talep durumu bildirimleri
+
+                ADMIN UI:
+                - Views/Admin/CapabilityRequests.cshtml
+                - Bekleyen talepler listesi
+                - Firma bilgisi, talep tarihi, notlar
+                - Onayla/Reddet butonlari + admin notu
+                - _AdminLayout.cshtml'e menu linki eklendi
+
+                2. ROL PERMISSION UI GUNCELLEMESI:
+
+                SORUN:
+                - Rol yetkilerinde sadece o rolun capability'sine ait moduller gorunuyordu
+                - Personeller farkli capability modulleri icin yetkilendirilemiyordu
+
+                COZUM:
+                - Tum capability modulleri gruplu olarak gosteriliyor
+                - Her capability acilir-kapanir bir section
+                - Modul tree her capability icinde ayri
+
+                SERVIS:
+                - IAdminService.GetAllModulesGroupedByCapabilityAsync(roleId)
+                - CapabilityModulesGroupDto: CapabilityId, Name, Icon, Modules listesi
+
+                API:
+                - GET /api/admin/roles/{roleId}/permissions/grouped
+
+                UI:
+                - Roles.cshtml: Capability gruplarini gosteren yeni template
+                - Roles.js: capabilityGroups observable, gruplu veri yukleme
+                - Her capability header tiklaninca expand/collapse
+            </Description>
+        </Task>
+        <Task id="91" date="2025-12-22">
+            <Title>Controller Refactoring + Route Guncelleme</Title>
+            <Description>
+                DashboardController cok buyumust, modullere ayrildi.
+
+                DASHBOARDBASECONTROLLER (YENI):
+                - Tum dashboard controller'larin kalitim aldigi abstract base class
+                - LoadViewDataAsync: ViewBag'e ortak verileri yukler
+                - ExecuteWithViewDataAsync: Basit action'lar icin helper
+                - GetCurrentUserAsync, GetUserId helper'lari
+
+                CONTROLLERS/MODULES KLASORU (YENI):
+                - OrdersController: MyOrders, SellerOrders
+                - DemandsController: MyDemands, SupplierOffers
+                - SuppliersController: SupplierProfile, DiscoverSuppliers, FavoriteSuppliers
+                - ProposalsController: Index (Proposals), Compare
+                - ReportsController: Index (Reports)
+                - MessagesController: Index (Messages)
+                - ServicesController: Logistics, Customs, Insurance, Survey
+                - InvestmentController: Opportunities
+                - StockController: Movements
+                - SettingsController: PersonalInfo, Documents, Contracts, Verifications,
+                  Billing, ServiceConnections, Notifications, Subscription, Security
+
+                MEVCUT CONTROLLER REFACTORING:
+                - DashboardController: Sadece Index kaldi
+                - ProductsController: DashboardBaseController'dan inherit
+                - CompanyController: DashboardBaseController'dan inherit
+                - TeamController: DashboardBaseController'dan inherit
+                - WarehousesController: DashboardBaseController'dan inherit
+                - BranchesController: DashboardBaseController'dan inherit
+
+                VIEW KLASORLERI (YENI):
+                - Views/Orders, Views/Demands, Views/Suppliers, Views/Proposals
+                - Views/Reports, Views/Messages, Views/Services, Views/Investment
+                - Views/Stock, Views/Settings
+
+                PLATFORMMODULES ROUTE GUNCELLEMELERI:
+                - /Dashboard/MyOrders -> /Orders/MyOrders
+                - /Dashboard/SellerOrders -> /Orders/SellerOrders
+                - /Dashboard/MyDemands -> /Demands/MyDemands
+                - /Dashboard/SupplierOffers -> /Demands/SupplierOffers
+                - /Dashboard/SupplierProfile -> /Suppliers/SupplierProfile
+                - /Dashboard/DiscoverSuppliers -> /Suppliers/DiscoverSuppliers
+                - /Dashboard/FavoriteSuppliers -> /Suppliers/FavoriteSuppliers
+                - /Dashboard/Proposals -> /Proposals
+                - /Dashboard/CompareProposals -> /Proposals/Compare
+                - /Dashboard/Messages -> /Messages
+                - /Dashboard/LogisticsRequests -> /Services/Logistics
+                - /Dashboard/CustomsRequests -> /Services/Customs
+                - /Dashboard/InsuranceRequests -> /Services/Insurance
+                - /Dashboard/SurveyRequests -> /Services/Survey
+                - /Dashboard/InvestmentOpportunities -> /Investment/Opportunities
+                - /Dashboard/StockMovements -> /Stock/Movements
+                - /Dashboard/PersonalInfo -> /Settings/PersonalInfo
+                - /Dashboard/Documents -> /Settings/Documents
+                - /Dashboard/Contracts -> /Settings/Contracts
+                - /Dashboard/Verifications -> /Settings/Verifications
+                - /Dashboard/Billing -> /Settings/Billing
+                - /Dashboard/ServiceConnections -> /Settings/ServiceConnections
+                - /Dashboard/Settings/Notifications -> /Settings/Notifications
+                - /Dashboard/Settings/Subscriptions -> /Settings/Subscription
+                - /Dashboard/Settings/Security -> /Settings/Security
+            </Description>
+        </Task>
+        <Task id="92" date="2025-12-22">
+            <Title>Finansman Talep Olusturma (Seller/Buyer)</Title>
+            <Description>
+                Seller/Buyer icin finansman talebi olusturma ve yonetme modulu.
+
+                API (FinancingApiController - /api/financing):
+                - GET /my-requests - Benim taleplerim
+                - GET /my-requests/{id} - Talep detayi (tekliflerle birlikte)
+                - POST /requests - Yeni talep olustur
+                - PUT /requests/{id} - Talep guncelle (Draft durumunda)
+                - POST /requests/{id}/publish - Talebi yayinla
+                - POST /requests/{id}/cancel - Talebi iptal et
+                - POST /offers/{id}/accept - Teklif kabul et
+                - POST /offers/{id}/reject - Teklif reddet
+                - POST /offers/{id}/confirm-transfer - Transfer onayla
+                - POST /offers/{id}/confirm-repayment - Geri odeme bildir
+                - GET /orders - Finansman icin uygun siparisler
+
+                MVC (FinancingController):
+                - /Financing/MyRequests
+
+                SAYFA OZELLIKLERI:
+                - Taleplerim listesi (tum durumlar)
+                - Ozet kartlari (toplam, aktif, bekleyen teklif, finanse edilen)
+                - Arama ve filtreleme (durum, tip)
+                - Yeni talep olusturma modali
+                  - Finansman tipi secimi (Fatura, Siparis, Proje)
+                  - Tutar, vade, max faiz
+                  - Teminat bilgileri
+                  - Fatura/Siparis detaylari (tipe gore)
+                  - Taslak veya direkt yayinla
+                - Talep duzenleme (Draft durumunda)
+                - Gelen teklifler modali
+                  - Teklif kabul/red
+                  - Transfer onay
+                  - Geri odeme bildirimi
+                - Talep detay modali
+
+                PLATFORMMODULES:
+                - Id=62, Name='My Financing Requests'
+                - Route: /Financing/MyRequests
+                - Satici ve Alici capability'lerine bagli
+
+                DOSYALAR:
+                - Controllers/Api/FinancingApiController.cs
+                - Controllers/Modules/FinancingController.cs
+                - Views/Financing/MyRequests.cshtml
+                - wwwroot/js/Financing/MyRequests.js
+            </Description>
+        </Task>
+        <Task id="93" date="2025-12-22">
+            <Title>Checkout Flow + Service Provider Sistemi</Title>
+            <Description>
+                Sepetten siparise donusum ve servis saglayici teklif sistemi kuruldu.
+
+                KONSEPT:
+                - Sepet checkout edildiginde Order olusur
+                - Order icin hizmet secenekleri belirlenir (Lojistik, Gumruk, Sigorta, Gozetim)
+                - Servis saglayicilara bildirim gider
+                - Servis saglayicilar teklif verir
+                - Alici teklifleri inceler ve secer
+                - Tum hizmetler secildikten sonra odemeye gecer
+
+                DTOS (DTOs/Checkout/CheckoutDtos.cs):
+                - CheckoutSummaryDto: Sepet ozeti, adresler, hizmet secenekleri
+                - CheckoutVendorGroupDto: Satici bazli urun grubu
+                - CheckoutItemDto: Checkout kalemi
+                - CheckoutAddressDto: Adres bilgisi
+                - CheckoutOriginDto: Kaynak adres (satici deposu)
+                - ServiceOptionDto: Hizmet secenegi
+                - InitiateCheckoutDto: Checkout baslatma istegi
+                - ServiceSelectionDto: Hizmet secimi detayi
+                - FinancingRequestDto: Finansman istegi detayi
+                - CheckoutResultDto: Checkout baslatma sonucu
+                - OrderQuotesDto: Siparis icin gelen teklifler
+                - ServiceRequestQuotesDto: Hizmet talebi ve teklifleri
+                - ServiceQuoteItemDto: Servis teklifi
+                - InvestmentOfferDto: Yatirim teklifi
+                - CheckoutCompleteDto: Checkout tamamlama sonucu
+
+                DTOS (DTOs/ServiceProvider/ServiceProviderDtos.cs):
+                - ServiceRequestListDto: Talep listesi
+                - ServiceRequestDetailDto: Talep detayi
+                - ServiceRequestItemDto: Siparis kalemi
+                - CreateQuoteDto: Teklif olusturma
+                - UpdateQuoteDto: Teklif guncelleme
+                - MyQuoteListDto: Verdigi teklifler
+
+                SERVICE (ICheckoutService/CheckoutService):
+                - GetCheckoutSummaryAsync: Sepet + hizmet secenekleri
+                - InitiateCheckoutAsync: Order + ServiceRequest olustur
+                - GetOrderQuotesAsync: Teklifleri getir
+                - SelectQuoteAsync: Teklif sec
+                - AreAllServicesSelectedAsync: Tum hizmetler secildi mi
+                - CompleteCheckoutAsync: Odemeye gec
+                - NotifyServiceProvidersAsync: Saglayicilara bildirim
+
+                API (CheckoutApiController - /api/checkout):
+                - GET /summary - Checkout ozeti
+                - POST /initiate - Checkout baslat
+                - GET /orders/{orderId}/quotes - Teklifleri getir
+                - POST /orders/{orderId}/quotes/{quoteId}/select - Teklif sec
+                - POST /orders/{orderId}/complete - Tamamla
+                - GET /orders/{orderId}/services-status - Servis durumu
+
+                API (ServiceProviderApiController - /api/provider):
+                - GET /requests - Gelen talepler (capability bazli)
+                - GET /requests/{id} - Talep detayi
+                - POST /quotes - Teklif ver
+                - PUT /quotes/{id} - Teklif guncelle
+                - POST /quotes/{id}/withdraw - Teklif geri cek
+                - GET /my-quotes - Verdiklerim
+
+                MVC CONTROLLERS:
+                - CheckoutController: Index (checkout), Quotes (teklif secimi)
+                - ProviderController: Requests, MyQuotes
+
+                VIEWS:
+                - Views/Checkout/Index.cshtml - 3 adimli checkout wizard
+                  Step 1: Urun ozeti + adres secimi
+                  Step 2: Hizmet secimi (Lojistik, Gumruk, Sigorta, Gozetim, Finansman)
+                  Step 3: Onay
+                - Views/Checkout/Quotes.cshtml - Gelen teklifleri goruntule ve sec
+                  Her hizmet tipi icin teklif listesi
+                  Teklif secimi
+                  Toplam tutar hesaplama
+                  Odemeye gec butonu
+                - Views/Provider/Requests.cshtml - Servis saglayici talep sayfasi
+                  Talep kartlari (rota, agirlik, deger, HS kodu)
+                  Teklif ver modali
+                  Teklif duzenleme
+                - Views/Provider/MyQuotes.cshtml - Verilen teklifler sayfasi
+                  Teklif listesi (ozet kartlari ile)
+                  Teklif duzenleme modali
+                  Teklif geri cekme
+                  Teklif detay goruntuleme
+
+                JAVASCRIPT:
+                - wwwroot/js/Checkout/Index.js
+                - wwwroot/js/Checkout/Quotes.js
+                - wwwroot/js/Provider/Requests.js
+                - wwwroot/js/Provider/MyQuotes.js
+
+                BILDIRIM ENTEGRASYONU:
+                - Yeni talep geldiginde servis saglayicilara bildirim
+                - NotificationType.NewServiceRequest (20)
+                - NotificationType.NewServiceQuote (21)
+                - Capability bazli bildirim (Tasimaci, Gumruk, Sigorta, Gozetim)
+
+                PLATFORMMODULES:
+                - Id=63: Provider Requests (/Provider/Requests) - Gelen Talepler
+                - Id=64: Provider My Quotes (/Provider/MyQuotes) - Tekliflerim
+                - Id=65: Order Quotes (/Checkout/Quotes) - Siparis Teklifleri
+                - Tasimaci, Sigorta, Gumruk, Gozetim capability'lerine 63, 64 eklendi
+                - Alici capability'sine 65 eklendi
+            </Description>
+        </Task>
+        <Task id="94" date="2025-12-22">
+            <Title>Checkout Finansman Detay Formu</Title>
+            <Description>
+                Checkout wizard Step 2'de finansman talebi icin detayli form eklendi.
+
+                UI (Views/Checkout/Index.cshtml):
+                - "Finansman Istiyorum" checkbox'i tiklaninca detay formu acilir
+                - Talep Tutari: Kismi veya tam tutar (max siparis toplami)
+                - Vade Suresi: 15, 30, 45, 60, 90, 120, 180 gun secenekleri
+                - Max Faiz Orani: Yatirimcilara sinir belirle
+                - Teklif Son Tarihi: Date picker
+                - Aciklama: Opsiyonel yatirimcilara not
+
+                JAVASCRIPT (wwwroot/js/Checkout/Index.js):
+                - financingForm observable objesi:
+                  requestedAmount, durationDays, maxInterestRate, offerDeadline, description
+                - Summary yuklendiginde default tutar set edilir
+                - submitOrder'da tum detaylar gonderilir
+
+                DTO (DTOs/Checkout/CheckoutDtos.cs):
+                - FinancingRequestDto guncellendi:
+                  RequestedAmount, DurationDays, MaxInterestRate, OfferDeadline, Description
+
+                SERVICE (Services/CheckoutService.cs):
+                - InitiateCheckoutAsync: Finansman detaylari FinancingRequest'e kaydedilir
+                - Talep tutari siparis toplamini gecemez
+                - NotifyInvestorsAsync: Yatirimcilara bildirim gonderilir
+
+                NOTIFICATION:
+                - NotificationType.NewFinancingRequest (40) eklendi
+                - NotificationType.NewInvestmentOffer (41) eklendi
+                - InvestmentFunded (44), InvestmentRepaid (45) eklendi
+            </Description>
+        </Task>
+        <Task id="95" date="2025-12-22">
+            <Title>Sepet Sistemi Yenileme + Coklu Sepet Destegi</Title>
+            <Description>
+                Sepet sisteminde onemli is kurali degisikligi ve yeni ozellikler eklendi.
+
+                IS KURALI:
+                - Bir sepette sadece ayni satici + ayni depodan urunler bulunabilir
+                - Farkli satici/depodan urun eklenirse yeni sepet olusur
+                - Bu sayede lojistik teklifleri tek origin icin tutarli olur
+                - Alicinin birden fazla aktif sepeti olabilir
+
+                ENTITY DEGISIKLIKLERI (Cart.cs):
+                - Cart.SellerVendorId: Sepetteki urunlerin saticisi (int?)
+                - Cart.SourceWarehouseId: Sepetteki urunlerin kaynagi (int?)
+                - Cart.DeliveryAddressId: Ortak teslimat adresi (int?)
+                - CartItem.SourceWarehouseId: Urunun geldigi depo (int?)
+                - Migration: EnhanceCartWithWarehouseConstraint
+
+                DTOS (DTOs/Cart/CartDtos.cs):
+                - CartsDto: Coklu sepet listesi (Carts, TotalItemCount, TotalAmount)
+                - CartDto: SellerVendorId/Name, SourceWarehouseId/Name/City, DeliveryAddressId/Title/Full eklendi
+                - CartItemDto: ProductSlug eklendi, DeliveryAddressId kaldirildi
+                - AddToCartResultDto: CartId, HasSameWarehouseProducts, SameWarehouseProducts
+                - SameWarehouseProductDto: Cross-sell icin urun bilgisi
+                - CartConflictDto: Uyumsuzluk durumu bilgisi
+
+                SERVICE (ICartService/CartService):
+                - GetActiveCartsAsync: Tum aktif sepetleri getir (cogul)
+                - GetCartByIdAsync: Belirli sepeti getir
+                - AddToCartAsync: Ayni satici+depo+adres icin sepet bulur veya yeni olusturur
+                - ClearCartAsync: Belirli sepeti temizle (cartId parametreli)
+                - GetSameWarehouseProductsAsync: Ayni depodan diger urunleri getir
+                - GetProductDefaultWarehouseIdAsync: Urunun varsayilan deposunu getir
+
+                API (CartApiController - /api/cart):
+                - GET / - Tum sepetleri getir (CartsDto dondurur)
+                - GET /{cartId} - Belirli sepeti getir
+                - DELETE /{cartId} - Belirli sepeti temizle
+                - GET /same-warehouse-products/{productId} - Ayni depodan urunler
+
+                URUN DETAY SAYFASI (Views/Catalog/Detail.cshtml):
+                - "Ayni Depodan Diger Urunler" section'i eklendi
+                - Tek sevkiyat avantaji bilgisi
+                - Sayfa yuklenmesinde cross-sell urunler gosterilir
+
+                - "Sepete Eklendi + Cross-sell Modal" eklendi
+                - Eklenen urun ozeti
+                - Ayni depodan onerileri goster
+                - "Alisverise Devam Et" veya "Sepete Git" secenekleri
+
+                JAVASCRIPT (wwwroot/js/Catalog/Detail.js):
+                - loadSameWarehouseProducts(): Ayni depodan urunleri yukle
+                - renderCrossSellProducts(): Cross-sell urunleri render et
+                - Sepete ekleme sonrasi modal goster
+                - API response'dan cross-sell urunleri al
+
+                SEPET SAYFASI (YENI):
+                - Controllers/CartController.cs
+                - Views/Cart/Index.cshtml
+                - wwwroot/js/Cart/Index.js
+
+                SEPET SAYFASI OZELLIKLERI:
+                - Coklu sepet gorunumu (her sepet ayri kart)
+                - Her sepette: Satici bilgisi, Depo bilgisi, Teslimat adresi
+                - Urun listesi tablosu (gorsel, isim, miktar, fiyat)
+                - Miktar +/- butonlari (min quantity kontrolu)
+                - Urun kaldir butonu
+                - Sepet temizle butonu
+                - "Odemeye Git" butonu (cartId ile /Checkout'a yonlendirir)
+                - Birden fazla sepet varsa genel toplam gosterimi
+                - Bilgi notu: "Her sepet farkli sevkiyat olarak gonderilecek"
+
+                ROUTES:
+                - /Cart - Sepet sayfasi
+            </Description>
+        </Task>
+        <Task id="96" date="2025-12-23">
+            <Title>VendorTeamMember Kimlik Bilgileri Genisletme</Title>
+            <Description>
+                Firma calisanlari icin detayli kimlik bilgileri alanlari eklendi.
+
+                ENTITY DEGISIKLIKLERI (VendorTeamMember):
+                - DateOfBirth: Dogum tarihi
+                - Citizenship: Vatandaslik (ornek: "TC", "DE")
+                - Nationality: Uyruk
+                - CountryOfBirthId: Dogum ulkesi (Countries FK)
+                - PlaceOfBirth: Dogum yeri (sehir)
+                - IdDocumentTypeId: Kimlik belgesi tipi
+                - IdDocumentNumber: Kimlik belgesi numarasi
+                - Occupation: Meslek
+                - Migration: EnhanceTeamMemberIdentityFields
+
+                TYPE DEFINITIONS:
+                - IdDocumentTypes: NationalId, Passport, DrivingLicense, ResidencePermit, WorkPermit, Other
+
+                API DEGISIKLIKLERI:
+                - GET /api/team/members: Yeni alanlar eklendi
+                - POST /api/team/members: Yeni alanlar destekleniyor
+                - PUT /api/team/members/{id}: Yeni alanlar destekleniyor
+                - GET /api/team/employees/select: Dropdown icin calisan listesi (YENI)
+                - GET /api/types/id-document-type: Kimlik belgesi tipleri (YENI)
+
+                DTO DEGISIKLIKLERI:
+                - AddTeamMemberDto: Tum yeni alanlar eklendi
+
+                FRONTEND:
+                - Warehouse/Index.js: Yeni endpoint kullanacak sekilde guncellendi
+            </Description>
+        </Task>
+        <Task id="97" date="2025-12-23">
+            <Title>Evrak Yonetimi ve Dijital Imza Sistemi</Title>
+            <Description>
+                Capability bazli evrak tanimlari, islem tipleri ve dijital imza sistemi kuruldu.
+
+                TYPE DEFINITIONS (TypeDefinitions.cs):
+                - TransactionTypes: OrderCreated, OrderConfirmed, PaymentCompleted, ContractSigned,
+                  ShipmentCreated, CustomsClearance, DeliveryCompleted, ServiceQuoteAccepted,
+                  InvestmentAccepted, RefundProcessed
+                - DocumentTypes: SalesContract, ServiceAgreement, LogisticsContract, InsurancePolicy,
+                  CustomsDeclaration, Invoice, ProformaInvoice, BillOfLading, PackingList, DeliveryNote,
+                  InvestmentAgreement, PaymentReceipt
+                - SignatureTypes: Electronic, Digital, Qualified
+                - DocumentStatuses: Draft, PendingSignature, PartiallySigned, Signed, Rejected, Cancelled
+                - GetPrefix(): Evrak numarasi prefix fonksiyonu (SZL, FTR, KNS vb.)
+
+                ENTITY LER:
+                - DocumentTemplate: Evrak sablonu, PDF field mapping, imza sayisi
+                - TransactionDocumentMapping: Islem-evrak eslestirmesi, capability bazli kosullar
+                - CapabilityDocumentRequirement: Capability bazli evrak gereksinimleri
+                - DocumentNumberSequence: Evrak numaralandirma sira tablosu (tip+yil bazli)
+                - GeneratedDocument: Olusturulan evraklar (PDF dosyasi, imza durumu)
+                - DocumentSignature: Evrak imzalari (elektronik onay, IP, UserAgent, dogrulama kodu)
+                - VendorServicePreference: Vendor varsayilan servis tercihleri
+
+                KILITLEME MEKANIZMASI:
+                - OrderServiceRequest.IsLocked: Sozlesme imzalandiktan sonra teklif degistirilemez
+                - OrderServiceRequest.LockedByDocumentId: Kilitleyen evrak
+                - OrderServiceRequest.LockedAt: Kilit tarihi
+                - Imza sonrasi otomatik kilitleme
+
+                SERVIS (IDocumentGenerationService / DocumentGenerationService):
+                - GenerateDocumentsForTransactionAsync: Islem icin evrak olustur
+                - GenerateDocumentAsync: Tek evrak olustur
+                - GenerateDocumentNumberAsync: Evrak numarasi uret (SZL-2024-000001)
+                - SignDocumentAsync: Evrak imzala (elektronik onay)
+                - VerifySignatureAsync: Imza dogrula
+                - GetDocumentSignatureStatusAsync: Imza durumu
+                - GetPendingSignatureDocumentsAsync: Bekleyen imzalar
+                - LockServiceRequestAfterSignatureAsync: Imza sonrasi kilitle
+                - IsServiceRequestLockedAsync: Kilit durumu kontrol
+
+                ORDER DETAY SERVIS TALEPLERI:
+                - MyOrders.cshtml: Servis talepleri bolumu eklendi
+                - Gelen teklifler tablosu
+                - Secilen teklif vurgulanir
+                - MyOrders.js: getServiceTypeBadgeClass, getServiceStatusBadgeClass
+                - OrderDetailDto.ServiceRequests: Servis talepleri listesi
+                - OrderServiceRequestDto, OrderServiceQuoteDto: Yeni DTO'lar
+                - OrderService.MapToDetailDto: ServiceRequests mapping eklendi
+
+                MIGRATIONS:
+                - AddDocumentManagementSystem
+                - AddGeneratedDocumentAndSignature
+                - AddVendorServicePreference
+                - AddLockingMechanism
+
+                SONRAKI ADIMLAR (Gelecekte):
+                - PDF Form Fields doldurma (iTextSharp/PdfSharp)
+                - Nitelikli e-imza entegrasyonu (Turkcell/E-Guven)
+                - Evrak goruntuleme/indirme UI
+                - Ayarlar sayfasina servis tercihleri ekleme
+            </Description>
+        </Task>
+        <Task id="98" date="2025-12-23">
+            <Title>Urun Tehlikeli Madde ve Servis Saglayici Detay Gosterimi</Title>
+            <Description>
+                Urunlere tehlikeli madde bilgileri eklendi ve servis saglayici teklif ekraninda
+                detayli bilgiler gosterildi.
+
+                PRODUCT ENTITY DEGISIKLIKLERI:
+                - IsDangerous: Tehlikeli madde mi?
+                - DangerClassId: ADR/IMDG tehlike sinifi (1-9)
+                - UNNumber: UN numarasi (UN1203 gibi)
+                - PackingGroupId: Ambalaj grubu (I, II, III)
+                - IsFlammable, IsExplosive, IsCorrosive, IsToxic: Tehlike isaretleri
+                - IsRadioactive, IsEnvironmentalHazard, IsOxidizing, IsCompressedGas
+                - RequiresColdChain: Soguk zincir gereksinimi
+                - RequiresFragileHandling: Kirilabilir - ozel tasima
+                - RequiresStackingLimit, MaxStackingLayers: Istifleme siniri
+                - HandlingInstructions: Ozel tasima talimatlari
+
+                TYPE DEFINITIONS:
+                - DangerClasses: Sinif 1-9 (Patlayici, Gaz, Yanici Sivi/Kati, Oksitleyici,
+                  Zehirli, Radyoaktif, Asindirici, Diger Tehlikeli)
+                - PackingGroups: Grup I (Yuksek), II (Orta), III (Dusuk) tehlike
+
+                MIGRATION:
+                - AddProductHazardousProperties
+
+                SERVIS SAGLAYICI TEKLIF EKRANI IYILESTIRMELERI:
+                - Kartlar genisletilerek 3 kolonlu layout yapildi
+                - Tam adres bilgileri (Origin/Destination)
+                - Yukleme/Teslimat tarihleri
+                - Paket sayisi, hacim bilgisi
+                - Urun listesi acilir/kapanir panel olarak eklendi
+                - Her urun icin: boyutlar (cm), agirlik (kg), HS kodu
+                - Tehlike uyarilari header'da badge olarak gosteriliyor
+                - Tehlikeli urunler icin UN numarasi, tehlike sinifi, ambalaj grubu
+                - Tehlike isaretleri (Yanici, Patlayici, Zehirli vb.)
+                - Ozel tasima gereksinimleri (Soguk Zincir, Kirilabilir)
+                - Tasima talimatlari
+
+                DTO DEGISIKLIKLERI:
+                - ServiceRequestListDto: OriginFullAddress, DestinationFullAddress, PackageCount
+                  HasHazardousMaterials, HazardWarnings, RequiresColdChain, RequiresFragileHandling
+                  Items listesi eklendi
+                - ServiceRequestItemDto: Weight, Length, Width, Height, TotalWeight
+                  IsDangerous, DangerClassId/Name/Icon, UNNumber, PackingGroupId/Name
+                  Tum tehlike isaretleri, ozel tasima gereksinimleri, HS kodu, mensei
+
+                API DEGISIKLIKLERI:
+                - GET /api/provider/requests: Urun detaylari ve tehlike bilgileri eklendi
+                - Order.Items include edildi
+                - Product bilgileri mapping yapildi
+                - Post-process ile tehlike sinifi isimleri eklendi
+
+                UI DEGISIKLIKLERI:
+                - Views/Provider/Requests.cshtml: Yeni 3 kolonlu layout
+                - wwwroot/js/Provider/Requests.js: toggleItems, isItemsExpanded fonksiyonlari
+            </Description>
+        </Task>
+    </CompletedTasks>
+</ProjectStatusArchive>

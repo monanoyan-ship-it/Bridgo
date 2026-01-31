@@ -1,0 +1,199 @@
+@{
+    Layout = null;
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Bridgo Admin</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar d-flex flex-column" style="width: 250px; flex-shrink: 0;">
+            <div class="sidebar-brand d-flex align-items-center">
+                <i class="bi bi-shield-lock me-2"></i>
+                <span>@Html.T("Admin.Brand")</span>
+            </div>
+
+            <div class="flex-grow-1 py-2">
+                <div class="sidebar-section">@Html.T("Admin.Section.General")</div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Index" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Index">
+                            <i class="bi bi-speedometer2"></i> @Html.T("Admin.Menu.Dashboard")
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="sidebar-section">@Html.T("Admin.Section.RBAC")</div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Modules" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Modules">
+                            <i class="bi bi-grid-3x3-gap"></i> @Html.T("Admin.Menu.Modules")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Roles" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Roles">
+                            <i class="bi bi-person-badge"></i> @Html.T("Admin.Menu.Roles")
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="sidebar-section">@Html.T("Admin.Section.System")</div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Vendors" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Vendors">
+                            <i class="bi bi-building"></i> @Html.T("Admin.Menu.Vendors")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Users" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Users">
+                            <i class="bi bi-people"></i> @Html.T("Admin.Menu.Users")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Geography" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Geography">
+                            <i class="bi bi-globe"></i> @Html.T("Admin.Menu.Geography")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Languages" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Languages">
+                            <i class="bi bi-translate"></i> @Html.T("Admin.Menu.Languages", "Diller")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Localization" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Localization">
+                            <i class="bi bi-chat-quote"></i> @Html.T("Admin.Menu.Localization", "Ceviriler")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "Categories" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Categories">
+                            <i class="bi bi-folder2-open"></i> @Html.T("Admin.Menu.Categories", "Kategoriler")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "CategoryRequests" ? "active" : "")"
+                           asp-controller="Admin" asp-action="CategoryRequests">
+                            <i class="bi bi-folder-plus"></i> @Html.T("Admin.Menu.CategoryRequests", "Kategori Talepleri")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "CapabilityRequests" ? "active" : "")"
+                           asp-controller="Admin" asp-action="CapabilityRequests">
+                            <i class="bi bi-box-arrow-in-right"></i> @Html.T("Admin.Menu.CapabilityRequests", "Hizmet Talepleri")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentAction == "ProfileApprovals" ? "active" : "")"
+                           asp-controller="Admin" asp-action="ProfileApprovals">
+                            <i class="bi bi-person-check"></i> @Html.T("Admin.Menu.ProfileApprovals", "Profil Onaylari")
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="p-3 border-top border-secondary">
+                <a class="nav-link text-white-50" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-arrow-left me-2"></i> @Html.T("Admin.BackToSite")
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="flex-grow-1 d-flex flex-column" style="min-height: 100vh;">
+            <!-- Header -->
+            <header class="admin-header px-4 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted me-2">@User.Identity?.Name</span>
+                    <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-person-circle"></i>
+                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> @Html.T("Common.Logout", "Cikis")
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-grow-1 p-4 bg-light">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Shared Confirm Modal -->
+    <div class="modal fade" id="sharedConfirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">@Html.T("Common.Confirm", "Onay")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmModalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn" id="confirmModalBtn">
+                        <i id="confirmModalIcon"></i> <span id="confirmModalBtnText">@Html.T("Common.Confirm", "Onayla")</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shared Info Modal -->
+    <div class="modal fade" id="sharedInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalTitle">@Html.T("Common.Details", "Detaylar")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="infoModalContent"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Close", "Kapat")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/knockout/knockout-latest.js"></script>
+    <script src="~/lib/toastr/toastr.min.js"></script>
+    <script src="~/js/Shared/confirm-modal.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,168 @@
+@{
+    ViewData["Title"] = Html.T("Branches.Title", "Subeler").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="branches-app">
+    <!-- Header with Create Button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-building me-2"></i>@Html.T("Branches.Title", "Subeler")</h4>
+            <p class="text-muted mb-0">@Html.T("Branches.Description", "Firma subelerinizi yonetin")</p>
+        </div>
+        <button class="btn btn-primary" data-bind="click: createNew">
+            <i class="bi bi-plus-circle"></i> @Html.T("Branches.AddNew", "Yeni Sube")
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2">@Html.T("Common.Loading", "Yukleniyor...")</p>
+    </div>
+
+    <!-- Error Message -->
+    <div data-bind="visible: errorMessage" class="alert alert-danger alert-dismissible fade show">
+        <span data-bind="text: errorMessage"></span>
+        <button type="button" class="btn-close" data-bind="click: function() { errorMessage(''); }"></button>
+    </div>
+
+    <!-- Content -->
+    <div data-bind="visible: !isLoading()">
+        <!-- Empty State -->
+        <div data-bind="visible: items().length === 0" class="text-center py-5">
+            <i class="bi bi-building text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 text-muted">@Html.T("Branches.Empty", "Henuz sube bulunmamaktadir")</h4>
+            <p class="text-muted">@Html.T("Branches.Empty.Hint", "Yeni sube eklemek icin yukaridaki butonu kullanin.")</p>
+        </div>
+
+        <!-- Data Table -->
+        <div data-bind="visible: items().length > 0" class="card shadow">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>@Html.T("Admin.Table.Code", "Kod")</th>
+                                <th>@Html.T("Branches.Table.Name", "Sube Adi")</th>
+                                <th>@Html.T("Address.Fields.City", "Sehir")</th>
+                                <th>@Html.T("Company.Fields.Phone", "Telefon")</th>
+                                <th>@Html.T("Admin.Table.Status", "Durum")</th>
+                                <th class="text-end">@Html.T("Admin.Table.Actions", "Islemler")</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: items">
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary" data-bind="text: code"></span>
+                                </td>
+                                <td data-bind="text: name"></td>
+                                <td>
+                                    <span data-bind="text: city || '-'"></span>
+                                    <small class="text-muted" data-bind="visible: district">
+                                        / <span data-bind="text: district"></span>
+                                    </small>
+                                </td>
+                                <td data-bind="text: phone || '-'"></td>
+                                <td>
+                                    <span class="badge" data-bind="css: isActive ? 'bg-success' : 'bg-danger', text: isActive ? '@Html.T("Common.Active", "Aktif")' : '@Html.T("Common.Inactive", "Pasif")'"></span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary me-1" data-bind="click: $parent.editItem" title="@Html.T("Common.Edit", "Duzenle")">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger btn-gap" data-bind="click: $parent.deleteItem" title="@Html.T("Common.Delete", "Sil")">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal (TEK MODAL) -->
+    <div class="modal fade" data-bind="css: { show: isModalOpen }, style: { display: isModalOpen() ? 'block' : 'none' }" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" data-bind="with: editingItem">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-building"></i>
+                        <span data-bind="visible: id() === 0">@Html.T("Branches.AddNew", "Yeni Sube")</span>
+                        <span data-bind="visible: id() > 0">@Html.T("Branches.Edit", "Sube Duzenle")</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bind="click: $parent.closeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@Html.T("Branches.Fields.Code", "Sube Kodu") <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" data-bind="value: code" placeholder="@Html.T("Branches.Fields.Code.Placeholder", "ORN: IST01")" maxlength="20" />
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">@Html.T("Branches.Fields.Name", "Sube Adi") <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" data-bind="value: name" placeholder="@Html.T("Branches.Fields.Name.Placeholder", "Sube adi")" maxlength="200" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Address.Fields.City", "Sehir")</label>
+                            <input type="text" class="form-control" data-bind="value: city" placeholder="@Html.T("Address.Fields.City", "Sehir")" maxlength="100" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Address.Fields.District", "Ilce")</label>
+                            <input type="text" class="form-control" data-bind="value: district" placeholder="@Html.T("Address.Fields.District", "Ilce")" maxlength="100" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("Address.Fields.AddressLine", "Adres")</label>
+                        <textarea class="form-control" data-bind="value: address" rows="2" placeholder="@Html.T("Branches.Fields.Address.Placeholder", "Tam adres")" maxlength="500"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Company.Fields.Phone", "Telefon")</label>
+                            <input type="text" class="form-control" data-bind="value: phone" placeholder="0212 123 45 67" maxlength="20" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Email", "E-posta")</label>
+                            <input type="email" class="form-control" data-bind="value: email" placeholder="sube@Bridgo.com" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Order", "Siralama")</label>
+                            <input type="number" class="form-control" data-bind="value: sortOrder" min="0" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Admin.Table.Status", "Durum")</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" data-bind="checked: isActive" />
+                                <label class="form-check-label">@Html.T("Common.Active", "Aktif")</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bind="click: $parent.closeModal">
+                        <i class="bi bi-x-lg"></i> @Html.T("Common.Cancel", "Iptal")
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bind="click: $parent.save, disable: $parent.isSaving">
+                        <span data-bind="visible: !$parent.isSaving()">
+                            <i class="bi bi-check-lg"></i> @Html.T("Common.Save", "Kaydet")
+                        </span>
+                        <span data-bind="visible: $parent.isSaving()">
+                            <span class="spinner-border spinner-border-sm"></span> @Html.T("Common.Saving", "Kaydediliyor...")
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade" data-bind="css: { show: isModalOpen }, style: { display: isModalOpen() ? 'block' : 'none' }"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Branches/Index.js" asp-append-version="true"></script>
+}

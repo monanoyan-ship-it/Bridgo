@@ -1,0 +1,279 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("ServiceRequests.Title.Customs", "Gumruk Talepleri").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="customs-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-flag text-warning"></i> @Html.T("ServiceRequests.Title.Customs", "Gumruk Talepleri")</h4>
+            <p class="text-muted mb-0">@Html.T("ServiceRequests.Subtitle.Customs", "Acik gumruk taleplerini goruntuleyin ve teklif verin")</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#openRequests"
+               data-bind="css: { active: currentTab() === 'open' }, click: function() { currentTab('open'); }">
+                <i class="bi bi-hourglass-split"></i> @Html.T("ServiceRequests.Tab.Open", "Acik Talepler")
+                <span class="badge bg-warning text-dark ms-1" data-bind="text: openRequests().length, visible: openRequests().length > 0"></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#myQuotes"
+               data-bind="css: { active: currentTab() === 'quotes' }, click: function() { currentTab('quotes'); }">
+                <i class="bi bi-send-check"></i> @Html.T("ServiceRequests.Tab.MyQuotes", "Verdiklerim")
+                <span class="badge bg-primary ms-1" data-bind="text: myQuotes().length, visible: myQuotes().length > 0"></span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Open Requests Tab -->
+    <div data-bind="visible: currentTab() === 'open'">
+        <!-- Filters -->
+        <div class="card mb-3">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" placeholder="@Html.T("Common.Search", "Ara...")..." data-bind="textInput: searchTerm" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" data-bind="value: operationFilter">
+                            <option value="">@Html.T("Customs.Filter.AllOperations", "Tum Islemler")</option>
+                            <option value="1">@Html.T("Customs.Operation.Export", "Ihracat")</option>
+                            <option value="2">@Html.T("Customs.Operation.Import", "Ithalat")</option>
+                            <option value="3">@Html.T("Customs.Operation.Transit", "Transit")</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-secondary w-100" data-bind="click: loadRequests">
+                            <i class="bi bi-arrow-clockwise"></i> @Html.T("Common.Refresh", "Yenile")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div data-bind="visible: isLoading()" class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div data-bind="visible: !isLoading() && filteredRequests().length === 0" class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="mt-3 text-muted">@Html.T("ServiceRequests.Empty.Customs", "Acik gumruk talebi bulunamadi")</p>
+        </div>
+
+        <!-- Request Cards -->
+        <div class="row" data-bind="foreach: filteredRequests">
+            <div class="col-lg-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge" data-bind="text: statusName, css: statusClass"></span>
+                            <span class="badge bg-info ms-1" data-bind="text: customsOperationName"></span>
+                            <span class="text-muted ms-2" data-bind="text: orderNumber"></span>
+                        </div>
+                        <small class="text-muted" data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></small>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title" data-bind="text: title"></h6>
+                        <p class="card-text text-muted small" data-bind="text: description"></p>
+
+                        <!-- Route -->
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-geo-alt text-success me-2"></i>
+                            <span data-bind="text: origin"></span>
+                            <i class="bi bi-arrow-right mx-2"></i>
+                            <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                            <span data-bind="text: destination"></span>
+                        </div>
+
+                        <!-- Details -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6" data-bind="visible: hsCode">
+                                <small class="text-muted d-block">@Html.T("Customs.HSCode", "GTIP/HS Kodu")</small>
+                                <strong data-bind="text: hsCode"></strong>
+                            </div>
+                            <div class="col-6" data-bind="visible: cargoValue">
+                                <small class="text-muted d-block">@Html.T("ServiceRequests.CargoValue", "Mal Degeri")</small>
+                                <strong><span data-bind="text: cargoValue?.toLocaleString('tr-TR')"></span> <span data-bind="text: currency"></span></strong>
+                            </div>
+                        </div>
+
+                        <!-- Deadline -->
+                        <div data-bind="visible: quoteDeadline" class="text-warning small">
+                            <i class="bi bi-clock"></i> @Html.T("ServiceRequests.QuoteDeadline", "Son teklif"): <span data-bind="text: new Date(quoteDeadline).toLocaleDateString('tr-TR')"></span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-building"></i> <span data-bind="text: buyerName"></span>
+                            </small>
+                            <div>
+                                <!-- ko if: myQuotes && myQuotes.length > 0 -->
+                                <span class="badge bg-success me-2">
+                                    <i class="bi bi-check"></i> <span data-bind="text: myQuotes.length"></span> @Html.T("ServiceRequests.Quote", "teklif")
+                                </span>
+                                <!-- /ko -->
+                                <button class="btn btn-sm btn-primary" data-bind="click: $parent.openQuoteModal">
+                                    <i class="bi bi-send"></i> @Html.T("ServiceRequests.NewQuote", "Yeni Teklif")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Quotes Tab -->
+    <div data-bind="visible: currentTab() === 'quotes'">
+        <!-- Filters -->
+        <div class="card mb-3">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" data-bind="value: quoteStatusFilter, options: quoteStatuses, optionsValue: 'id', optionsText: 'name', optionsCaption: '@Html.T("ServiceRequests.Filter.AllStatuses", "Tum Durumlar")'"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-secondary w-100" data-bind="click: loadMyQuotes">
+                            <i class="bi bi-arrow-clockwise"></i> @Html.T("Common.Refresh", "Yenile")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div data-bind="visible: isLoading()" class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+
+        <div data-bind="visible: !isLoading() && filteredQuotes().length === 0" class="text-center py-5">
+            <i class="bi bi-send display-1 text-muted"></i>
+            <p class="mt-3 text-muted">@Html.T("ServiceRequests.Empty.NoQuotes", "Henuz teklif vermediniz")</p>
+        </div>
+
+        <div class="table-responsive" data-bind="visible: filteredQuotes().length > 0">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>@Html.T("Common.Order", "Siparis")</th>
+                        <th>@Html.T("ServiceRequests.Route", "Guzergah")</th>
+                        <th>@Html.T("ServiceRequests.Quote", "Teklif")</th>
+                        <th>@Html.T("Common.Status", "Durum")</th>
+                        <th>@Html.T("Common.Date", "Tarih")</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: filteredQuotes">
+                    <tr>
+                        <td>
+                            <strong data-bind="text: orderNumber"></strong>
+                            <br /><small class="text-muted" data-bind="text: buyerName"></small>
+                        </td>
+                        <td>
+                            <span data-bind="text: origin"></span>
+                            <i class="bi bi-arrow-right mx-1"></i>
+                            <span data-bind="text: destination"></span>
+                        </td>
+                        <td>
+                            <strong data-bind="text: quoteAmount.toLocaleString('tr-TR')"></strong>
+                            <span data-bind="text: currency"></span>
+                        </td>
+                        <td><span class="badge" data-bind="text: statusName, css: statusClass"></span></td>
+                        <td data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.withdrawQuote, visible: status === 1">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quote Modal -->
+    <div class="modal fade" id="quoteModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-flag"></i> @Html.T("ServiceRequests.Modal.CustomsQuote", "Gumruk Teklifi")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-light mb-4" data-bind="with: selectedRequest">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong data-bind="text: title"></strong>
+                                <p class="mb-1 text-muted small" data-bind="text: description"></p>
+                            </div>
+                            <div class="col-md-6">
+                                <div><span class="badge bg-info" data-bind="text: customsOperationName"></span></div>
+                                <small class="text-muted">HS: <span data-bind="text: hsCode || '-'"></span></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="quoteForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("ServiceRequests.QuoteAmount", "Teklif Tutari") *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" data-bind="value: quoteForm().quoteAmount" required min="0" step="0.01" />
+                                    <select class="form-select" style="max-width: 100px;" data-bind="value: quoteForm().currency">
+                                        <option value="TRY">TRY</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("ServiceRequests.QuoteValidity", "Teklif Gecerliligi")</label>
+                                <input type="date" class="form-control" data-bind="value: quoteForm().validUntil" />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">@Html.T("ServiceRequests.IncludedServices", "Dahil Hizmetler")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: quoteForm().includedServices"
+                                          placeholder="@Html.T("Customs.IncludedServices.Placeholder", "Beyanname, muayene, belge...")"></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">@Html.T("ServiceRequests.AdditionalCosts", "Ek Masraflar")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: quoteForm().additionalCosts"
+                                          placeholder="@Html.T("Customs.AdditionalCosts.Placeholder", "Vergi, harc, antrepo...")"></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">@Html.T("Common.Notes", "Notlar")</label>
+                                <textarea class="form-control" rows="2" data-bind="value: quoteForm().notes"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: submitQuote, disable: isSubmitting()">
+                        <span data-bind="visible: isSubmitting()"><span class="spinner-border spinner-border-sm"></span></span>
+                        <span data-bind="visible: !isSubmitting()"><i class="bi bi-send"></i> @Html.T("ServiceRequests.SubmitQuote", "Teklif Gonder")</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/CustomsRequests.js" asp-append-version="true"></script>
+}

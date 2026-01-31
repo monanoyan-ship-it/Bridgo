@@ -1,0 +1,402 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Module.Team", "Ekip Yonetimi").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid" id="team-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-people text-primary me-2"></i>
+                @Html.T("Module.Team", "Ekip Yonetimi")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Team.Subtitle", "Ekip uyelerini ve kurumsal temsilcileri yonetin")</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary me-2" data-bind="click: showInviteModal">
+                <i class="bi bi-envelope-plus me-1"></i> @Html.T("Team.SendInvite", "Davet Gonder")
+            </button>
+            <button class="btn btn-primary" data-bind="click: showAddMemberModal">
+                <i class="bi bi-person-plus me-1"></i> @Html.T("Team.AddMember", "Uye Ekle")
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-members">
+                <i class="bi bi-people me-1"></i> @Html.T("Team.Tab.Members", "Ekip Uyeleri")
+                <span class="badge bg-primary ms-1" data-bind="text: activeMembers().length"></span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-corporate">
+                <i class="bi bi-building me-1"></i> @Html.T("Team.Tab.Corporate", "Kurumsal Temsilciler")
+                <span class="badge bg-secondary ms-1" data-bind="text: corporateMembers().length"></span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-pending">
+                <i class="bi bi-hourglass-split me-1"></i> @Html.T("Team.Tab.Pending", "Bekleyenler")
+                <span class="badge bg-warning text-dark ms-1" data-bind="text: pendingMembers().length"></span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Loading -->
+    <!-- ko if: isLoading -->
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko ifnot: isLoading -->
+    <div class="tab-content">
+        <!-- Ekip Uyeleri -->
+        <div class="tab-pane fade show active" id="tab-members">
+            <!-- ko if: activeMembers().length === 0 -->
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-people fs-1"></i>
+                <p class="mt-2">@Html.T("Team.Empty.Members", "Henuz aktif ekip uyesi yok")</p>
+            </div>
+            <!-- /ko -->
+
+            <div class="table-responsive" data-bind="visible: activeMembers().length > 0">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>@Html.T("Common.FullName", "Ad Soyad")</th>
+                            <th>@Html.T("Common.Email", "E-posta")</th>
+                            <th>@Html.T("Common.Title", "Unvan")</th>
+                            <th>@Html.T("Common.Phone", "Telefon")</th>
+                            <th>@Html.T("Common.Role", "Rol")</th>
+                            <th>@Html.T("Common.Status", "Durum")</th>
+                            <th class="text-end" style="width: 100px;">@Html.T("Common.Actions", "Islemler")</th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: activeMembers">
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <span data-bind="text: initials" class="small"></span>
+                                    </div>
+                                    <span data-bind="text: name"></span>
+                                </div>
+                            </td>
+                            <td><span class="text-muted" data-bind="text: email"></span></td>
+                            <td data-bind="text: title || '-'"></td>
+                            <td data-bind="text: phone || '-'"></td>
+                            <td><span class="badge" data-bind="text: roleName, css: roleBadgeClass"></span></td>
+                            <td>
+                                <!-- ko if: !hasUser -->
+                                <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>@Html.T("Team.Status.NoUser", "Kullanici Yok")</span>
+                                <!-- /ko -->
+                                <!-- ko if: hasUser && isVerified -->
+                                <span class="badge bg-success"><i class="bi bi-patch-check me-1"></i>@Html.T("Team.Status.Verified", "Dogrulandi")</span>
+                                <!-- /ko -->
+                                <!-- ko if: hasUser && !isVerified -->
+                                <span class="badge bg-secondary">@Html.T("Common.Active", "Aktif")</span>
+                                <!-- /ko -->
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bind="click: $parent.editMember" title="@Html.T("Common.Edit", "Duzenle")">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.removeMember" title="@Html.T("Team.Remove", "Cikar")">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Kurumsal Temsilciler -->
+        <div class="tab-pane fade" id="tab-corporate">
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-info-circle me-2"></i>
+                @Html.T("Team.Corporate.Info", "Kurumsal temsilciler, ortaklar, hissedarlar ve yetkili kisiler firma dogrulama surecinde kullanilir.")
+            </div>
+
+            <!-- ko if: corporateMembers().length === 0 -->
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-building fs-1"></i>
+                <p class="mt-2">@Html.T("Team.Empty.Corporate", "Henuz kurumsal temsilci eklenmemis")</p>
+                <button class="btn btn-outline-primary" data-bind="click: showAddMemberModal">
+                    <i class="bi bi-plus-lg me-1"></i> @Html.T("Team.AddRepresentative", "Temsilci Ekle")
+                </button>
+            </div>
+            <!-- /ko -->
+
+            <div class="table-responsive" data-bind="visible: corporateMembers().length > 0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>@Html.T("Common.FullName", "Ad Soyad")</th>
+                            <th>@Html.T("Common.Type", "Tip")</th>
+                            <th>@Html.T("Common.Title", "Unvan")</th>
+                            <th>@Html.T("Common.Contact", "Iletisim")</th>
+                            <th>@Html.T("Team.SharePercent", "Hisse %")</th>
+                            <th>@Html.T("Team.Authority", "Yetki")</th>
+                            <th>@Html.T("Common.Verification", "Dogrulama")</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: corporateMembers">
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <span data-bind="text: initials" class="small"></span>
+                                    </div>
+                                    <div>
+                                        <div data-bind="text: name"></div>
+                                        <!-- ko if: !hasUser -->
+                                        <small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>@Html.T("Team.Status.NoUser", "Kullanici Yok")</small>
+                                        <!-- /ko -->
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge" data-bind="text: memberTypeName, css: memberTypeBadgeClass"></span></td>
+                            <td data-bind="text: title || '-'"></td>
+                            <td>
+                                <div class="small" data-bind="text: email"></div>
+                                <div class="small text-muted" data-bind="text: phone || ''"></div>
+                            </td>
+                            <td data-bind="text: sharePercentage ? sharePercentage + '%' : '-'"></td>
+                            <td>
+                                <!-- ko if: isAuthorizedSignatory -->
+                                <span class="badge bg-info me-1" title="@Html.T("Team.AuthorizedSignatory", "Imza Yetkili")"><i class="bi bi-pen"></i></span>
+                                <!-- /ko -->
+                                <!-- ko if: isLegalRepresentative -->
+                                <span class="badge bg-primary" title="@Html.T("Team.LegalRepresentative", "Yasal Temsilci")"><i class="bi bi-shield-check"></i></span>
+                                <!-- /ko -->
+                                <!-- ko if: !isAuthorizedSignatory && !isLegalRepresentative -->
+                                <span class="text-muted">-</span>
+                                <!-- /ko -->
+                            </td>
+                            <td>
+                                <span class="badge" data-bind="text: verificationStatusName, css: verificationBadgeClass"></span>
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" data-bind="click: $parent.editMember"><i class="bi bi-pencil me-2"></i>@Html.T("Common.Edit", "Duzenle")</a></li>
+                                        <li><a class="dropdown-item text-danger" href="#" data-bind="click: $parent.removeMember"><i class="bi bi-trash me-2"></i>@Html.T("Common.Delete", "Sil")</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bekleyenler -->
+        <div class="tab-pane fade" id="tab-pending">
+            <!-- ko if: pendingMembers().length === 0 -->
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-hourglass fs-1"></i>
+                <p class="mt-2">@Html.T("Team.Empty.Pending", "Bekleyen davet veya istek yok")</p>
+            </div>
+            <!-- /ko -->
+
+            <div class="table-responsive" data-bind="visible: pendingMembers().length > 0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>@Html.T("Team.NameEmail", "Ad / E-posta")</th>
+                            <th>@Html.T("Common.Source", "Kaynak")</th>
+                            <th>@Html.T("Common.Role", "Rol")</th>
+                            <th>@Html.T("Common.Date", "Tarih")</th>
+                            <th>@Html.T("Common.Status", "Durum")</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: pendingMembers">
+                        <tr>
+                            <td>
+                                <div data-bind="text: name || email"></div>
+                                <!-- ko if: name -->
+                                <small class="text-muted" data-bind="text: email"></small>
+                                <!-- /ko -->
+                            </td>
+                            <td><span class="badge bg-secondary" data-bind="text: sourceName"></span></td>
+                            <td data-bind="text: roleName"></td>
+                            <td data-bind="text: createdAtFormatted"></td>
+                            <td>
+                                <!-- ko if: isExpired -->
+                                <span class="badge bg-danger">@Html.T("Team.Status.Expired", "Suresi Doldu")</span>
+                                <!-- /ko -->
+                                <!-- ko ifnot: isExpired -->
+                                <span class="badge bg-warning text-dark">@Html.T("Common.Pending", "Beklemede")</span>
+                                <!-- /ko -->
+                            </td>
+                            <td>
+                                <!-- ko if: source === 'Invitation' -->
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bind="click: $parent.resendInvitation, enable: !$parent.isProcessing()" title="@Html.T("Team.Resend", "Tekrar Gonder")">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.cancelInvitation, enable: !$parent.isProcessing()" title="@Html.T("Common.Cancel", "Iptal Et")">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <!-- /ko -->
+                                <!-- ko if: source === 'JoinRequest' -->
+                                <button class="btn btn-sm btn-success me-1" data-bind="click: $parent.approveRequest, enable: !$parent.isProcessing()" title="@Html.T("Common.Approve", "Onayla")">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" data-bind="click: $parent.rejectRequest, enable: !$parent.isProcessing()" title="@Html.T("Common.Reject", "Reddet")">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <!-- /ko -->
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- Davet Modal -->
+    <div class="modal fade" id="inviteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-envelope-plus me-2"></i>@Html.T("Team.Modal.InviteTitle", "Ekip Uyesi Davet Et")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("Common.Email", "E-posta") <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" data-bind="value: inviteForm.email" placeholder="ornek@firma.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("Common.FullName", "Ad Soyad")</label>
+                        <input type="text" class="form-control" data-bind="value: inviteForm.name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("Common.Role", "Rol")</label>
+                        <select class="form-select" data-bind="value: inviteForm.role">
+                            <option value="4">@Html.T("VendorRole.Employee", "Calisan")</option>
+                            <option value="3">@Html.T("VendorRole.Manager", "Yonetici")</option>
+                            <option value="2">@Html.T("VendorRole.Supervisor", "Supervisor")</option>
+                            <option value="1">@Html.T("VendorRole.Admin", "Admin")</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: sendInvitation, enable: !isProcessing()">
+                        <span data-bind="visible: isProcessing"><i class="bi bi-hourglass-split me-1"></i></span>
+                        @Html.T("Team.SendInvite", "Davet Gonder")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Uye Ekleme/Duzenleme Modal -->
+    <div class="modal fade" id="memberModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-plus me-2"></i>
+                        <!-- ko if: editingMemberId() -->@Html.T("Team.Modal.EditTitle", "Uye Duzenle")<!-- /ko -->
+                        <!-- ko ifnot: editingMemberId() -->@Html.T("Team.Modal.AddTitle", "Uye Ekle")<!-- /ko -->
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Team.MemberType", "Uye Tipi") <span class="text-danger">*</span></label>
+                            <select class="form-select" data-bind="value: memberForm.memberTypeId, options: memberTypes, optionsValue: 'id', optionsText: 'name'"></select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Team.SystemRole", "Sistem Rolu")</label>
+                            <select class="form-select" data-bind="value: memberForm.role">
+                                <option value="4">@Html.T("VendorRole.Employee", "Calisan")</option>
+                                <option value="3">@Html.T("VendorRole.Manager", "Yonetici")</option>
+                                <option value="2">@Html.T("VendorRole.Supervisor", "Supervisor")</option>
+                                <option value="1">@Html.T("VendorRole.Admin", "Admin")</option>
+                            </select>
+                            <small class="text-muted">@Html.T("Team.SystemRoleHint", "Kullanici olarak sisteme erisim rolu")</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Common.FullName", "Ad Soyad") <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" data-bind="value: memberForm.name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Team.TitlePosition", "Unvan / Pozisyon")</label>
+                            <input type="text" class="form-control" data-bind="value: memberForm.title" placeholder="@Html.T("Team.TitlePlaceholder", "Genel Mudur, Mali Isler Direktoru, vb.")">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Common.Email", "E-posta") <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" data-bind="value: memberForm.email">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Common.Phone", "Telefon")</label>
+                            <input type="text" class="form-control" data-bind="value: memberForm.phone">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Team.IdentityNumber", "TC Kimlik No / Pasaport")</label>
+                            <input type="text" class="form-control" data-bind="value: memberForm.identityNumber">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("Team.ShareRatio", "Hisse Orani (%)")</label>
+                            <input type="number" class="form-control" data-bind="value: memberForm.sharePercentage" min="0" max="100" step="0.01">
+                            <small class="text-muted">@Html.T("Team.ShareRatioHint", "Hissedar ve UBO icin")</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isAuthorizedSignatory" data-bind="checked: memberForm.isAuthorizedSignatory">
+                                <label class="form-check-label" for="isAuthorizedSignatory">
+                                    <i class="bi bi-pen me-1"></i>@Html.T("Team.HasSignatureAuth", "Imza Yetkisi Var")
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isLegalRepresentative" data-bind="checked: memberForm.isLegalRepresentative">
+                                <label class="form-check-label" for="isLegalRepresentative">
+                                    <i class="bi bi-shield-check me-1"></i>@Html.T("Team.LegalRepresentative", "Yasal Temsilci")
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: saveMember, enable: !isProcessing()">
+                        <span data-bind="visible: isProcessing"><i class="bi bi-hourglass-split me-1"></i></span>
+                        <i class="bi bi-check-lg me-1" data-bind="visible: !isProcessing()"></i>
+                        @Html.T("Common.Save", "Kaydet")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/Team.js"></script>
+}

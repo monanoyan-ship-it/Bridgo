@@ -1,0 +1,303 @@
+@{
+    ViewData["Title"] = Html.T("Admin.CapabilityRequests.Title", "Hizmet Talepleri").ToString();
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid" id="capabilityRequestsApp">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">@Html.T("Admin.CapabilityRequests.Title", "Hizmet Talepleri")</h4>
+            <p class="text-muted mb-0">@Html.T("Admin.CapabilityRequests.Subtitle", "Firmalarin hizmet taleplerini inceleyin")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning text-dark fs-6" id="pendingBadge" style="display: none;">
+                <i class="bi bi-clock me-1"></i>
+                <span id="pendingCount">0</span> @Html.T("Admin.CapabilityRequests.Pending", "Bekleyen")
+            </span>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="card mb-4">
+        <div class="card-body py-2">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm" id="statusFilter">
+                        <option value="">@Html.T("Common.AllStatuses", "Tum Durumlar")</option>
+                        <option value="1">@Html.T("CapabilityRequestStatus.Pending", "Beklemede")</option>
+                        <option value="2">@Html.T("CapabilityRequestStatus.Approved", "Onaylandi")</option>
+                        <option value="3">@Html.T("CapabilityRequestStatus.Rejected", "Reddedildi")</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control form-control-sm" id="searchQuery"
+                           placeholder="@Html.T("Common.Search", "Ara...")">
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-sm btn-outline-primary" id="btnRefresh">
+                        <i class="bi bi-arrow-clockwise"></i> @Html.T("Common.Refresh", "Yenile")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="text-center p-4" id="loadingIndicator" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="text-center p-4" id="emptyState" style="display: none;">
+        <i class="bi bi-inbox display-4 text-muted"></i>
+        <p class="text-muted mt-2">@Html.T("Admin.CapabilityRequests.NoRequests", "Hizmet talebi bulunamadi")</p>
+    </div>
+
+    <!-- Request List -->
+    <div class="card" id="requestsCard" style="display: none;">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>@Html.T("CapabilityRequest.Capability", "Hizmet")</th>
+                        <th>@Html.T("CapabilityRequest.Vendor", "Firma")</th>
+                        <th>@Html.T("CapabilityRequest.RequestedBy", "Talep Eden")</th>
+                        <th>@Html.T("Common.Status", "Durum")</th>
+                        <th>@Html.T("Common.Date", "Tarih")</th>
+                        <th class="text-end">@Html.T("Common.Actions", "Islemler")</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-check2-square me-2"></i>@Html.T("Admin.CapabilityRequests.Review", "Talebi Incele")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">@Html.T("CapabilityRequest.Capability", "Hizmet")</label>
+                    <div class="fw-medium" id="reviewCapability"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">@Html.T("CapabilityRequest.Vendor", "Firma")</label>
+                    <div class="fw-medium" id="reviewVendor"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">@Html.T("CapabilityRequest.RequestedBy", "Talep Eden")</label>
+                    <div id="reviewRequestedBy"></div>
+                </div>
+                <div class="mb-3" id="reviewNotesSection" style="display: none;">
+                    <label class="form-label text-muted">@Html.T("CapabilityRequest.Notes", "Kullanici Notu")</label>
+                    <div id="reviewNotes" class="fst-italic"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("Admin.CapabilityRequests.AdminNotes", "Admin Notu (Opsiyonel)")</label>
+                    <textarea class="form-control" id="adminNotes" rows="2" placeholder="@Html.T("Admin.CapabilityRequests.AdminNotesPlaceholder", "Onay veya red nedeni...")"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-danger" id="btnReject">
+                    <i class="bi bi-x-circle me-1"></i>@Html.T("Common.Reject", "Reddet")
+                </button>
+                <button type="button" class="btn btn-success" id="btnApprove">
+                    <i class="bi bi-check-circle me-1"></i>@Html.T("Common.Approve", "Onayla")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function() {
+    'use strict';
+
+    var requests = [];
+    var currentRequestId = null;
+    var reviewModal = null;
+
+    // Elements
+    var loadingIndicator = document.getElementById('loadingIndicator');
+    var emptyState = document.getElementById('emptyState');
+    var requestsCard = document.getElementById('requestsCard');
+    var requestsTableBody = document.getElementById('requestsTableBody');
+    var statusFilter = document.getElementById('statusFilter');
+    var searchQuery = document.getElementById('searchQuery');
+    var pendingBadge = document.getElementById('pendingBadge');
+    var pendingCount = document.getElementById('pendingCount');
+    var btnRefresh = document.getElementById('btnRefresh');
+    var btnApprove = document.getElementById('btnApprove');
+    var btnReject = document.getElementById('btnReject');
+    var adminNotes = document.getElementById('adminNotes');
+
+    // Init
+    reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+    loadRequests();
+
+    // Event listeners
+    statusFilter.addEventListener('change', renderRequests);
+    searchQuery.addEventListener('input', renderRequests);
+    btnRefresh.addEventListener('click', loadRequests);
+    btnApprove.addEventListener('click', function() { processRequest('approve'); });
+    btnReject.addEventListener('click', function() { processRequest('reject'); });
+
+    function loadRequests() {
+        loadingIndicator.style.display = 'block';
+        emptyState.style.display = 'none';
+        requestsCard.style.display = 'none';
+
+        fetch('/api/capability-requests')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                requests = data || [];
+                updatePendingCount();
+                renderRequests();
+            })
+            .catch(function(err) {
+                console.error('Error loading requests:', err);
+                toastr.error('Talepler yuklenemedi');
+            })
+            .finally(function() {
+                loadingIndicator.style.display = 'none';
+            });
+    }
+
+    function updatePendingCount() {
+        var count = requests.filter(function(r) { return r.status === 1; }).length;
+        pendingCount.textContent = count;
+        pendingBadge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    function renderRequests() {
+        var filtered = requests;
+        var status = statusFilter.value;
+        var search = searchQuery.value.toLowerCase();
+
+        if (status) {
+            filtered = filtered.filter(function(r) { return r.status === parseInt(status); });
+        }
+
+        if (search) {
+            filtered = filtered.filter(function(r) {
+                return r.vendorName.toLowerCase().indexOf(search) > -1 ||
+                       r.capabilityName.toLowerCase().indexOf(search) > -1 ||
+                       r.requestedByUserName.toLowerCase().indexOf(search) > -1;
+            });
+        }
+
+        if (filtered.length === 0) {
+            emptyState.style.display = 'block';
+            requestsCard.style.display = 'none';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        requestsCard.style.display = 'block';
+
+        var html = '';
+        filtered.forEach(function(req) {
+            var statusClass = req.statusCssClass || 'bg-secondary';
+            var date = new Date(req.createdAt).toLocaleDateString('tr-TR');
+            var isPending = req.status === 1;
+
+            html += '<tr>' +
+                '<td><i class="' + (req.capabilityIcon || 'bi-box') + ' me-2"></i>' + req.capabilityName + '</td>' +
+                '<td>' + req.vendorName + '</td>' +
+                '<td>' + req.requestedByUserName + '</td>' +
+                '<td><span class="badge ' + statusClass + '">' + req.statusName + '</span></td>' +
+                '<td><small>' + date + '</small></td>' +
+                '<td class="text-end">';
+
+            if (isPending) {
+                html += '<button class="btn btn-sm btn-primary" onclick="showReviewModal(' + req.id + ')">' +
+                    '<i class="bi bi-check2-square me-1"></i>Incele</button>';
+            } else {
+                html += '<button class="btn btn-sm btn-outline-secondary" onclick="showDetailModal(' + req.id + ')">' +
+                    '<i class="bi bi-eye"></i></button>';
+            }
+
+            html += '</td></tr>';
+        });
+
+        requestsTableBody.innerHTML = html;
+    }
+
+    window.showReviewModal = function(id) {
+        var req = requests.find(function(r) { return r.id === id; });
+        if (!req) return;
+
+        currentRequestId = id;
+        document.getElementById('reviewCapability').innerHTML = '<i class="' + (req.capabilityIcon || 'bi-box') + ' me-2"></i>' + req.capabilityName;
+        document.getElementById('reviewVendor').textContent = req.vendorName;
+        document.getElementById('reviewRequestedBy').textContent = req.requestedByUserName;
+
+        var notesSection = document.getElementById('reviewNotesSection');
+        var notesEl = document.getElementById('reviewNotes');
+        if (req.notes) {
+            notesEl.textContent = req.notes;
+            notesSection.style.display = 'block';
+        } else {
+            notesSection.style.display = 'none';
+        }
+
+        adminNotes.value = '';
+        reviewModal.show();
+    };
+
+    window.showDetailModal = function(id) {
+        var req = requests.find(function(r) { return r.id === id; });
+        if (!req) return;
+
+        var msg = 'Firma: ' + req.vendorName + '\n' +
+            'Hizmet: ' + req.capabilityName + '\n' +
+            'Talep Eden: ' + req.requestedByUserName + '\n' +
+            'Durum: ' + req.statusName;
+
+        if (req.adminNotes) {
+            msg += '\nAdmin Notu: ' + req.adminNotes;
+        }
+
+        alert(msg);
+    };
+
+    function processRequest(action) {
+        if (!currentRequestId) return;
+
+        var url = '/api/capability-requests/' + currentRequestId + '/' + action;
+        var notes = adminNotes.value.trim();
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notes: notes })
+        })
+        .then(function(r) {
+            if (!r.ok) throw new Error('Request failed');
+            return r.json();
+        })
+        .then(function(result) {
+            toastr.success(result.message || (action === 'approve' ? 'Talep onaylandi' : 'Talep reddedildi'));
+            reviewModal.hide();
+            loadRequests();
+        })
+        .catch(function(err) {
+            console.error('Error:', err);
+            toastr.error('Islem basarisiz');
+        });
+    }
+})();
+</script>
+}

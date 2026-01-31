@@ -1,0 +1,268 @@
+@{
+    ViewData["Title"] = "Mesajlar";
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="messages-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Mesajlar</h4>
+        <button class="btn btn-primary" data-bind="click: showNewThread">
+            <i class="bi bi-plus-lg me-1"></i> Yeni Mesaj
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="bi bi-chat-left-text text-primary fs-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0" data-bind="text: stats().totalThreads || 0">0</h3>
+                            <small class="text-muted">Toplam Konu</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="bi bi-envelope text-danger fs-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0" data-bind="text: stats().unreadMessages || 0">0</h3>
+                            <small class="text-muted">Okunmamis</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="bi bi-chat-dots text-success fs-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0" data-bind="text: stats().totalMessages || 0">0</h3>
+                            <small class="text-muted">Toplam Mesaj</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="bi bi-clock-history text-warning fs-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0" data-bind="text: stats().unreadThreads || 0">0</h3>
+                            <small class="text-muted">Bekleyen Konu</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-3">
+        <!-- Thread List -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Ara..."
+                               data-bind="value: filter.search, valueUpdate: 'afterkeydown'">
+                    </div>
+                </div>
+                <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                    <!-- Loading -->
+                    <div class="text-center py-4" data-bind="visible: isLoading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Yukleniyor...</span>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="text-center py-5" data-bind="visible: !isLoading() && threads().length === 0">
+                        <i class="bi bi-chat-left text-muted fs-1"></i>
+                        <p class="text-muted mt-2 mb-0">Henuz mesaj yok</p>
+                    </div>
+
+                    <!-- Thread List -->
+                    <div class="list-group list-group-flush" data-bind="foreach: threads, visible: !isLoading()">
+                        <a href="#" class="list-group-item list-group-item-action p-3"
+                           data-bind="click: $parent.selectThread,
+                                      css: { 'active': $parent.selectedThread() && $parent.selectedThread().id === id,
+                                             'bg-light': unreadCount > 0 && (!$parent.selectedThread() || $parent.selectedThread().id !== id) }">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="me-2" style="min-width: 0;">
+                                    <h6 class="mb-1 text-truncate" data-bind="text: participantVendorName,
+                                                                              css: { 'fw-bold': unreadCount > 0 }"></h6>
+                                    <p class="mb-1 text-muted small text-truncate" data-bind="text: subject"></p>
+                                    <small class="text-muted" data-bind="text: lastMessage || 'Mesaj yok'"></small>
+                                </div>
+                                <div class="text-end flex-shrink-0">
+                                    <small class="text-muted d-block" data-bind="text: formatDate(lastMessageAt || createdAt)"></small>
+                                    <!-- ko if: unreadCount > 0 -->
+                                    <span class="badge bg-danger rounded-pill" data-bind="text: unreadCount"></span>
+                                    <!-- /ko -->
+                                    <!-- ko if: isClosed -->
+                                    <span class="badge bg-secondary">Kapali</span>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Detail -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+                <!-- Empty State -->
+                <div class="card-body d-flex flex-column align-items-center justify-content-center"
+                     data-bind="visible: !selectedThread()" style="min-height: 400px;">
+                    <i class="bi bi-chat-square-text text-muted fs-1 mb-3"></i>
+                    <p class="text-muted">Goruntulemek icin bir konu secin</p>
+                </div>
+
+                <!-- Thread Content -->
+                <div data-bind="if: selectedThread">
+                    <!-- Thread Header -->
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1" data-bind="text: threadDetail()?.subject"></h5>
+                                <small class="text-muted">
+                                    <span data-bind="text: getParticipantName()"></span>
+                                    <!-- ko if: threadDetail()?.isClosed -->
+                                    <span class="badge bg-secondary ms-2">Kapali</span>
+                                    <!-- /ko -->
+                                </small>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <!-- ko ifnot: threadDetail()?.isClosed -->
+                                    <li><a class="dropdown-item" href="#" data-bind="click: closeThread">
+                                        <i class="bi bi-x-circle me-2"></i>Konuyu Kapat
+                                    </a></li>
+                                    <!-- /ko -->
+                                    <!-- ko if: threadDetail()?.isClosed -->
+                                    <li><a class="dropdown-item" href="#" data-bind="click: reopenThread">
+                                        <i class="bi bi-arrow-counterclockwise me-2"></i>Konuyu Yeniden Ac
+                                    </a></li>
+                                    <!-- /ko -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div class="card-body" id="messagesContainer" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Loading -->
+                        <div class="text-center py-4" data-bind="visible: isLoadingThread">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Yukleniyor...</span>
+                            </div>
+                        </div>
+
+                        <!-- Messages List -->
+                        <div data-bind="foreach: threadDetail()?.messages || [], visible: !isLoadingThread()">
+                            <div class="mb-3" data-bind="css: { 'text-end': isMine }">
+                                <div class="d-inline-block p-3 rounded-3"
+                                     style="max-width: 80%;"
+                                     data-bind="css: { 'bg-primary text-white': isMine, 'bg-light': !isMine }">
+                                    <div class="small mb-1" data-bind="visible: !isMine">
+                                        <strong data-bind="text: senderUserName"></strong>
+                                        <span class="text-muted" data-bind="text: ' - ' + senderVendorName"></span>
+                                    </div>
+                                    <p class="mb-1" data-bind="text: content" style="white-space: pre-wrap;"></p>
+                                    <small data-bind="text: formatDateTime(createdAt), css: { 'text-white-50': isMine, 'text-muted': !isMine }"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reply Form -->
+                    <div class="card-footer bg-white py-3" data-bind="visible: !threadDetail()?.isClosed">
+                        <form data-bind="submit: sendMessage">
+                            <div class="input-group">
+                                <textarea class="form-control" rows="2" placeholder="Mesajinizi yazin..."
+                                          data-bind="value: newMessage, enable: !isSending()"></textarea>
+                                <button class="btn btn-primary" type="submit"
+                                        data-bind="enable: canSend() && !isSending()">
+                                    <i class="bi bi-send" data-bind="visible: !isSending()"></i>
+                                    <span class="spinner-border spinner-border-sm" data-bind="visible: isSending()"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Thread Modal -->
+<div class="modal fade" id="newThreadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Mesaj</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form data-bind="submit: createThread">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Alici Firma *</label>
+                        <select class="form-select" data-bind="value: newThread.recipientVendorId, options: vendors,
+                                                               optionsText: 'companyName', optionsValue: 'id',
+                                                               optionsCaption: 'Firma secin...'">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Konu *</label>
+                        <input type="text" class="form-control" placeholder="Konu basligi"
+                               data-bind="value: newThread.subject">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mesaj *</label>
+                        <textarea class="form-control" rows="4" placeholder="Mesajinizi yazin..."
+                                  data-bind="value: newThread.message"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Iptal</button>
+                    <button type="submit" class="btn btn-primary" data-bind="enable: canCreateThread() && !isCreating()">
+                        <span data-bind="visible: !isCreating()">Gonder</span>
+                        <span class="spinner-border spinner-border-sm" data-bind="visible: isCreating()"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/Messages.js"></script>
+}

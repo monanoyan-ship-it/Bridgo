@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- COMMON -->
+  <resource name="Common.AppName">Bridgo B2B Platform</resource>
+  <resource name="Common.Save">Kaydet</resource>
+  <resource name="Common.Cancel">Iptal</resource>
+  <resource name="Common.Delete">Sil</resource>
+  <resource name="Common.Edit">Duzenle</resource>
+  <resource name="Common.Add">Ekle</resource>
+  <resource name="Common.Search">Ara</resource>
+  <resource name="Common.Filter">Filtrele</resource>
+  <resource name="Common.Close">Kapat</resource>
+  <resource name="Common.Confirm">Onayla</resource>
+  <resource name="Common.Yes">Evet</resource>
+  <resource name="Common.No">Hayir</resource>
+  <resource name="Common.Back">Geri</resource>
+  <resource name="Common.Next">Devam</resource>
+  <resource name="Common.Loading">Yukleniyor...</resource>
+  <resource name="Common.NoData">Veri bulunamadi</resource>
+  <resource name="Common.Error">Hata</resource>
+  <resource name="Common.Success">Basarili</resource>
+  <resource name="Common.Warning">Uyari</resource>
+  <resource name="Common.Required">Zorunlu alan</resource>
+  <resource name="Common.Actions">Islemler</resource>
+  <resource name="Common.Status">Durum</resource>
+  <resource name="Common.Active">Aktif</resource>
+  <resource name="Common.Inactive">Pasif</resource>
+  <resource name="Common.All">Tumu</resource>
+  <resource name="Common.SelectAll">Tumunu Sec</resource>
+  <resource name="Common.Clear">Temizle</resource>
+  <resource name="Common.View">Goruntule</resource>
+  <resource name="Common.Update">Guncelle</resource>
+  <resource name="Common.Saving">Kaydediliyor...</resource>
+  <resource name="Common.Select">Secin...</resource>
+
+  <!-- NAVIGATION -->
+  <resource name="Nav.Home">Ana Sayfa</resource>
+  <resource name="Nav.Dashboard">Dashboard</resource>
+  <resource name="Nav.AdminPanel">Admin Panel</resource>
+  <resource name="Nav.Profile">Profil</resource>
+  <resource name="Nav.Logout">Cikis Yap</resource>
+  <resource name="Nav.Login">Giris Yap</resource>
+  <resource name="Nav.Register">Uye Ol</resource>
+
+  <!-- ACCOUNT / LOGIN -->
+  <resource name="Account.Login.Title">Giris Yap</resource>
+  <resource name="Account.Login.Submit">Giris Yap</resource>
+  <resource name="Account.Login.RememberMe">Beni hatirla</resource>
+  <resource name="Account.Login.NoAccount">Hesabiniz yok mu?</resource>
+  <resource name="Account.Login.InvalidAttempt">Gecersiz giris denemesi.</resource>
+  <resource name="Account.Login.LockedOut">Hesabiniz gecici olarak kilitlendi. Lutfen daha sonra tekrar deneyin.</resource>
+  <resource name="Account.Fields.Email">E-posta</resource>
+  <resource name="Account.Fields.Email.Placeholder">ornek@email.com</resource>
+  <resource name="Account.Fields.Password">Sifre</resource>
+  <resource name="Account.Fields.Password.Placeholder">En az 6 karakter</resource>
+  <resource name="Account.Fields.ConfirmPassword">Sifre Tekrar</resource>
+
+  <!-- ACCOUNT / PROFILE -->
+  <resource name="Account.Profile.Title">Profil</resource>
+  <resource name="Account.Profile.Info">Profil Bilgileri</resource>
+  <resource name="Account.Profile.Name">Ad Soyad</resource>
+  <resource name="Account.Profile.Phone">Telefon</resource>
+  <resource name="Account.Profile.LastLogin">Son Giris</resource>
+  <resource name="Account.Profile.ChangePassword">Sifre Degistir</resource>
+  <resource name="Account.Profile.CurrentPassword">Mevcut Sifre</resource>
+  <resource name="Account.Profile.NewPassword">Yeni Sifre</resource>
+  <resource name="Account.Profile.ConfirmPassword">Yeni Sifre Tekrar</resource>
+  <resource name="Account.Profile.PasswordHint">En az 6 karakter</resource>
+  <resource name="Account.Profile.ChangePasswordBtn">Sifreyi Degistir</resource>
+  <resource name="Account.Profile.FillAllFields">Lutfen tum alanlari doldurun</resource>
+  <resource name="Account.Profile.PasswordMismatch">Yeni sifreler eslesmedi</resource>
+  <resource name="Account.Profile.PasswordTooShort">Sifre en az 6 karakter olmali</resource>
+
+  <!-- ADMIN -->
+  <resource name="Admin.Title">Admin Panel</resource>
+  <resource name="Admin.Section.Rbac">RBAC</resource>
+  <resource name="Admin.Section.System">Sistem</resource>
+  <resource name="Admin.BackToSite">Siteye Don</resource>
+  <resource name="Admin.Menu.Dashboard">Genel Bakis</resource>
+  <resource name="Admin.Menu.Capabilities">Yetenekler</resource>
+  <resource name="Admin.Menu.Modules">Moduller</resource>
+  <resource name="Admin.Menu.Roles">Roller</resource>
+  <resource name="Admin.Menu.Vendors">Firmalar</resource>
+  <resource name="Admin.Menu.Users">Kullanicilar</resource>
+  <resource name="Admin.Menu.Geography">Cografi Veriler</resource>
+  <resource name="Admin.Menu.Languages">Diller</resource>
+  <resource name="Admin.Menu.Localization">Ceviriler</resource>
+
+  <!-- ADMIN TABLE -->
+  <resource name="Admin.Table.Order">Sira</resource>
+  <resource name="Admin.Table.Name">Ad</resource>
+  <resource name="Admin.Table.Code">Kod</resource>
+  <resource name="Admin.Table.Description">Aciklama</resource>
+  <resource name="Admin.Table.Icon">Icon</resource>
+  <resource name="Admin.Table.Status">Durum</resource>
+  <resource name="Admin.Table.Actions">Islemler</resource>
+  <resource name="Admin.Table.VendorCount">Firma Sayisi</resource>
+  <resource name="Admin.Table.Capability">Yetenek</resource>
+  <resource name="Admin.Table.FullName">Ad Soyad</resource>
+  <resource name="Admin.Table.Email">E-posta</resource>
+  <resource name="Admin.Table.Company">Firma</resource>
+  <resource name="Admin.Table.VendorRole">Firma Rolu</resource>
+  <resource name="Admin.Table.SystemRole">Sistem Rolu</resource>
+  <resource name="Admin.Table.LastLogin">Son Giris</resource>
+  <resource name="Admin.Table.FirstName">Ad</resource>
+  <resource name="Admin.Table.LastName">Soyad</resource>
+  <resource name="Admin.Table.Phone">Telefon</resource>
+  <resource name="Admin.Table.Password">Sifre</resource>
+
+  <!-- ADMIN USERS -->
+  <resource name="Admin.Users.Title">Kullanici Yonetimi</resource>
+  <resource name="Admin.Users.AllUsers">Tum Kullanicilar</resource>
+  <resource name="Admin.Users.AllRoles">Tum Roller</resource>
+  <resource name="Admin.Users.Add">Kullanici Ekle</resource>
+  <resource name="Admin.Users.Empty">Henuz kullanici kaydi bulunmuyor</resource>
+  <resource name="Admin.Users.Activate">Aktif Yap</resource>
+  <resource name="Admin.Users.Deactivate">Pasif Yap</resource>
+  <resource name="Admin.Users.NoCompany">Firma Yok (Sistem Kullanicisi)</resource>
+  <resource name="Admin.Users.IsSystemAdmin">Sistem Yoneticisi</resource>
+  <resource name="Admin.Users.PasswordHint">En az 6 karakter, buyuk/kucuk harf ve rakam icermeli</resource>
+
+  <!-- ADMIN VENDORS -->
+  <resource name="Admin.Vendors.Title">Firma Yonetimi</resource>
+  <resource name="Admin.Vendors.AllVendors">Tum Firmalar</resource>
+  <resource name="Admin.Vendors.AllStatuses">Tum Durumlar</resource>
+  <resource name="Admin.Vendors.Empty">Henuz firma kaydi bulunmuyor</resource>
+  <resource name="Admin.Vendors.Approve">Onayla</resource>
+  <resource name="Admin.Vendors.Suspend">Askiya Al</resource>
+  <resource name="Admin.Vendors.Reactivate">Aktif Et</resource>
+
+  <!-- ADMIN LANGUAGES -->
+  <resource name="Admin.Languages.Title">Dil Yonetimi</resource>
+  <resource name="Admin.Languages.AllLanguages">Tum Diller</resource>
+  <resource name="Admin.Languages.AddNew">Yeni Dil</resource>
+  <resource name="Admin.Languages.Edit">Dil Duzenle</resource>
+  <resource name="Admin.Languages.Language">Dil</resource>
+  <resource name="Admin.Languages.Name">Dil Adi</resource>
+  <resource name="Admin.Languages.NativeName">Yerel Adi</resource>
+  <resource name="Admin.Languages.Culture">Kultur Kodu</resource>
+  <resource name="Admin.Languages.SeoCode">SEO Kodu</resource>
+  <resource name="Admin.Languages.Iso3Code">ISO3 Kodu</resource>
+  <resource name="Admin.Languages.FlagEmoji">Bayrak Emoji</resource>
+  <resource name="Admin.Languages.FlagImage">Bayrak Dosyasi</resource>
+  <resource name="Admin.Languages.Rtl">Sagdan Sola (RTL)</resource>
+  <resource name="Admin.Languages.GeoTranslation">Cografi Ceviriler</resource>
+  <resource name="Admin.Languages.Default">Varsayilan</resource>
+  <resource name="Admin.Languages.SetDefault">Varsayilan Yap</resource>
+  <resource name="Admin.Languages.Resources">Kaynaklar</resource>
+  <resource name="Admin.Languages.ResourceCount">Kaynak</resource>
+  <resource name="Admin.Languages.Empty">Henuz dil tanimlanmamis</resource>
+
+  <!-- ADMIN LOCALIZATION -->
+  <resource name="Admin.Localization.Title">Ceviri Yonetimi</resource>
+  <resource name="Admin.Localization.Resources">Ceviri Kaynaklari</resource>
+  <resource name="Admin.Localization.AddNew">Yeni Kaynak</resource>
+  <resource name="Admin.Localization.Key">Anahtar</resource>
+  <resource name="Admin.Localization.Value">Deger</resource>
+  <resource name="Admin.Localization.Export">Disa Aktar</resource>
+  <resource name="Admin.Localization.Import">Ice Aktar</resource>
+  <resource name="Admin.Localization.ImportFromFile">Dosyadan Yukle</resource>
+  <resource name="Admin.Localization.TotalResources">kaynak</resource>
+  <resource name="Admin.Localization.Empty">Bu dil icin henuz kaynak tanimlanmamis</resource>
+  <resource name="Admin.Localization.NoResults">Arama kriterine uygun kaynak bulunamadi</resource>
+
+  <!-- VENDOR ROLES -->
+  <resource name="VendorRole.Owner">Sahip</resource>
+  <resource name="VendorRole.Admin">Admin</resource>
+  <resource name="VendorRole.Manager">Yonetici</resource>
+  <resource name="VendorRole.Employee">Calisan</resource>
+
+  <!-- DASHBOARD -->
+  <resource name="Dashboard.Title">Dashboard</resource>
+  <resource name="Dashboard.Overview">Genel Bakis</resource>
+  <resource name="Dashboard.Company">Firma</resource>
+  <resource name="Dashboard.ReturnHome">Ana Sayfaya Don</resource>
+  <resource name="Dashboard.Logout">Cikis</resource>
+  <resource name="Dashboard.Menu">Menu</resource>
+  <resource name="Dashboard.Section.Dashboard">Dashboard</resource>
+  <resource name="Dashboard.Section.Actions">Islemler</resource>
+  <resource name="Dashboard.Section.Account">Hesap</resource>
+  <resource name="Dashboard.Section.Apps">Uygulamalar</resource>
+  <resource name="Dashboard.Section.Settings">Ayarlar</resource>
+  <resource name="Dashboard.Section.ServiceProviders">Hizmet Saglayicilar</resource>
+</resources>

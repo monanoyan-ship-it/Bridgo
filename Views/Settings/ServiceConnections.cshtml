@@ -1,0 +1,415 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Module.ServiceConnections", "Servis Baglantilari").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid" id="services-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-plug text-primary me-2"></i>
+                @Html.T("Module.ServiceConnections", "Servis Baglantilari")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("ServiceConnections.Subtitle", "Harici servislerle entegrasyonlarinizi yonetin")</p>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <!-- ko if: isLoading -->
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Yukleniyor...</p>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko ifnot: isLoading -->
+    <!-- Kategori Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#paymentTab">
+                <i class="bi bi-credit-card me-1"></i>
+                Odeme Sistemleri
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#logisticsTab">
+                <i class="bi bi-truck me-1"></i>
+                Lojistik
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#accountingTab">
+                <i class="bi bi-calculator me-1"></i>
+                Muhasebe / E-Fatura
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#marketplaceTab">
+                <i class="bi bi-shop me-1"></i>
+                Pazar Yerleri
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Odeme Sistemleri -->
+        <div class="tab-pane fade show active" id="paymentTab">
+            <div class="row">
+                <!-- Stripe -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100" data-bind="css: { 'border-success': getService('stripe').status() === 'connected' }">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-light p-2 me-3">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" style="height: 24px;">
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Stripe</h6>
+                                    <small class="text-muted">Uluslararasi Odeme</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">135+ ulkede kredi karti ve banka transferi ile odeme alin.</p>
+
+                            <!-- ko with: getService('stripe') -->
+                            <!-- ko if: status() === 'connected' -->
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                <span class="small">Bagli</span>
+                            </div>
+                            <div class="small text-muted mb-3" data-bind="text: 'Hesap: ' + (externalAccountId() || '-')"></div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" data-bind="click: $parent.openDashboard.bind($parent, 'stripe')">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>Dashboard
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.disconnect.bind($parent, 'stripe')">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <!-- /ko -->
+                            <!-- ko if: status() !== 'connected' -->
+                            <button class="btn btn-primary w-100" data-bind="click: $parent.connect.bind($parent, 'stripe'), enable: !$parent.isConnecting()">
+                                <span data-bind="visible: $parent.connectingService() === 'stripe'"><i class="bi bi-hourglass-split me-1"></i></span>
+                                <i class="bi bi-link-45deg me-1" data-bind="visible: $parent.connectingService() !== 'stripe'"></i>
+                                Baglan
+                            </button>
+                            <!-- /ko -->
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- iyzico -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100" data-bind="css: { 'border-success': getService('iyzico').status() === 'connected' }">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-light p-2 me-3">
+                                    <i class="bi bi-credit-card-2-front fs-4 text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">iyzico</h6>
+                                    <small class="text-muted">Turkiye Odeme</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Turkiye'de yerel odeme yontemleri ve taksit secenekleri.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PayPal -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-light p-2 me-3">
+                                    <i class="bi bi-paypal fs-4 text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">PayPal</h6>
+                                    <small class="text-muted">Global Odeme</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">PayPal hesabinizla dunya capinda odeme alin.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lojistik -->
+        <div class="tab-pane fade" id="logisticsTab">
+            <div class="row">
+                <!-- Aras Kargo -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-warning bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-box-seam fs-4 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Aras Kargo</h6>
+                                    <small class="text-muted">Yurtici Kargo</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Otomatik kargo etiketi ve takip numarasi olusturma.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Yurtici Kargo -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-danger bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-truck fs-4 text-danger"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Yurtici Kargo</h6>
+                                    <small class="text-muted">Yurtici Kargo</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Entegre kargo yonetimi ve otomatik bildirimler.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DHL -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-warning bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-globe fs-4 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">DHL Express</h6>
+                                    <small class="text-muted">Uluslararasi Kargo</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Uluslararasi gonderiler icin DHL entegrasyonu.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Muhasebe / E-Fatura -->
+        <div class="tab-pane fade" id="accountingTab">
+            <div class="row">
+                <!-- Parasut -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-success bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-receipt fs-4 text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Parasut</h6>
+                                    <small class="text-muted">Bulut Muhasebe</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Fatura, gider ve gelir takibi ile muhasebe entegrasyonu.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-primary bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-building fs-4 text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Logo Yazilim</h6>
+                                    <small class="text-muted">ERP Entegrasyonu</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Logo Tiger/Go ile stok ve siparis senkronizasyonu.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- E-Fatura -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-info bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-file-earmark-text fs-4 text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">E-Fatura / E-Arsiv</h6>
+                                    <small class="text-muted">GIB Entegrasyonu</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Otomatik e-fatura ve e-arsiv fatura kesimi.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pazar Yerleri -->
+        <div class="tab-pane fade" id="marketplaceTab">
+            <div class="row">
+                <!-- Trendyol -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-warning bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-shop-window fs-4 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Trendyol</h6>
+                                    <small class="text-muted">Pazar Yeri</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Urun ve siparis senkronizasyonu.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hepsiburada -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-danger bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-cart4 fs-4 text-danger"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Hepsiburada</h6>
+                                    <small class="text-muted">Pazar Yeri</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Urun ve siparis senkronizasyonu.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- N11 -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded bg-success bg-opacity-10 p-2 me-3">
+                                    <i class="bi bi-bag fs-4 text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">n11</h6>
+                                    <small class="text-muted">Pazar Yeri</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-3">Urun ve siparis senkronizasyonu.</p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-clock me-1"></i>Yakin Zamanda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Baglanti Durumu Ozet -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-activity me-2"></i>
+                        Aktif Baglantilar
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- ko if: connectedServices().length === 0 -->
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-plug fs-1"></i>
+                        <p class="mt-2 mb-0">Henuz aktif baglanti yok</p>
+                    </div>
+                    <!-- /ko -->
+
+                    <!-- ko if: connectedServices().length > 0 -->
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Servis</th>
+                                    <th>Kategori</th>
+                                    <th>Durum</th>
+                                    <th>Baglanti Tarihi</th>
+                                    <th>Son Senkronizasyon</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: connectedServices">
+                                <tr>
+                                    <td>
+                                        <strong data-bind="text: serviceName"></strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary" data-bind="text: categoryName"></span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" data-bind="text: statusText, css: statusClass"></span>
+                                    </td>
+                                    <td data-bind="text: connectedAt || '-'"></td>
+                                    <td data-bind="text: lastSyncAt || '-'"></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.disconnect.bind($parent, serviceCode)">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/ServiceConnections.js"></script>
+}

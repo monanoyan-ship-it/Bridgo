@@ -1,0 +1,271 @@
+@* Company Dashboard - Firma Genel Bilgileri *@
+@* Capability parametresi olmadan /Dashboard'a gelindiginde gosterilir *@
+
+<!-- Firma Bilgileri Header -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <!-- ko if: companyData().logoUrl -->
+                <img data-bind="attr: { src: companyData().logoUrl }" class="rounded" style="width: 80px; height: 80px; object-fit: contain;" />
+                <!-- /ko -->
+                <!-- ko ifnot: companyData().logoUrl -->
+                <div class="bg-primary rounded d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                    <i class="bi bi-building text-white" style="font-size: 2rem;"></i>
+                </div>
+                <!-- /ko -->
+            </div>
+            <div class="col">
+                <h3 class="mb-1">
+                    <span data-bind="text: companyData().companyName"></span>
+                    <!-- ko if: companyData().isVerified -->
+                    <i class="bi bi-patch-check-fill text-primary ms-2" title="@Html.T("Company.Verified", "Dogrulanmis")"></i>
+                    <!-- /ko -->
+                </h3>
+                <div class="text-muted">
+                    <!-- ko if: companyData().email -->
+                    <span class="me-3"><i class="bi bi-envelope me-1"></i><span data-bind="text: companyData().email"></span></span>
+                    <!-- /ko -->
+                    <!-- ko if: companyData().phone -->
+                    <span class="me-3"><i class="bi bi-telephone me-1"></i><span data-bind="text: companyData().phone"></span></span>
+                    <!-- /ko -->
+                    <!-- ko if: companyData().website -->
+                    <span><i class="bi bi-globe me-1"></i><a data-bind="attr: { href: companyData().website }, text: companyData().website" target="_blank"></a></span>
+                    <!-- /ko -->
+                </div>
+            </div>
+            <div class="col-auto">
+                <a href="/Company/Profile" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i> @Html.T("Company.EditProfile", "Profili Duzenle")
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Capability'ler -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="bi bi-layers me-2"></i>@Html.T("Company.Capabilities", "Faaliyet Alanlari")</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2" data-bind="foreach: companyData().capabilities">
+                    <a class="btn btn-outline-primary" data-bind="attr: { href: '/Dashboard?capability=' + code }">
+                        <i data-bind="attr: { class: 'bi ' + icon + ' me-1' }"></i>
+                        <span data-bind="text: name"></span>
+                    </a>
+                </div>
+                <!-- ko if: companyData().capabilities && companyData().capabilities.length === 0 -->
+                <div class="text-muted">@Html.T("Company.NoCapabilities", "Henuz faaliyet alani tanimlanmamis")</div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Istatistikler -->
+<div class="row mb-4">
+    <!-- Ekip -->
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                <h3 class="mt-2 mb-1" data-bind="text: companyData().activeUserCount || 0"></h3>
+                <small class="text-muted">@Html.T("Company.Stats.ActiveUsers", "Aktif Kullanicilar")</small>
+                <div class="mt-2 small">
+                    <span class="text-muted" data-bind="text: companyData().teamMemberCount + ' @Html.T("Company.Stats.TotalMembers", "toplam uye")'"></span>
+                    <!-- ko if: companyData().pendingInviteCount > 0 -->
+                    <br><span class="text-warning" data-bind="text: companyData().pendingInviteCount + ' @Html.T("Company.Stats.PendingInvites", "bekleyen davet")'"></span>
+                    <!-- /ko -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adresler -->
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-geo-alt text-success" style="font-size: 2rem;"></i>
+                <h3 class="mt-2 mb-1" data-bind="text: companyData().totalAddressCount || 0"></h3>
+                <small class="text-muted">@Html.T("Company.Stats.Addresses", "Adresler")</small>
+                <!-- ko if: companyData().warehouseCount > 0 -->
+                <div class="mt-2 small">
+                    <span class="text-info" data-bind="text: companyData().warehouseCount + ' @Html.T("Company.Stats.Warehouses", "depo")'"></span>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Siparisler -->
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-cart-check text-info" style="font-size: 2rem;"></i>
+                <h3 class="mt-2 mb-1" data-bind="text: companyData().totalOrderCount || 0"></h3>
+                <small class="text-muted">@Html.T("Company.Stats.TotalOrders", "Toplam Siparis")</small>
+                <!-- ko if: companyData().activeOrderCount > 0 -->
+                <div class="mt-2 small">
+                    <span class="text-warning" data-bind="text: companyData().activeOrderCount + ' @Html.T("Company.Stats.ActiveOrders", "aktif siparis")'"></span>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Urunler (Satici capability varsa) -->
+    <!-- ko if: companyData().totalProductCount !== null && companyData().totalProductCount !== undefined -->
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam text-warning" style="font-size: 2rem;"></i>
+                <h3 class="mt-2 mb-1" data-bind="text: companyData().activeProductCount || 0"></h3>
+                <small class="text-muted">@Html.T("Company.Stats.ActiveProducts", "Aktif Urunler")</small>
+                <div class="mt-2 small">
+                    <span class="text-muted" data-bind="text: companyData().totalProductCount + ' @Html.T("Company.Stats.TotalProducts", "toplam urun")'"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+</div>
+
+<!-- Gelir/Gider Ozeti -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card border-0 shadow-sm bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 opacity-75">@Html.T("Company.Stats.TotalRevenue", "Toplam Satis Geliri")</h6>
+                        <h2 class="mb-0" data-bind="text: formatCurrency(companyData().totalRevenue, companyData().currency)"></h2>
+                    </div>
+                    <i class="bi bi-graph-up-arrow" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 opacity-75">@Html.T("Company.Stats.TotalSpending", "Toplam Alis Harcamasi")</h6>
+                        <h2 class="mb-0" data-bind="text: formatCurrency(companyData().totalSpending, companyData().currency)"></h2>
+                    </div>
+                    <i class="bi bi-graph-down-arrow" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Merkez Adres -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="bi bi-building me-2"></i>@Html.T("Company.HeadquartersAddress", "Merkez Adres")</h5>
+            </div>
+            <div class="card-body">
+                <!-- ko if: companyData().headquartersAddress -->
+                <div data-bind="with: companyData().headquartersAddress">
+                    <h6 data-bind="text: title"></h6>
+                    <p class="mb-1" data-bind="text: addressLine"></p>
+                    <p class="mb-1">
+                        <span data-bind="text: city"></span>
+                        <!-- ko if: stateName -->
+                        <span>, </span><span data-bind="text: stateName"></span>
+                        <!-- /ko -->
+                    </p>
+                    <p class="mb-0">
+                        <span data-bind="text: countryName"></span>
+                        <!-- ko if: postalCode -->
+                        <span> - </span><span data-bind="text: postalCode"></span>
+                        <!-- /ko -->
+                    </p>
+                </div>
+                <!-- /ko -->
+                <!-- ko ifnot: companyData().headquartersAddress -->
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-geo-alt" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">@Html.T("Company.NoAddress", "Adres bilgisi girilmemis")</p>
+                    <a href="/Company/Addresses" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="bi bi-plus me-1"></i>@Html.T("Company.AddAddress", "Adres Ekle")
+                    </a>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firma Detaylari -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>@Html.T("Company.Details", "Firma Detaylari")</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="text-muted">@Html.T("Company.TaxNumber", "Vergi No")</td>
+                            <td class="text-end" data-bind="text: companyData().taxNumber || '-'"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">@Html.T("Company.TradeRegistryNo", "Ticaret Sicil No")</td>
+                            <td class="text-end" data-bind="text: companyData().tradeRegistryNo || '-'"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">@Html.T("Company.ProfileStatus", "Profil Durumu")</td>
+                            <td class="text-end">
+                                <!-- ko if: companyData().isProfileComplete -->
+                                <span class="badge bg-success">@Html.T("Company.ProfileComplete", "Tamamlandi")</span>
+                                <!-- /ko -->
+                                <!-- ko ifnot: companyData().isProfileComplete -->
+                                <span class="badge bg-warning">@Html.T("Company.ProfileIncomplete", "Tamamlanmadi")</span>
+                                <!-- /ko -->
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">@Html.T("Company.CreatedAt", "Kayit Tarihi")</td>
+                            <td class="text-end" data-bind="text: formatDate(companyData().createdAt)"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Aktiviteler -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>@Html.T("Company.RecentActivities", "Son Aktiviteler")</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush" data-bind="foreach: companyData().recentActivities">
+                    <li class="list-group-item">
+                        <div class="d-flex align-items-start">
+                            <i data-bind="attr: { class: 'bi ' + icon + ' ' + iconColor + ' me-2' }" style="font-size: 1.2rem;"></i>
+                            <div class="flex-grow-1">
+                                <div class="small fw-semibold" data-bind="text: title"></div>
+                                <div class="small text-muted" data-bind="text: description"></div>
+                            </div>
+                            <small class="text-muted" data-bind="text: $parent.formatDate(createdAt)"></small>
+                        </div>
+                    </li>
+                </ul>
+                <!-- ko if: !companyData().recentActivities || companyData().recentActivities.length === 0 -->
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">@Html.T("Common.NoActivity", "Henuz aktivite yok")</p>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+</div>

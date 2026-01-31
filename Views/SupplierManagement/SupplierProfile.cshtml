@@ -1,0 +1,647 @@
+@{
+    ViewData["Title"] = Html.T("SupplierProfile.Title", "Tedarikci Profili");
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+    var vendor = ViewBag.Vendor as Bridgo.DTOs.Vendor.VendorDto;
+}
+
+@section Styles {
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 0.5rem;
+        color: white;
+        margin-bottom: 1.5rem;
+    }
+    .profile-header h4 {
+        margin-bottom: 0.5rem;
+    }
+    .nav-pills .nav-link {
+        color: #6c757d;
+    }
+    .nav-pills .nav-link.active {
+        background-color: #0d6efd;
+    }
+    .category-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        border-radius: 2rem;
+        background-color: #e9ecef;
+        font-size: 0.875rem;
+    }
+    .category-badge.selected {
+        background-color: #0d6efd;
+        color: white;
+    }
+    .gallery-item {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border-radius: 0.5rem;
+    }
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .gallery-item .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+    .gallery-item:hover .overlay {
+        display: flex;
+    }
+    .capability-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #f8f9fa;
+        border-radius: 2rem;
+        margin: 0.25rem;
+    }
+    .slug-preview {
+        font-family: monospace;
+        background: #f8f9fa;
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+    }
+</style>
+}
+
+<div class="container-fluid py-4" data-bind="with: $root">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">@Html.T("SupplierProfile.Title", "Tedarikci Profili")</h4>
+            <p class="text-muted mb-0">@Html.T("SupplierProfile.Subtitle", "Platformda gorunecek firma profilinizi yonetin")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a data-bind="attr: { href: '/Suppliers/' + profile()?.slug }" target="_blank" class="btn btn-outline-primary" data-bind="visible: profile()?.slug">
+                <i class="bi bi-eye"></i> @Html.T("SupplierProfile.ViewPublic", "Profili Gor")
+            </a>
+            <button class="btn btn-primary" data-bind="click: saveProfile, disable: isSaving">
+                <span data-bind="visible: isSaving" class="spinner-border spinner-border-sm me-1"></span>
+                <i class="bi bi-check-lg" data-bind="visible: !isSaving()"></i> @Html.T("Common.Save", "Kaydet")
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div data-bind="visible: loadError" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span data-bind="text: loadError"></span>
+    </div>
+
+    <!-- Success Message -->
+    <div data-bind="visible: successMessage" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle"></i>
+        <span data-bind="text: successMessage"></span>
+        <button type="button" class="btn-close" data-bind="click: function() { successMessage(''); }"></button>
+    </div>
+
+    <!-- Profile Form -->
+    <div data-bind="visible: !isLoading() && !loadError()">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills mb-4" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="pill" href="#basic-info">
+                    <i class="bi bi-info-circle"></i> @Html.T("SupplierProfile.Tab.BasicInfo", "Temel Bilgiler")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#categories">
+                    <i class="bi bi-folder"></i> @Html.T("SupplierProfile.Tab.Categories", "Kategoriler")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#capabilities">
+                    <i class="bi bi-award"></i> @Html.T("SupplierProfile.Tab.Capabilities", "Yetenekler")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#gallery">
+                    <i class="bi bi-images"></i> @Html.T("SupplierProfile.Tab.Gallery", "Galeri")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#subscriptions">
+                    <i class="bi bi-bell"></i> @Html.T("SupplierProfile.Tab.Subscriptions", "Kategori Takibi")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#seo">
+                    <i class="bi bi-search"></i> @Html.T("SupplierProfile.Tab.SEO", "SEO")
+                </a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Basic Info Tab -->
+            <div class="tab-pane fade show active" id="basic-info">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Profile Status -->
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="isPublic" data-bind="checked: form.isPublic">
+                                    <label class="form-check-label" for="isPublic">
+                                        <strong>@Html.T("SupplierProfile.IsPublic", "Profili Public Yap")</strong>
+                                        <span class="text-muted d-block small">@Html.T("SupplierProfile.IsPublicHint", "Public profiller platformda ve arama motorlarinda gorunur")</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Tagline -->
+                            <div class="col-12">
+                                <label class="form-label">@Html.T("SupplierProfile.Tagline", "Slogan")</label>
+                                <input type="text" class="form-control" maxlength="200" data-bind="value: form.tagline"
+                                       placeholder="@Html.T("SupplierProfile.TaglinePlaceholder", "Kisaca firmanizi tanitin...")">
+                                <small class="text-muted">@Html.T("SupplierProfile.TaglineHint", "Firma isminizin altinda gorunecek kisa tanitim")</small>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-12">
+                                <label class="form-label">@Html.T("SupplierProfile.Description", "Hakkimizda")</label>
+                                <textarea class="form-control" rows="5" maxlength="5000" data-bind="value: form.description"
+                                          placeholder="@Html.T("SupplierProfile.DescriptionPlaceholder", "Firmaniz hakkinda detayli bilgi verin...")"></textarea>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("SupplierProfile.Country", "Ulke")</label>
+                                <select class="form-select" data-bind="value: form.countryId, options: countries, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Common.Select", "Secin...")'"></select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("SupplierProfile.City", "Sehir")</label>
+                                <input type="text" class="form-control" data-bind="value: form.city"
+                                       placeholder="@Html.T("SupplierProfile.CityPlaceholder", "Istanbul")">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">@Html.T("SupplierProfile.Address", "Adres")</label>
+                                <input type="text" class="form-control" data-bind="value: form.address"
+                                       placeholder="@Html.T("SupplierProfile.AddressPlaceholder", "Tam adres...")">
+                            </div>
+
+                            <!-- Contact Info -->
+                            <div class="col-12">
+                                <hr class="my-3">
+                                <h6><i class="bi bi-telephone"></i> @Html.T("SupplierProfile.ContactInfo", "Iletisim Bilgileri")</h6>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("SupplierProfile.Phone", "Telefon")</label>
+                                <input type="tel" class="form-control" data-bind="value: form.phone"
+                                       placeholder="+90 212 xxx xx xx">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("SupplierProfile.Email", "E-posta")</label>
+                                <input type="email" class="form-control" data-bind="value: form.email"
+                                       placeholder="info@firmaniz.com">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("SupplierProfile.Website", "Web Sitesi")</label>
+                                <input type="url" class="form-control" data-bind="value: form.website"
+                                       placeholder="https://www.firmaniz.com">
+                            </div>
+
+                            <!-- Company Details -->
+                            <div class="col-12">
+                                <hr class="my-3">
+                                <h6><i class="bi bi-building"></i> @Html.T("SupplierProfile.CompanyDetails", "Firma Detaylari")</h6>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.T("SupplierProfile.FoundedYear", "Kurulus Yili")</label>
+                                <input type="number" class="form-control" min="1800" max="2030" data-bind="value: form.foundedYear"
+                                       placeholder="1990">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.T("SupplierProfile.EmployeeCount", "Calisan Sayisi")</label>
+                                <select class="form-select" data-bind="value: form.employeeCountRange">
+                                    <option value="">@Html.T("Common.Select", "Secin...")</option>
+                                    <option value="1-10">1-10</option>
+                                    <option value="11-50">11-50</option>
+                                    <option value="51-200">51-200</option>
+                                    <option value="201-500">201-500</option>
+                                    <option value="501-1000">501-1000</option>
+                                    <option value="1000+">1000+</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.T("SupplierProfile.MinOrderValue", "Min. Siparis Degeri")</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" min="0" data-bind="value: form.minimumOrderValue"
+                                           placeholder="1000">
+                                    <span class="input-group-text" data-bind="text: form.minimumOrderCurrency"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("SupplierProfile.LeadTime", "Ortalama Teslimat Suresi (Gun)")</label>
+                                <input type="number" class="form-control" min="1" max="365" data-bind="value: form.leadTimeDays"
+                                       placeholder="15">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.T("SupplierProfile.AcceptsCustomOrders", "Ozel Siparis")</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" id="acceptsCustom" data-bind="checked: form.acceptsCustomOrders">
+                                    <label class="form-check-label" for="acceptsCustom">@Html.T("SupplierProfile.AcceptsCustomOrdersHint", "Ozel/kisisellestirmeli siparisler kabul ediyoruz")</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Tab -->
+            <div class="tab-pane fade" id="categories">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-folder"></i> @Html.T("SupplierProfile.Categories.Title", "Uretim/Hizmet Kategorileri")</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">@Html.T("SupplierProfile.Categories.Hint", "Firmanizin uretim yaptigi veya hizmet verdigi kategorileri secin")</p>
+
+                        <!-- Search -->
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="@Html.T("Common.Search", "Ara...")"
+                                   data-bind="value: categorySearch, valueUpdate: 'input'">
+                        </div>
+
+                        <!-- Selected Categories -->
+                        <div class="mb-3" data-bind="visible: form.categoryIds().length > 0">
+                            <label class="form-label">@Html.T("SupplierProfile.Categories.Selected", "Secili Kategoriler")</label>
+                            <div>
+                                <!-- ko foreach: selectedCategoryObjects -->
+                                <span class="category-badge selected">
+                                    <span data-bind="text: name"></span>
+                                    <button type="button" class="btn-close btn-close-white" style="font-size: 0.65rem;"
+                                            data-bind="click: function() { $parent.toggleCategory(id); }"></button>
+                                </span>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+
+                        <!-- Category List -->
+                        <div class="row">
+                            <!-- ko foreach: filteredCategories -->
+                            <div class="col-md-4 col-lg-3 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           data-bind="checked: $parent.form.categoryIds().indexOf(id) > -1, click: function() { $parent.toggleCategory(id); return true; }">
+                                    <label class="form-check-label" data-bind="text: name"></label>
+                                </div>
+                            </div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Capabilities Tab -->
+            <div class="tab-pane fade" id="capabilities">
+                <div class="row g-3">
+                    <!-- Certifications -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-patch-check"></i> @Html.T("SupplierProfile.Certifications", "Sertifikalar")</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">@Html.T("SupplierProfile.CertificationsHint", "Her satira bir sertifika yazin (ISO 9001, CE, vb.)")</p>
+                                <textarea class="form-control" rows="5" data-bind="value: form.certifications"
+                                          placeholder="ISO 9001&#10;ISO 14001&#10;CE Belgesi"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Capabilities/Services -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-gear"></i> @Html.T("SupplierProfile.Capabilities", "Uretim Kapasitesi")</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">@Html.T("SupplierProfile.CapabilitiesHint", "Her satira bir kapasite/yetenek yazin")</p>
+                                <textarea class="form-control" rows="5" data-bind="value: form.capabilities"
+                                          placeholder="CNC Torna&#10;Lazer Kesim&#10;3D Printing"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Countries -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-globe"></i> @Html.T("SupplierProfile.ExportCountries", "Ihracat Yapilan Ulkeler")</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">@Html.T("SupplierProfile.ExportCountriesHint", "Virgul ile ayirarak yazin")</p>
+                                <input type="text" class="form-control" data-bind="value: form.exportCountries"
+                                       placeholder="Almanya, Fransa, Italya, ABD">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Terms -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-credit-card"></i> @Html.T("SupplierProfile.PaymentTerms", "Odeme Kosullari")</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">@Html.T("SupplierProfile.PaymentTermsHint", "Kabul edilen odeme yontemleri ve kosullar")</p>
+                                <textarea class="form-control" rows="3" data-bind="value: form.paymentTerms"
+                                          placeholder="30 gun vadeli&#10;LC kabul edilir&#10;Pesin odeme %5 indirim"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery Tab -->
+            <div class="tab-pane fade" id="gallery">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-images"></i> @Html.T("SupplierProfile.Gallery.Title", "Firma Galerisi")</h6>
+                        <button class="btn btn-sm btn-primary" onclick="document.getElementById('galleryUpload').click()">
+                            <i class="bi bi-plus"></i> @Html.T("SupplierProfile.Gallery.Add", "Gorsel Ekle")
+                        </button>
+                        <input type="file" id="galleryUpload" class="d-none" accept="image/*" multiple data-bind="event: { change: uploadGalleryImages }">
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">@Html.T("SupplierProfile.Gallery.Hint", "Fabrika, uretim tesisi, urun ornekleri vb. gorseller ekleyin")</p>
+
+                        <!-- Gallery Grid -->
+                        <div class="row g-3" data-bind="visible: form.galleryImages().length > 0">
+                            <!-- ko foreach: form.galleryImages -->
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <div class="gallery-item">
+                                    <img data-bind="attr: { src: url }">
+                                    <div class="overlay">
+                                        <button type="button" class="btn btn-sm btn-danger" data-bind="click: function() { $parent.removeGalleryImage($index()); }">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="text" class="form-control form-control-sm mt-1" placeholder="Aciklama" data-bind="value: caption">
+                            </div>
+                            <!-- /ko -->
+                        </div>
+
+                        <!-- Empty State -->
+                        <div data-bind="visible: form.galleryImages().length === 0" class="text-center py-5 text-muted">
+                            <i class="bi bi-images" style="font-size: 3rem;"></i>
+                            <p class="mt-2">@Html.T("SupplierProfile.Gallery.Empty", "Henuz gorsel eklenmedi")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscriptions Tab -->
+            <div class="tab-pane fade" id="subscriptions">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-bell"></i> @Html.T("SupplierProfile.Subscriptions.Title", "Kategori Takibi")</h6>
+                        <button class="btn btn-sm btn-primary" data-bind="click: openSubscriptionModal">
+                            <i class="bi bi-plus"></i> @Html.T("SupplierProfile.Subscriptions.Add", "Kategori Ekle")
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">@Html.T("SupplierProfile.Subscriptions.Hint", "Takip ettiginiz kategorilerde yeni talep acildiginda bildirim alin")</p>
+
+                        <!-- Loading -->
+                        <div data-bind="visible: isLoadingSubscriptions" class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                        </div>
+
+                        <!-- Subscriptions List -->
+                        <div data-bind="visible: !isLoadingSubscriptions() && subscriptions().length > 0">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>@Html.T("Common.Category", "Kategori")</th>
+                                            <th>@Html.T("SupplierProfile.Subscriptions.EmailNotify", "E-posta")</th>
+                                            <th>@Html.T("SupplierProfile.Subscriptions.AppNotify", "Bildirim")</th>
+                                            <th>@Html.T("SupplierProfile.Subscriptions.MinQuantity", "Min. Miktar")</th>
+                                            <th>@Html.T("SupplierProfile.Subscriptions.Keywords", "Anahtar Kelimeler")</th>
+                                            <th class="text-end">@Html.T("Common.Actions", "Islemler")</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: subscriptions">
+                                        <tr>
+                                            <td>
+                                                <span data-bind="text: categoryName || 'Kategori'"></span>
+                                                <small class="text-muted d-block" data-bind="text: categoryPath"></small>
+                                            </td>
+                                            <td>
+                                                <span class="badge" data-bind="css: notifyByEmail ? 'bg-success' : 'bg-secondary', text: notifyByEmail ? 'Evet' : 'Hayir'"></span>
+                                            </td>
+                                            <td>
+                                                <span class="badge" data-bind="css: notifyInApp ? 'bg-success' : 'bg-secondary', text: notifyInApp ? 'Evet' : 'Hayir'"></span>
+                                            </td>
+                                            <td data-bind="text: minQuantity || '-'"></td>
+                                            <td data-bind="text: keywordFilter || '-'"></td>
+                                            <td class="text-end">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" data-bind="click: $parent.editSubscription" title="Duzenle">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger btn-gap" data-bind="click: $parent.deleteSubscription" title="Sil">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div data-bind="visible: !isLoadingSubscriptions() && subscriptions().length === 0" class="text-center py-5 text-muted">
+                            <i class="bi bi-bell-slash" style="font-size: 3rem;"></i>
+                            <p class="mt-2">@Html.T("SupplierProfile.Subscriptions.Empty", "Henuz kategori takip etmiyorsunuz")</p>
+                            <button class="btn btn-primary mt-2" data-bind="click: openSubscriptionModal">
+                                <i class="bi bi-plus"></i> @Html.T("SupplierProfile.Subscriptions.AddFirst", "Ilk Kategorinizi Ekleyin")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO Tab -->
+            <div class="tab-pane fade" id="seo">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-search"></i> @Html.T("SupplierProfile.SEO.Title", "Arama Motoru Optimizasyonu")</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Slug -->
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("SupplierProfile.Slug", "URL Adresi")</label>
+                            <div class="input-group">
+                                <span class="input-group-text">/Suppliers/</span>
+                                <input type="text" class="form-control" data-bind="value: form.slug" placeholder="firma-adi">
+                            </div>
+                            <small class="text-muted">@Html.T("SupplierProfile.SlugHint", "Sadece kucuk harf, rakam ve tire kullanin")</small>
+                        </div>
+
+                        <!-- Meta Title -->
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("SupplierProfile.MetaTitle", "Meta Baslik")</label>
+                            <input type="text" class="form-control" maxlength="70" data-bind="value: form.metaTitle"
+                                   placeholder="@Html.T("SupplierProfile.MetaTitlePlaceholder", "Firma Adi - Uretim Alani | Bridgo")">
+                            <small class="text-muted"><span data-bind="text: (form.metaTitle() || '').length"></span>/70</small>
+                        </div>
+
+                        <!-- Meta Description -->
+                        <div class="mb-3">
+                            <label class="form-label">@Html.T("SupplierProfile.MetaDescription", "Meta Aciklama")</label>
+                            <textarea class="form-control" rows="3" maxlength="160" data-bind="value: form.metaDescription"
+                                      placeholder="@Html.T("SupplierProfile.MetaDescriptionPlaceholder", "Firmaniz hakkinda arama sonuclarinda gorunecek kisa aciklama...")"></textarea>
+                            <small class="text-muted"><span data-bind="text: (form.metaDescription() || '').length"></span>/160</small>
+                        </div>
+
+                        <!-- Indexable -->
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="isIndexable" data-bind="checked: form.isIndexable">
+                            <label class="form-check-label" for="isIndexable">
+                                <strong>@Html.T("SupplierProfile.IsIndexable", "Arama Motorlarinda Indexlensin")</strong>
+                                <span class="text-muted d-block small">@Html.T("SupplierProfile.IsIndexableHint", "Isaretlenmezse profil Google'da listelenmez")</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subscription Modal -->
+<div class="modal fade" id="subscriptionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-bind="text: editingSubscriptionId() ? '@Html.T("SupplierProfile.Subscriptions.Edit", "Kategori Takibi Duzenle")' : '@Html.T("SupplierProfile.Subscriptions.Add", "Kategori Takibi Ekle")'"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Error -->
+                <div class="alert alert-danger" data-bind="visible: subscriptionError, text: subscriptionError"></div>
+
+                <!-- Category Selection (only for new) -->
+                <div class="mb-3" data-bind="visible: !editingSubscriptionId()">
+                    <label class="form-label">@Html.T("Common.Category", "Kategori") *</label>
+                    <select class="form-select" data-bind="value: subscriptionForm.categoryId, options: availableCategories, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Common.Select", "Secin...")'"></select>
+                </div>
+
+                <!-- Category Display (for edit) -->
+                <div class="mb-3" data-bind="visible: editingSubscriptionId()">
+                    <label class="form-label">@Html.T("Common.Category", "Kategori")</label>
+                    <p class="form-control-plaintext" data-bind="text: subscriptionForm.categoryName"></p>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="subNotifyEmail" data-bind="checked: subscriptionForm.notifyByEmail">
+                            <label class="form-check-label" for="subNotifyEmail">@Html.T("SupplierProfile.Subscriptions.EmailNotify", "E-posta Bildirimi")</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="subNotifyApp" data-bind="checked: subscriptionForm.notifyInApp">
+                            <label class="form-check-label" for="subNotifyApp">@Html.T("SupplierProfile.Subscriptions.AppNotify", "Uygulama Bildirimi")</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("SupplierProfile.Subscriptions.MinQuantity", "Minimum Miktar")</label>
+                    <input type="number" class="form-control" min="0" data-bind="value: subscriptionForm.minQuantity"
+                           placeholder="@Html.T("SupplierProfile.Subscriptions.MinQuantityHint", "Bos birakilirsa tum talepler")">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("SupplierProfile.Subscriptions.Keywords", "Anahtar Kelimeler")</label>
+                    <input type="text" class="form-control" data-bind="value: subscriptionForm.keywordFilter"
+                           placeholder="@Html.T("SupplierProfile.Subscriptions.KeywordsHint", "Virgul ile ayirin: ahsap, mobilya, kapi")">
+                    <small class="text-muted">@Html.T("SupplierProfile.Subscriptions.KeywordsNote", "Sadece bu kelimeleri iceren talepler bildirilir")</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">@Html.T("SupplierProfile.Subscriptions.CountryFilter", "Ulke Filtresi")</label>
+                    <input type="text" class="form-control" data-bind="value: subscriptionForm.countryFilter"
+                           placeholder="@Html.T("SupplierProfile.Subscriptions.CountryFilterHint", "Virgul ile ayirin: Turkiye, Almanya")">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-primary" data-bind="click: saveSubscription, disable: isSavingSubscription">
+                    <span data-bind="visible: isSavingSubscription" class="spinner-border spinner-border-sm me-1"></span>
+                    @Html.T("Common.Save", "Kaydet")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteSubscriptionModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Html.T("Common.Confirm", "Onay")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@Html.T("SupplierProfile.Subscriptions.DeleteConfirm", "Bu kategori takibini silmek istediginize emin misiniz?")</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                <button type="button" class="btn btn-danger" data-bind="click: confirmDeleteSubscription, disable: isDeletingSubscription">
+                    <span data-bind="visible: isDeletingSubscription" class="spinner-border spinner-border-sm me-1"></span>
+                    @Html.T("Common.Delete", "Sil")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/Dashboard/SupplierProfile.js" asp-append-version="true"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var vm = new SupplierProfileViewModel();
+        ko.applyBindings(vm, document.querySelector('.container-fluid'));
+    });
+</script>
+}

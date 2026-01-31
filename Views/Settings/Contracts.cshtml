@@ -1,0 +1,261 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Module.Contracts", "Sozlesmelerim").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid" id="contracts-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                @Html.T("Module.Contracts", "Sozlesmelerim")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Contracts.Subtitle", "Siparis sozlesmeleri ve faturalarinizi yonetin")</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#contractsTab">
+                <i class="bi bi-file-earmark-text me-1"></i>
+                Sozlesmeler
+                <span class="badge bg-primary ms-1" data-bind="text: contracts().length"></span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#invoicesTab">
+                <i class="bi bi-receipt me-1"></i>
+                Faturalar
+                <span class="badge bg-primary ms-1" data-bind="text: invoices().length"></span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Loading -->
+    <!-- ko if: isLoading -->
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Yukleniyor...</p>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko ifnot: isLoading -->
+    <div class="tab-content">
+        <!-- Sozlesmeler Tab -->
+        <div class="tab-pane fade show active" id="contractsTab">
+            <!-- Filtreler -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Siparis no ile ara..." data-bind="value: contractSearch, valueUpdate: 'afterkeydown'">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" data-bind="value: contractStatusFilter">
+                        <option value="">Tum Durumlar</option>
+                        <option value="pending">Beklemede</option>
+                        <option value="signed">Imzalandi</option>
+                        <option value="completed">Tamamlandi</option>
+                        <option value="cancelled">Iptal</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Sozlesme Listesi -->
+            <!-- ko if: filteredContracts().length === 0 -->
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-file-earmark-x fs-1"></i>
+                <p class="mt-2">Sozlesme bulunamadi</p>
+            </div>
+            <!-- /ko -->
+
+            <!-- ko if: filteredContracts().length > 0 -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Sozlesme No</th>
+                            <th>Siparis</th>
+                            <th>Karsi Taraf</th>
+                            <th>Tarih</th>
+                            <th>Tutar</th>
+                            <th>Durum</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: filteredContracts">
+                        <tr>
+                            <td>
+                                <a href="#" data-bind="text: contractNumber, click: $parent.viewContract"></a>
+                            </td>
+                            <td>
+                                <span class="text-muted" data-bind="text: orderNumber"></span>
+                            </td>
+                            <td data-bind="text: counterparty"></td>
+                            <td data-bind="text: date"></td>
+                            <td data-bind="text: amount"></td>
+                            <td>
+                                <span class="badge" data-bind="text: statusText, css: statusClass"></span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" data-bind="click: $parent.downloadContract" title="Indir">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <!-- ko if: status === 'pending' -->
+                                    <button class="btn btn-outline-success" data-bind="click: $parent.signContract" title="Imzala">
+                                        <i class="bi bi-pen"></i>
+                                    </button>
+                                    <!-- /ko -->
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /ko -->
+        </div>
+
+        <!-- Faturalar Tab -->
+        <div class="tab-pane fade" id="invoicesTab">
+            <!-- Filtreler -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Fatura no ile ara..." data-bind="value: invoiceSearch, valueUpdate: 'afterkeydown'">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" data-bind="value: invoiceTypeFilter">
+                        <option value="">Tum Tipler</option>
+                        <option value="sales">Satis Faturasi</option>
+                        <option value="purchase">Alis Faturasi</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Fatura Listesi -->
+            <!-- ko if: filteredInvoices().length === 0 -->
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-receipt-cutoff fs-1"></i>
+                <p class="mt-2">Fatura bulunamadi</p>
+            </div>
+            <!-- /ko -->
+
+            <!-- ko if: filteredInvoices().length > 0 -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fatura No</th>
+                            <th>Siparis</th>
+                            <th>Tip</th>
+                            <th>Tarih</th>
+                            <th>Tutar</th>
+                            <th>Durum</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: filteredInvoices">
+                        <tr>
+                            <td>
+                                <a href="#" data-bind="text: invoiceNumber, click: $parent.viewInvoice"></a>
+                            </td>
+                            <td>
+                                <span class="text-muted" data-bind="text: orderNumber"></span>
+                            </td>
+                            <td>
+                                <span class="badge" data-bind="text: typeText, css: typeClass"></span>
+                            </td>
+                            <td data-bind="text: date"></td>
+                            <td data-bind="text: amount"></td>
+                            <td>
+                                <span class="badge" data-bind="text: statusText, css: statusClass"></span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" data-bind="click: $parent.downloadInvoice" title="Indir">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary" data-bind="click: $parent.printInvoice" title="Yazdir">
+                                        <i class="bi bi-printer"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /ko -->
+        </div>
+    </div>
+    <!-- /ko -->
+</div>
+
+<!-- Sozlesme Detay Modal -->
+<div class="modal fade" id="contractModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Sozlesme Detayi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" data-bind="with: selectedContract">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Sozlesme No:</strong>
+                        <span data-bind="text: contractNumber"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Siparis No:</strong>
+                        <span data-bind="text: orderNumber"></span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Karsi Taraf:</strong>
+                        <span data-bind="text: counterparty"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Tarih:</strong>
+                        <span data-bind="text: date"></span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Tutar:</strong>
+                        <span data-bind="text: amount"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Durum:</strong>
+                        <span class="badge" data-bind="text: statusText, css: statusClass"></span>
+                    </div>
+                </div>
+                <hr>
+                <div class="border rounded p-3 bg-light">
+                    <h6>Sozlesme Icerigi</h6>
+                    <p class="small text-muted mb-0" data-bind="text: summary || 'Sozlesme detaylari PDF olarak mevcuttur.'"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" data-bind="click: downloadSelectedContract">
+                    <i class="bi bi-download me-1"></i>
+                    PDF Indir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Dashboard/Contracts.js"></script>
+}

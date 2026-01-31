@@ -1,0 +1,1498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProjectStatus>
+    <Project>
+        <Name>Bridgo B2B Platform</Name>
+        <Framework>.NET 9</Framework>
+        <Database>PostgreSQL</Database>
+        <DatabaseName>BridgoDb</DatabaseName>
+        <LastUpdated>2025-12-20T14:00:00</LastUpdated>
+    </Project>
+
+    <CompletedTasks>
+        <Task id="1" date="2025-12-16">
+            <Title>Proje Altyapisi</Title>
+            <Description>.NET 9 MVC projesi olusturuldu</Description>
+        </Task>
+        <Task id="2" date="2025-12-16">
+            <Title>Veritabani Altyapisi</Title>
+            <Description>PostgreSQL + EF Core + Identity kurulumu (int ID)</Description>
+        </Task>
+        <Task id="3" date="2025-12-16">
+            <Title>Authentication</Title>
+            <Description>ASP.NET Identity + JWT Authentication</Description>
+        </Task>
+        <Task id="4" date="2025-12-16">
+            <Title>Layout ve UI Altyapisi</Title>
+            <Description>Bootstrap + KnockoutJS + Toastr + Confirm Modal</Description>
+        </Task>
+        <Task id="5" date="2025-12-16">
+            <Title>Ornek Modul - Branches</Title>
+            <Description>DEVELOPMENT_PATTERNS.md standartlarina uygun SPA Modal Pattern</Description>
+        </Task>
+        <Task id="6" date="2025-12-16">
+            <Title>Vendor ve Address Modelleri</Title>
+            <Description>B2B Vendor sistemi modelleri (int ID)</Description>
+        </Task>
+        <Task id="7" date="2025-12-16">
+            <Title>Localization Altyapisi</Title>
+            <Description>Cok dilli destek - T() helper metodu (nopCommerce benzeri)</Description>
+        </Task>
+        <Task id="8" date="2025-12-16">
+            <Title>Repository + Service Pattern</Title>
+            <Description>Controller'da DbContext kullanilmaz. Service layer ile clean architecture.</Description>
+        </Task>
+        <Task id="9" date="2025-12-16">
+            <Title>Migration InitialCreate</Title>
+            <Description>Ilk migration olusturuldu (Vendors, Addresses, Languages, vb.)</Description>
+        </Task>
+        <Task id="10" date="2025-12-16">
+            <Title>Ana Sayfa (Landing Page)</Title>
+            <Description>Ziyaretciler icin landing page - banner, ozellikler, istatistikler, CTA</Description>
+        </Task>
+        <Task id="11" date="2025-12-16">
+            <Title>VendorJoinRequest Modeli</Title>
+            <Description>Kullanicinin mevcut firmaya katilma istegi sistemi</Description>
+        </Task>
+        <Task id="12" date="2025-12-16">
+            <Title>VendorSetup Sayfasi</Title>
+            <Description>Yeni firma olusturma + mevcut firmaya katilma + domain eslestirme</Description>
+        </Task>
+        <Task id="13" date="2025-12-16">
+            <Title>VendorRequired Middleware</Title>
+            <Description>VendorId olmayan kullanicilar sisteme giremez (Admin haric)</Description>
+        </Task>
+        <Task id="14" date="2025-12-16">
+            <Title>VendorId Ownership Pattern</Title>
+            <Description>Is verileri VendorId'ye aittir - UserId sadece audit icindir</Description>
+        </Task>
+        <Task id="15" date="2025-12-16">
+            <Title>Migration AddVendorJoinRequest</Title>
+            <Description>VendorJoinRequests tablosu migration'i olusturuldu</Description>
+        </Task>
+        <Task id="16" date="2025-12-16">
+            <Title>Dashboard Panel</Title>
+            <Description>Ayri layout ile Dashboard sayfasi - sol menu (gruplar halinde: Genel, Islemler, Yonetim, Firma Bilgileri), ust capability tab'lari (birden fazla varsa), dinamik modul menusu. Company sayfalari (Profile, Addresses, Team) Dashboard layout'u ile entegre edildi.</Description>
+        </Task>
+        <Task id="17" date="2025-12-16">
+            <Title>Multi-Step Register</Title>
+            <Description>5 adimli kayit formu: 1) Hesap bilgileri, 2) Firma bilgileri, 3) Adres bilgileri, 4) Kullanim amaci (Alici/Satici/Hizmet Saglayici), 5) Aktif ulkeler. Kayit sirasinda Vendor, Address, VendorCapabilityMapping ve VendorTeamMember otomatik olusturuluyor.</Description>
+        </Task>
+        <Task id="18" date="2025-12-16">
+            <Title>Team ve Branches Dashboard Entegrasyonu</Title>
+            <Description>Team ve Branches sayfalari Dashboard layout'u kullanacak sekilde guncellendi. ViewBag verileri (Vendor, Capabilities, Modules) yukleniyor.</Description>
+        </Task>
+        <Task id="19" date="2025-12-16">
+            <Title>Capability Secim Ekrani</Title>
+            <Description>Capability'si olmayan vendor'lar icin Dashboard'da capability secim ekrani. Alici/Satici kartlari ve Hizmet Saglayici checkbox'lari (Tasimaci, Sigorta, Gumruk). POST /api/company/capabilities API endpoint'i ile kayit.</Description>
+        </Task>
+        <Task id="20" date="2025-12-16">
+            <Title>Collapsible Sidebar</Title>
+            <Description>Dashboard sidebar acilir/kapanir yapildi. Toggle butonu header'da, localStorage ile durum hatirlama, mobil responsive overlay menu. Tooltip gosterimi collapsed modda.</Description>
+        </Task>
+        <Task id="21" date="2025-12-16">
+            <Title>Route Konsolidasyonu</Title>
+            <Description>Tum modul route'lari /Company'den /Dashboard'a tasindi. CompanyController sadece Profile ve Addresses icin, Index Dashboard'a yonlendiriyor. Eski Company view'lari silindi (Index, _Sidebar, Team).</Description>
+        </Task>
+        <Task id="22" date="2025-12-16">
+            <Title>Rol Bazli Menu Sistemi</Title>
+            <Description>
+                Tum menu ogeleri VendorUserRole bazli yapildi:
+                - Genel Bakis: Herkes
+                - Islemler (dinamik): RBAC sistemi (UserCompanyRole)
+                - Subeler: Manager ve ustu
+                - Ekip Uyeleri: Owner ve Admin
+                - Firma Profili: Manager ve ustu
+                - Adresler: Manager ve ustu
+                - Ayarlar: Owner ve Admin
+                Controller'lara da rol kontrolu eklendi (URL ile erisimi engeller).
+            </Description>
+        </Task>
+        <Task id="23" date="2025-12-16">
+            <Title>Menu Section Bazli Dinamik Menu</Title>
+            <Description>
+                CapabilityModule'e MenuSection eklendi (dashboard, actions, account, apps, settings, service-providers).
+                Dashboard layout MenuSection'a gore gruplama yapiyor.
+                VendorUserRole: Owner, Admin, Supervisor, Manager, Employee.
+                Supervisor rolu eklendi - Apps ve Settings bolumune erisim.
+                Platform capability ortak moduller icin: Proposals, Auctions, Orders, Messages, Personal Info, vb.
+                CompanyRole: Proposal/Auctions Staff, Order Staff, Account Manager.
+                GetPlatformModulesAsync() tum controller'larda platform modullerini her zaman yukluyor.
+            </Description>
+        </Task>
+        <Task id="24" date="2025-12-16">
+            <Title>Localization Sistemi Entegrasyonu</Title>
+            <Description>
+                T() helper metodu tum view dosyalarinda aktif hale getirildi.
+                - LocalizationApiController: JavaScript icin /api/localization/resources endpoint'i
+                - site.js: Global T() fonksiyonu ile JS tarafinda ceviri destegi
+                - ApplicationUser'a LanguageId alani eklendi (kullanici dil tercihi)
+                - Login'de kullanici dil tercihi cookie'ye yaziliyor
+                - LocalizationSeed: Turkce + Ingilizce 150+ ceviri kaynagi (Nav, Common, Account, Home, Dashboard, Team, Branches, Messages, vb.)
+                - _Layout.cshtml, _DashboardLayout.cshtml, Login.cshtml, Home/Index.cshtml T() ile guncellendi
+            </Description>
+        </Task>
+        <Task id="25" date="2025-12-16">
+            <Title>Sistem Tablolari NameResourceKey Destegi</Title>
+            <Description>
+                ResourceKey Pattern ile sistem tablolari cok dilli hale getirildi:
+                - VendorCapability, CapabilityModule, CompanyRole entity'lerine NameResourceKey eklendi
+                - Migration: AddNameResourceKeyToSystemTables
+                - RbacSeeder: Tum capability, module ve role tanimlarinda NameResourceKey dolduruldu
+                - LocalizationSeed: Capability.*, Module.*, Role.* key'leri TR ve EN
+                - CompanyService: DTO mapping'lere NameResourceKey eklendi
+                - _DashboardLayout: GetModuleName/GetCapabilityName helper'lari ile T(NameResourceKey) destegi
+                Artik menu ogeleri, capability tab'lari ve roller kullanici diline gore gosteriliyor.
+            </Description>
+        </Task>
+        <Task id="26" date="2025-12-16">
+            <Title>Tum View Dosyalarini T() ile Guncelle</Title>
+            <Description>
+                Tum view dosyalari T() helper ile localize edildi:
+                - Admin/* (7 dosya): _AdminLayout, Index, Capabilities, Modules, Roles, Vendors, Users
+                - Account/*: Login, Register (5 adimli form), AccessDenied
+                - Company/*: Profile, Addresses, Settings
+                - Dashboard/*: Index (capability secimi + dashboard), _DashboardLayout (zaten vardi)
+                - Team/Index.cshtml, Branches/Index.cshtml
+                - VendorSetup/Index.cshtml (firma kurulum)
+                - Invitations/Accept.cshtml (davet kabul)
+                - Home/Index.cshtml (zaten vardi), Privacy.cshtml
+                - Shared/Error.cshtml, _Layout.cshtml (zaten vardi)
+                Tum hardcoded text'ler T("Key", "Default") formatina cevirildi.
+                Build basarili - 0 hata.
+            </Description>
+        </Task>
+        <Task id="27" date="2025-12-16">
+            <Title>Dinamik RBAC Bazli Menu Erisimi</Title>
+            <Description>
+                Menu erisimi artik tamamen RBAC bazli:
+                - DashboardController.LoadViewDataAsync() guncellendi
+                - Owner/Admin: Tum platform modullerini + capability modullerini gorur
+                - Diger roller: RBAC'a gore filtrelenmis moduller (UserCompanyRole + RoleModulePermission)
+                - GetPlatformCapabilityAsync() metodu eklendi
+                - Layout'tan hardcoded rol kontrolleri (RequiresSupervisor, isSupervisorOrAbove) kaldirildi
+                - Layout sadece modul varlik kontrolu yapiyor, erisim controller'da
+                - CompanyRole.IsDefault: Yeni firma Owner'ina otomatik rol atama
+                - AccountController Register'da default roller ataniyor
+            </Description>
+        </Task>
+        <Task id="28" date="2025-12-16">
+            <Title>CompanyRole Code Alani Kaldirildi</Title>
+            <Description>
+                Hard-coded kontroller icin kullanilan Code alani kaldirildi:
+                - CompanyRole entity'sinden Code property silindi
+                - ApplicationDbContext fluent configuration guncellendi
+                - RbacSeeder: Name ile eslestirme yapiliyor
+                - AdminApiController: GetRoles, CreateRole, UpdateRole guncellendi
+                - CompanyService ve ICompanyService: RoleCode kaldirildi
+                - Roles.cshtml: Code kolonu ve inputu kaldirildi, IsDefault kolonu eklendi
+                - Roles.js: formData, resetForm, showEditModal, saveRole guncellendi
+                - Migration: RemoveCodeFromCompanyRole
+                Artik roller ID bazli, string eslestirme yok.
+            </Description>
+        </Task>
+        <Task id="29" date="2025-12-17">
+            <Title>Kayit Akisi - Firma Arama Adimi</Title>
+            <Description>
+                Kayit sirasinda mevcut firmaya katilma ozelligi eklendi:
+                - 6 adimli yeni kayit akisi (1.Hesap, 2.Firma Arama, 3.Firma, 4.Adres, 5.Kullanim, 6.Ulkeler)
+                - Adim 2'de email domain kontrolu yapiliyor
+                - Domain eslesirse otomatik firmaya katilma secenegi
+                - Firma ismiyle arama yapabilme
+                - Mevcut firmaya katilma istegi (VendorTeamMember ile)
+                - Yeni firma olusturma secenegi
+                - AccountController: CheckDomainMatch, SearchCompanies, RegisterWithJoinRequest endpoint'leri
+                - RegisterWithJoinDto eklendi
+            </Description>
+        </Task>
+        <Task id="30" date="2025-12-17">
+            <Title>Admin Dashboard Izolasyonu</Title>
+            <Description>
+                Admin kullanicilarin Dashboard'a erismesi engellendi:
+                - VendorRequiredMiddleware: Admin kullanicilar /dashboard, /company, /team, /branches path'lerine erisimleri /Admin'e yonlendiriliyor
+                - _Layout.cshtml: Admin icin sadece Admin Panel linki, normal kullanicilar icin sadece Dashboard linki gorunuyor
+            </Description>
+        </Task>
+        <Task id="31" date="2025-12-17">
+            <Title>Katilma Istegi Onay Modal - CompanyRole Secimi</Title>
+            <Description>
+                Team sayfasinda katilma istegi onaylarken CompanyRole secimi ozelligi eklendi:
+                - ProcessRequestDto'ya CompanyRoleIds listesi eklendi
+                - TeamService.ProcessJoinRequestAsync: Onaylama sirasinda CompanyRoleUserMapping kaydi olusturuyor
+                - TeamApiController: GET /api/TeamApi/roles endpoint'i - vendor'in capability'lerine bagli rolleri listeliyor
+                - IUnitOfWork'e CompanyRoles ve CompanyRoleUserMappings repository'leri eklendi
+                - Team/Index.cshtml: Approve Modal eklendi (VendorUserRole + CompanyRole secimi)
+                - Team/Index.js: openApproveModal, loadCompanyRoles, submitApprove, groupedRoles fonksiyonlari eklendi
+                - CompanyRoleDto eklendi
+                - Roller capability'lere gore gruplanmis sekilde gosteriliyor
+                - IsDefault olan roller otomatik secili geliyor
+            </Description>
+        </Task>
+        <Task id="32" date="2025-12-17">
+            <Title>Admin/Modules - DisplayName ve Gruplu Gorunum</Title>
+            <Description>
+                CapabilityModule entity'sine DisplayName ve DisplayNameResourceKey alanlari eklendi:
+                - CapabilityModule: Name (teknik ad), DisplayName (menu ad), DisplayNameResourceKey (lokalizasyon key)
+                - Migration: AddDisplayNameToCapabilityModule
+                - AdminApiController: ModuleDto, ModuleCreateDto guncellendi - displayName, displayNameResourceKey, menuSection alanlari
+                - CreateModule/UpdateModule: Yeni alanlari kaydediyor
+                - GetModules/GetPlatformModules: Yeni alanlari donduruyor
+                - Admin/Modules.cshtml: Modal'a displayName, displayNameResourceKey, menuSection alanlari eklendi
+                - Admin/Modules.js: formData, resetForm, showEditModal, saveModule, selectedPlatformModule.subscribe guncellendi
+                - Gruplu gorunum: menuSection bazli gruplama eklendi (Dashboard, Islemler, Hesap, Uygulamalar, Ayarlar, Servis Saglayicilar)
+                - Tree/Grouped gorunum toggle butonu eklendi
+                - _DashboardLayout: GetModuleName helper'i DisplayNameResourceKey -> DisplayName -> Name oncelik sirasi ile calisiyor
+            </Description>
+        </Task>
+        <Task id="33" date="2025-12-17">
+            <Title>Dinamik Menu Section (IsMenuSection)</Title>
+            <Description>
+                Menu section'lar artik dinamik olarak eklenebiliyor:
+                - CapabilityModule: MenuSection string alani kaldirildi, IsMenuSection boolean alani eklendi
+                - IsMenuSection=true olan moduller menu baslik/grup gorevini goruyor
+                - Alt moduller ParentId ile section'a baglaniyor
+                - Migration: AddIsMenuSectionToCapabilityModule
+                - RbacSeeder: Section moduller (section-actions, section-account, vb.) IsMenuSection=true ile tanimli
+                - _DashboardLayout: standaloneModules (section olmayan) ve sectionModules (IsMenuSection=true) ayrimiyla render
+                - Admin/Modules.cshtml: IsMenuSection checkbox'i eklendi
+                - Admin/Modules.js: isMenuSection boolean ile formData, resetForm, showEditModal, saveModule guncellendi
+                - AdminApiController: ModuleDto ve ModuleCreateDto'da isMenuSection alani
+                - Kullanicilar kendi menu section'larini olusturup modullerini altina ekleyebilir
+            </Description>
+        </Task>
+        <Task id="34" date="2025-12-17">
+            <Title>Controller'lardan DbContext Kaldirildi</Title>
+            <Description>
+                CLAUDE.md kuralina uygun olarak Controller'larda DbContext kullanimi kaldirildi:
+                - IRegistrationService: Yeni firma kaydi, firmaya katilma istegi, domain eslestirme, firma arama
+                - IAdminService: Dashboard stats, Capabilities CRUD, Modules CRUD, Roles CRUD, Permissions
+                - RegistrationService: Kayit islemleri service'e tasindi
+                - AdminService: Tum admin panel islemleri service'e tasindi
+                - AccountController: _context yerine IRegistrationService kullaniyor
+                - AdminApiController: _context yerine IAdminService kullaniyor
+                - ServiceResult/ServiceResult&lt;T&gt;: Generic sonuc sinifi eklendi
+                - Program.cs: IRegistrationService ve IAdminService DI'a eklendi
+                Artik tum is mantigi Service layer'da, Controller'lar sadece HTTP request/response isliyor.
+            </Description>
+        </Task>
+        <Task id="35" date="2025-12-17">
+            <Title>PlatformModuleId ile Modul Referans Sistemi</Title>
+            <Description>
+                Capability modulleri artik Code string yerine PlatformModuleId ile platform modullerine referans veriyor:
+                - CapabilityModule: PlatformModuleId alani eklendi (FK - self-referencing)
+                - Code artik nullable (sadece platform modullerinde kullanilir)
+                - Migration: AddPlatformModuleId
+                - ApplicationDbContext: Yeni unique constraint (CapabilityId + PlatformModuleId WHERE NOT NULL)
+                - AdminService.CreateModuleAsync: Platform'dan modul eklerken PlatformModuleId ile referans
+                - Otomatik section ekleme: Parent section PlatformModuleId ile bulunup ekleniyor
+                - AdminModuleDto, AdminModuleCreateDto, CapabilityModuleDto: PlatformModuleId alani eklendi
+                - Admin/Modules.cshtml: Code alani sadece Platform capability icin goruniyor
+                - Admin/Modules.js: platformModuleId gonderimi, validasyon guncellendi
+                - Tree ve Grouped view'larda "Platform" badge'i gosteriliyor
+                Artik moduller platform'a Code string eslemesi yerine ID referansiyla baglanabiliyor.
+            </Description>
+        </Task>
+        <Task id="36" date="2025-12-17">
+            <Title>Platform Modul Secimi Tree View ve Icon Picker</Title>
+            <Description>
+                Admin/Modules sayfasinda platform modulu secimi iyilestirildi:
+                - Platform modulleri artik tree (hiyerarsik) gorunumde listeleniyor
+                - Section'lar (IsMenuSection=true) sadece baslik olarak gorunuyor, secilemez
+                - Sadece alt moduller secilebilir (radio button ile)
+                - Manuel giris secenegi de mevcut
+                - IsMenuSection checkbox'i platform'dan secim yapildiginda gizleniyor (otomatik gelir)
+                - Icon Picker: 50+ Bootstrap Icon grid gorunumunde secim paneli
+                - Icon input readonly, sadece picker'dan secilebilir
+                - GetPlatformModulesAsync artik tree yapisi donduruyor (BuildModuleTree)
+                Kullanici deneyimi buyuk olcude iyilestirildi.
+            </Description>
+        </Task>
+        <Task id="37" date="2025-12-17">
+            <Title>Admin/Roles Tree View ve Section Selection</Title>
+            <Description>
+                Rol izinleri yonetimi iyilestirildi:
+                - Moduller tree gorunumde listeleniyor (section + alt moduller)
+                - Section secildiginde tum alt moduller otomatik seciliyor
+                - "Tumunu Sec" checkbox'lari eklendi (View, Create, Edit, Delete icin ayri ayri)
+                - toggleModulePermission fonksiyonu duzeltildi (child propagation bug fix)
+                - isSection alani ModulePermissionViewDto'ya eklendi
+            </Description>
+        </Task>
+        <Task id="38" date="2025-12-17">
+            <Title>Global Cografi Veri Sistemi</Title>
+            <Description>
+                Ulke, Eyalet, Sehir verileri icin kapsamli cok dilli sistem:
+                - Models: Country, State, City entity'leri olusturuldu (koordinat, para birimi, telefon kodu vb.)
+                - Ceviri tablolari: CountryTranslation, StateTranslation, CityTranslation
+                - Language entity'sine NativeName, Iso3Code, FlagEmoji, IsGeoTranslationEnabled alanlari eklendi
+                - Migration: AddGeographyAndLanguageUpdates
+                - GeographySeedService: REST Countries API ve GitHub countries-states-cities-database'den veri cekme
+                - ISO 639-1/639-2 dil kodu donusum mapping'leri
+                - API endpoint'leri: /api/admin/geography/seed (tumu), /seed/countries, /seed/states, /seed/cities, /translations/{lang}, /stats
+                - Admin/Geography sayfasi: Istatistik kartlari, seed butonlari, dil bazli ceviri guncelleme, islem log'u
+                - Menu'ye Geography linki eklendi
+                Kullanici Admin panelinden cografi verileri yukleyip yonetebilir.
+            </Description>
+        </Task>
+        <Task id="39" date="2025-12-17">
+            <Title>Sifre Degistirme ve Admin Dil Yonetimi</Title>
+            <Description>
+                - AccountController'a ChangePassword endpoint'i eklendi
+                - Admin/Languages sayfasi: Dil CRUD, aktif/pasif toggle, varsayilan dil secimi
+                - Admin/Localization sayfasi: Ceviri kaynaklari yonetimi, arama, XML import/export
+                - 55+ dunya dili seed edildi (native script'ler dahil)
+                - LocalizationSeed: Dil ve ceviri kaynaklari otomatik yukleme
+            </Description>
+        </Task>
+        <Task id="40" date="2025-12-17">
+            <Title>Kayit Formu Iyilestirmeleri</Title>
+            <Description>
+                - Uluslararasi telefon kodu secimi (25+ ulke)
+                - Dinamik ulke listesi API'den (/api/localization/countries)
+                - Ulke arama ozelligi (filteredCountries computed)
+                - Inline validation hatalari (field-spesifik)
+                - Server hatalarini field bazli gosterme
+            </Description>
+        </Task>
+        <Task id="41" date="2025-12-17">
+            <Title>RBAC Tabanli Menu Sistemi</Title>
+            <Description>
+                - VendorRole bypass kaldirildi (Owner dahil herkes RBAC'a tabi)
+                - Menu tamamen CompanyRoleUserMappings + CompanyRoleModulePermissions'dan geliyor
+                - ModuleHelper: Duplicate modul kontrolu (ID, Code, PlatformModuleId)
+                - Section accordion unique ID fix (module.Id kullanimi)
+                - 4 controller guncellendi: DashboardController, CompanyController, BranchesController, TeamController
+            </Description>
+        </Task>
+        <Task id="42" date="2025-12-17">
+            <Title>Country CurrencySymbol Fix</Title>
+            <Description>
+                CurrencySymbol alani varchar(5)'ten varchar(20)'ye genisletildi.
+                Somalia gibi uzun semboller (Sh.so.) icin destek.
+            </Description>
+        </Task>
+        <Task id="43" date="2025-12-17">
+            <Title>Seller: Product Entity'leri</Title>
+            <Description>
+                Product Catalog icin entity'ler olusturuldu:
+                - Product entity: Name, SKU, Barcode, Description, Price, CompareAtPrice, CostPrice, Currency (Country tablosundan), StockQuantity, MinStockLevel, TrackStock, AllowBackorder, Weight/Length/Width/Height, CategoryId, Tags, DisplayOrder, Status, IsFeatured, PublishedAt, SEO alanlari, VendorId
+                - ProductCategory entity: Hiyerarsik kategori yapisi (ParentId), Icon, ImageUrl, SEO, VendorId
+                - ProductImage entity: ProductId, Url, AltText, Title, DisplayOrder, IsMain, Width/Height/FileSize/MimeType
+                - ProductStatus enum: Models/Enums klasorune tasindi (Draft, Active, Inactive, OutOfStock, Discontinued)
+                - DbContext: DbSet'ler ve Fluent configuration (indexler, FK, unique constraint'ler)
+                - Migration: AddProductEntities
+
+                Gelecek TODO'lar:
+                - Stok bilgileri warehouse bazinda tutulacak
+                - Birim boxing turu eklenecek
+                - Slug sistem tarafindan olusturulacak (unique)
+                - Image: S3/Azure Blob hazirligi
+                - Image: AltText/Title sistem olusturacak
+                - Image: Boyutlar sistem hesaplayacak
+            </Description>
+        </Task>
+        <Task id="44" date="2025-12-17">
+            <Title>Seller: Product Service + API + View</Title>
+            <Description>
+                Product modulu icin tam CRUD altyapisi olusturuldu:
+                - DTOs: ProductDto.cs, ProductCategoryDto.cs (List, Detail, Create/Update DTO'lari)
+                - IProductService interface (Products, ProductImages, Categories metodlari)
+                - ProductService implementation (filtreleme, slug uretimi, hiyerarsi yonetimi)
+                - ProductsApiController (CRUD + bulk islemler + image yonetimi)
+                - ProductsController (MVC - Dashboard layout)
+                - Products/Index.cshtml (tabs: urunler/kategoriler, filtreler, modal'lar)
+                - Products/Index.js (KnockoutJS ViewModel)
+                - UnitOfWork: Products, ProductCategories, ProductImages repository'leri
+                - RbacSeeder: Seller capability'si icin Katalog section ve moduller
+                - RbacSeeder: Catalog Manager ve Stock Manager rolleri ve izinleri
+                - Program.cs: IProductService DI kaydı
+            </Description>
+        </Task>
+        <Task id="45" date="2025-12-17">
+            <Title>Seller: Product Price Tiers (Miktar Bazli Fiyatlandirma)</Title>
+            <Description>
+                Urun icin miktar bazli fiyat esikleri modulu:
+                - ProductPriceTier entity: ProductId, MinQuantity, MaxQuantity (null=sinirsiz), Price, Description
+                - DbContext: ProductPriceTiers DbSet + Fluent configuration (unique index, precision)
+                - Migration: AddProductPriceTiersTable
+                - DTOs: ProductPriceTierDto, ProductPriceTierCreateUpdateDto
+                - IProductService: GetPriceTiers, AddPriceTier, UpdatePriceTier, DeletePriceTier, SavePriceTiers
+                - ProductService: PriceTier CRUD implementasyonu, validasyonlar
+                - ProductsApiController: /price-tiers endpoint'leri (GET, POST, PUT, DELETE)
+                - Product entity: PriceTiers navigation property
+                - ProductDetailDto: PriceTiers listesi
+                - Products/Index.cshtml: "Fiyat Esikleri" tab'i (sadece duzenleme modunda)
+                - Products/Index.js: priceTiers, newPriceTier, addPriceTier, deletePriceTier fonksiyonlari
+
+                Ornek kullanim: 1-99 adet = 25$, 100-999 = 24$, 1000+ = 23$ (toptan fiyatlandirma)
+            </Description>
+        </Task>
+        <Task id="46" date="2025-12-17">
+            <Title>Admin: Global Urun Kategorileri Yonetimi</Title>
+            <Description>
+                ProductCategory artik global (platform geneli) ve Admin tarafindan yonetiliyor:
+                - ProductCategory entity'sinden VendorId alani kaldirildi
+                - Migration: RemoveVendorIdFromProductCategory
+                - IAdminService: GetCategories, GetCategoryById, CreateCategory, UpdateCategory, DeleteCategory, SeedCategories
+                - AdminService: Kategori CRUD implementasyonu (hiyerarsi, level yonetimi, slug uretimi)
+                - AdminApiController: /api/admin/categories endpoint'leri
+                - Admin/Categories.cshtml: Tree gorunumu, expand/collapse, seed butonu
+                - Admin/Categories.js: KnockoutJS ViewModel
+                - AdminController: Categories action
+                - _AdminLayout: Kategoriler menu linki
+                - ProductsApiController: Kategori CRUD kaldirildi, sadece /categories/select endpoint'i (dropdown icin)
+                - IProductService: GetCategoriesForSelectAsync() (vendorId olmadan)
+                - ProductService: Global kategorileri listeleyen GetCategoriesForSelectAsync()
+                - CategorySeedService: SeedCategoriesAsync (vendorId olmadan)
+                - Eski CategoriesController, Views/Categories, wwwroot/js/Categories silindi
+
+                Seller'lar sadece urun eklerken kategori secer, kategori CRUD yapamazlar.
+            </Description>
+        </Task>
+        <Task id="47" date="2025-12-17">
+            <Title>Enum'lari Tip Tablolarina Cevir</Title>
+            <Description>
+                Kullanici gorebilecegi enum degerlerini veritabani tablolarina cevirme:
+                - BaseTypeEntity: Ortak base class (Id, Code, NameResourceKey, Description, DisplayOrder, IsActive, IsSystem)
+                - AddressTypeEntity: Billing, Shipping, Headquarters, Warehouse, Branch, Return
+                - WarehouseTypeEntity: Main, Distribution, Transit, Virtual, ReturnWarehouse
+                - VendorStatusEntity: PendingProfile, PendingVerification, Active, Suspended, Rejected
+                - ProductStatusEntity: Draft, Active, Inactive, OutOfStock, Discontinued
+                - TeamMemberStatusEntity: Pending, Active, Rejected, Cancelled, Expired, Left
+                - Entity'ler FK'ya guncellendi: Address.AddressTypeId, Vendor.VendorStatusId, Product.ProductStatusId, VendorTeamMember.TeamMemberStatusId
+                - Warehouse entity olusturuldu (WarehouseTypeId ile)
+                - ProductWarehouseStock entity olusturuldu (depo bazli stok)
+                - TypeTableSeeder: Tum tip tablolarini seed ediyor + LocaleStringResource kayitlari
+                - Migration: TypeTableConversion (seed data + enum-to-ID conversion)
+                - Tum service/controller'lar ID bazli calismaya guncellendi
+
+                Bu degisiklik Admin panelden tip yonetimi (ekleme, silme, guncelleme, localization key) icin altyapi sagliyor.
+            </Description>
+        </Task>
+        <Task id="48" date="2025-12-18">
+            <Title>Adres Formu: State/City Duzeltmesi</Title>
+            <Description>
+                - State = Eyalet (sadece 13 ulke icin: US, DE, AU, AT, BR, IN, MX, MY, MM, NG, PW, SS, FM)
+                - Diger ulkelerin State kayitlari silindi (CleanupNonStateCountries migration)
+                - State dropdown sadece State'i olan ulkeler icin gorunur
+                - City artik text input (tablo degil)
+                - Kod bazli TypeItem pattern'i DEVELOPMENT_PATTERNS.md'ye eklendi (Section 16)
+                - ITypeResolver.cs -> Models/Enums/TypeDefinitions.cs olarak tasindiController/View'lar zaten hazirdi, sadece data temizligi yapildi.
+            </Description>
+        </Task>
+        <Task id="49" date="2025-12-18">
+            <Title>Warehouse Management Modulu</Title>
+            <Description>
+                Depo yonetimi modulu eklendi:
+
+                DOSYALAR:
+                - DTOs/Warehouse/WarehouseDto.cs (DTO'lar)
+                - Services/Interfaces/IWarehouseService.cs (Interface)
+                - Services/WarehouseService.cs (Implementation)
+                - Controllers/Api/WarehousesApiController.cs (API)
+                - Controllers/WarehousesController.cs (MVC)
+                - Views/Warehouses/Index.cshtml (View)
+                - wwwroot/js/Warehouses/Index.js (JavaScript)
+
+                OZELLIKLER:
+                - Depo CRUD (Create, Read, Update, Delete)
+                - Depo tipleri: Main, Distribution, Returns, Temporary, Virtual, Consignment
+                - Varsayilan depo secimi
+                - Adres ve sorumlu atama
+                - Kapasite ve calisma saatleri
+                - Stok istatistikleri (urun sayisi, toplam stok)
+
+                MENU:
+                - Seller > Katalog > Depolar (/Warehouses)
+                - Catalog Manager ve Stock Manager rolleri icin yetki
+                - Localization: Module.Warehouses (TR/EN)
+            </Description>
+        </Task>
+        <Task id="50" date="2025-12-18">
+            <Title>Platform Katalog Modulleri Migration</Title>
+            <Description>
+                Katalog modulleri Platform capability'sine data migration ile eklendi:
+                - section-catalog: Katalog menu section'i
+                - products: Urunler modulu (/Products)
+                - product-categories: Kategoriler modulu (/Products/Categories)
+                - stock-management: Stok Yonetimi modulu (/Products/Stock)
+                - warehouses: Depolar modulu (/Warehouses)
+                - Localization: TR + EN cevirileri
+                - Migration: AddCatalogModulesToPlatform + RemovePriceListsModule (price-lists kaldirildi)
+
+                RbacSeeder artik her modul icin Platform'da tanimlama yapiyor.
+                Seller/Buyer rolleri Platform modullerini referans aliyor.
+                NOT: Fiyatlandirma ayri bir modul degil, Product entity'sinde Price + ProductPriceTier ile yonetiliyor.
+            </Description>
+        </Task>
+        <Task id="51" date="2025-12-18">
+            <Title>Kategori Talep Sistemi</Title>
+            <Description>
+                Kullanicilarin yeni kategori talebi olusturma ve Admin onay sistemi:
+
+                ENTITY:
+                - CategoryRequest: RequestedName, Description, SuggestedParentCategoryId, Status (Pending/Approved/Rejected/Duplicate), VendorId, RequestedByUserId, ReviewedByUserId, ReviewNote, ReviewedAt, CreatedCategoryId
+                - CategoryRequestStatus enum
+
+                SERVIS:
+                - ICategoryRequestService: GetVendorRequests, GetById, Create, Cancel, SearchCategories, GetAllRequests, GetPendingCount, ReviewRequest, FindSimilarCategories
+                - CategoryRequestService: Tam CRUD + onay akisi implementasyonu
+
+                API:
+                - /api/category-requests: Kullanici endpoint'leri (GET, POST, DELETE, search, check-similar)
+                - /api/category-requests/admin/*: Admin endpoint'leri (all, pending-count, review)
+
+                KULLANICI TARAFI:
+                - ProductsController.CategoryRequests action
+                - Views/Products/CategoryRequests.cshtml
+                - wwwroot/js/Products/CategoryRequests.js
+                - Kategori arama + benzer kategori uyarisi + talep olusturma
+
+                ADMIN TARAFI:
+                - AdminController.CategoryRequests action
+                - Views/Admin/CategoryRequests.cshtml
+                - wwwroot/js/Admin/CategoryRequests.js
+                - Talep listesi + filtreleme + Incele modal (Onayla/Reddet/Mevcut)
+                - Onaylaninca ProductCategory otomatik olusturuluyor
+
+                Migration: AddCategoryRequestsTable
+            </Description>
+        </Task>
+        <Task id="52" date="2025-12-18">
+            <Title>Admin/Modules: Cop Kutusu (Trash) Ozelligi</Title>
+            <Description>
+                Silinmis modullerin yonetimi icin cop kutusu ozelligi:
+
+                BACKEND:
+                - GetDeletedModulesAsync: Silinmis modulleri listele (IgnoreQueryFilters)
+                - RestoreModuleAsync: Modulu ve alt modullerini geri yukle
+                - HardDeleteModuleAsync: Modulu, alt modulleri ve izinleri kalici sil
+                - DeleteModuleAsync guncellendi: Modul silindiginde izinler de siliniyor
+
+                API:
+                - GET /api/admin/capabilities/{id}/modules/deleted
+                - POST /api/admin/modules/{id}/restore
+                - DELETE /api/admin/modules/{id}/hard
+
+                UI:
+                - "Cop Kutusu" toggle switch (showDeleted)
+                - Silinmis moduller listesi (kirmizi cerceve, ustuzeri cizgi)
+                - "Geri Yukle" butonu
+                - "Kalici Sil" butonu (onay modal ile)
+                - deleted-module-tree template
+
+                KURALLAR:
+                - Modul silindiginde tum izinleri (CompanyRoleModulePermissions) de siliniyor
+                - Hard delete alt modulleri ve izinleri de cascade siliyor
+                - Restore alt modulleri de geri yukluyor
+            </Description>
+        </Task>
+        <Task id="53" date="2025-12-18">
+            <Title>RBAC Modül Sistemi Yeniden Yapılandırma</Title>
+            <Description>
+                CapabilityModules tablosu kaldırıldı, yerini PlatformModules + CapabilityModuleMappings aldı.
+
+                YAPISAL DEGISIKLIKLER:
+                - CapabilityModules -> PlatformModules (tek master liste)
+                - CapabilityModuleMappings tablosu (capability-modul iliskisi)
+                - Code alanı kaldırıldı, DisplayNameResourceKey unique identifier
+                - Platform artık capability değil, sadece tüm modülleri gösteren buton
+
+                ADMIN/MODULES:
+                - Platform butonu eklendi, 41 modül gösteriyor
+                - Capability seçildiğinde sadece atanmış modüller gösteriliyor
+                - Çoklu modül seçimi için checkbox'lar (radio button yerine)
+                - Manuel giriş seçeneği ayrı checkbox
+                - Section seçilince tüm alt modüller seçiliyor
+                - Section kaldırılınca tüm alt modüller de kaldırılıyor
+                - Section altına section eklenebiliyor
+                - Platform'da silme: PlatformModule soft delete
+                - Capability'de silme: Sadece mapping kaldırılıyor (modül korunuyor)
+
+                ADMIN/ROLES:
+                - ModulePermissionViewDto'ya ModuleId alias eklendi (JS uyumu)
+                - Modül listesi artık capability mapping'den geliyor
+
+                DASHBOARD MENU:
+                - IsRouteActive helper: Tam eşleşme veya alt path kontrolü
+                - HasActiveChildRecursive helper: Recursive child aktiflik kontrolü
+                - Doğru section açılıyor (sibling section'lar kapalı kalıyor)
+                - Chevron icon: Kapalıyken sağa (→), açıkken aşağı (↓)
+                - collapsed class ile initial state düzeltildi
+
+                ENDPOINT'LER:
+                - POST /api/admin/capabilities/{id}/modules/add-multiple
+                - POST /api/admin/capabilities/{id}/modules/add
+                - POST /api/admin/capabilities/{id}/modules/remove
+            </Description>
+        </Task>
+        <Task id="54" date="2025-12-18">
+            <Title>/Products/Categories Sayfasi</Title>
+            <Description>
+                Dashboard altinda urun kategorilerini goruntulemek icin sayfa:
+
+                DOSYALAR:
+                - Controllers/ProductsController.cs: Categories action eklendi
+                - Views/Products/Categories.cshtml: Tree gorunumlu kategori listesi
+                - wwwroot/js/Products/Categories.js: KnockoutJS ViewModel
+
+                OZELLIKLER:
+                - Global kategorileri tree gorunumde listele (read-only)
+                - Kategori arama ve filtreleme
+                - Istatistik kartlari (toplam, ana, alt kategori, urun sayisi)
+                - Tumunu ac/kapat butonlari
+                - Recursive expand/collapse
+                - Kategori talebi olusturma linki (/Products/CategoryRequests)
+                - Dashboard layout entegrasyonu
+
+                NOT: Kategoriler Admin tarafindan yonetilir, kullanicilar sadece goruntuler.
+            </Description>
+        </Task>
+        <Task id="55" date="2025-12-18">
+            <Title>Urun Stok Yonetimi - Depo Bazli</Title>
+            <Description>
+                Urunler sayfasina depo bazli stok yonetimi entegre edildi:
+
+                DOSYALAR:
+                - Views/Products/Index.cshtml: Stok butonu ve modal eklendi
+                - wwwroot/js/Products/Index.js: Stock fonksiyonlari eklendi
+                - Controllers/Api/ProductsApiController.cs: Stock endpoint'leri
+                - Services/ProductService.cs: GetProductStockAsync, SaveProductStockAsync
+                - DTOs/Product/ProductDto.cs: ProductWarehouseStockDto, ProductWarehouseStockUpdateDto
+
+                OZELLIKLER:
+                - Her urunun sagindaki butonlara Stok butonu eklendi
+                - Modal'da tum depolar listelenir
+                - Her depo icin miktar ve rezerve miktar girilebilir
+                - Kullanilabilir miktar otomatik hesaplanir
+                - Toplam stok gosterilir
+                - Urunun StockQuantity alani otomatik guncellenir
+
+                API ENDPOINT'LER:
+                - GET /api/ProductsApi/{productId}/stock
+                - POST /api/ProductsApi/{productId}/stock
+            </Description>
+        </Task>
+        <Task id="56" date="2025-12-18">
+            <Title>Adres Dropdown Gösterim Düzeltmesi</Title>
+            <Description>
+                Warehouse adres seçiminde addressLine boş olduğunda düzgün gösterim:
+                - Eski format: "city - addressLine" (addressLine boşsa sadece "city - " görünüyordu)
+                - Yeni format: "title (city, addressLine)" veya addressLine boşsa "title (city)"
+                - Views/Warehouses/Index.cshtml: optionsText fonksiyonu güncellendi
+            </Description>
+        </Task>
+        <Task id="57" date="2025-12-18">
+            <Title>AddressLine Validasyonu</Title>
+            <Description>
+                Adres satırının boş veya sadece boşluklardan oluşmasını engelleme:
+                - CompanyApiController.CreateAddress: Backend validasyon eklendi
+                - CompanyApiController.UpdateAddress: Backend validasyon eklendi
+                - RegistrationService.RegisterVendorAsync: Backend validasyon eklendi
+                - Addresses.js: Frontend trim() kontrolü eklendi
+                - Register.cshtml: Zaten trim() kontrolü vardı
+            </Description>
+        </Task>
+        <Task id="58" date="2025-12-18">
+            <Title>UI Standard: Sil Butonu Boşluğu (.btn-gap)</Title>
+            <Description>
+                Tüm projede sil butonları ile diğer butonlar arasında boşluk standardı:
+
+                CSS UTILITY CLASS (wwwroot/css/site.css):
+                - .btn-gap: margin-left: 1rem + border-radius koruması
+                - btn-group-sm ve btn-group-lg için özel radius değerleri
+
+                GUNCELLENEN DOSYALAR:
+                - Branches/Index.cshtml
+                - Company/Addresses.cshtml
+                - Team/Index.cshtml (2 yer)
+                - Products/Index.cshtml (3 yer: tablo, bulk, image modal)
+                - Admin/Languages.cshtml
+                - Admin/Localization.cshtml
+                - Admin/Capabilities.cshtml
+                - Admin/Categories.cshtml
+                - Admin/Modules.cshtml (2 yer: delete, hard delete)
+                - Admin/Roles.cshtml
+
+                BTN-GAP GEREKMEYEN (tek başına veya ilk sırada):
+                - VendorSetup/Index.cshtml - tek başına iptal butonu
+                - Company/Settings.cshtml - tek başına disabled buton
+                - Products/Categories.cshtml - ilk sırada iptal butonu
+                - Products/Index.cshtml:383 - fiyat esik sil (tek başına)
+                - Account/Register.cshtml - firma seçimi temizle (X) butonu
+            </Description>
+        </Task>
+        <Task id="59" date="2025-12-19">
+            <Title>Stok Yonetimi Ozet Sayfasi</Title>
+            <Description>
+                /Products/Stock sayfasi - Stok durumu ve depo bazli ozet:
+
+                OZELLIKLER:
+                - Ozet kartlari: Toplam urun, stokta, tukenmis, dusuk stok, depo sayisi, toplam deger
+                - Dusuk stoklu urunler tablosu (min stok seviyesi altinda olanlar)
+                - Depo bazli stok ozeti (her depo icin toplam, rezerve, mevcut)
+
+                DOSYALAR:
+                - Controllers/ProductsController.cs: Stock() action
+                - Views/Products/Stock.cshtml: Ozet sayfasi gorunumu
+                - wwwroot/js/Products/Stock.js: KnockoutJS ViewModel
+
+                API ENDPOINT'LER:
+                - GET /api/ProductsApi/stock/overview: Genel ozet
+                - GET /api/ProductsApi/stock/low-stock: Dusuk stoklu urunler
+                - GET /api/ProductsApi/stock/by-warehouse: Depo bazli ozet
+
+                SERVICE METODLARI:
+                - GetStockOverviewAsync
+                - GetLowStockProductsAsync
+                - GetStockByWarehouseAsync
+
+                DTO'LAR:
+                - StockOverviewDto
+                - LowStockProductDto
+                - WarehouseStockSummaryDto
+            </Description>
+        </Task>
+        <Task id="60" date="2025-12-19">
+            <Title>Urun Gorseli Dosya Yukleme</Title>
+            <Description>
+                Urun gorsellerini PC'den dosya olarak yukleme ozelligi:
+
+                API ENDPOINT:
+                - POST /api/ProductsApi/{productId}/images/upload
+                - FormData ile dosya yukleme
+                - Max 5MB, JPG/PNG/GIF/WebP destegi
+                - Dosyalar: /wwwroot/uploads/products/{vendorId}/ altinda
+
+                UI DEGISIKLIKLERI:
+                - Products/Index.cshtml: Image modal'a tab sistemi eklendi
+                  - "Dosya Yukle" tab (varsayilan)
+                  - "URL ile" tab
+                - Dosya secme ve yukleme butonu
+
+                JAVASCRIPT:
+                - selectedFile, isUploading observables
+                - onFileSelected, uploadImage fonksiyonlari
+                - closeImageModal'da temizlik
+
+                GUVENLIK:
+                - Dosya tipi kontrolu (MIME type)
+                - Dosya boyutu kontrolu (5MB)
+                - Benzersiz dosya adi (GUID)
+            </Description>
+        </Task>
+        <Task id="61" date="2025-12-19">
+            <Title>.gitignore: Uploads Klasoru</Title>
+            <Description>
+                Urun gorselleri icin uploads klasoru .gitignore'a eklendi:
+                - wwwroot/uploads/**/* ignore edilir
+                - !wwwroot/uploads/**/.gitkeep (klasor yapisi korunur)
+                - Git conflict'leri onlendi
+            </Description>
+        </Task>
+        <Task id="62" date="2025-12-19">
+            <Title>Public Demand Board + Supplier Discovery Sistemi</Title>
+            <Description>
+                IKI YONLU KESIF SISTEMI TAMAMLANDI:
+
+                1. PUBLIC DEMAND BOARD:
+                - PublicDemand, DemandResponse, DemandAttachment, DemandModification entity'leri
+                - /Demands sayfasi (SEO-optimized, login gerektirmez)
+                - /Demands/{slug} detay sayfasi
+                - DemandFilterDto ile arama/filtreleme
+
+                2. PRODUCT-BASED PROPOSAL:
+                - Mevcut urunden referans alarak talep olusturma
+                - DemandModification ile "buna benzer ama X farkli" ozellikleri
+                - Urun arama API (/api/ProductsApi/search)
+                - MyDemands modal'inda urun secimi + modifikasyon formu
+
+                3. SUPPLIER DISCOVERY:
+                - SupplierProfile entity
+                - /Suppliers sayfasi (public uretici listesi)
+                - /Suppliers/{slug} profil sayfasi
+                - Contact form entegrasyonu
+
+                4. DASHBOARD SAYFALARI:
+                - /Dashboard/MyDemands: Talep yonetimi + gelen teklifler
+                - /Dashboard/SupplierProfile: Tedarikci profil yonetimi
+
+                5. PLATFORM MODULLERI:
+                - RbacSeeder'a MyDemands ve SupplierProfile modulleri eklendi
+                - Database'e moduller eklendi
+            </Description>
+        </Task>
+        <Task id="63" date="2025-12-19">
+            <Title>SignalR Real-Time Notification + SEO</Title>
+            <Description>
+                GERCEK ZAMANLI BILDIRIM SISTEMI:
+                - Notification entity (Type, Title, Message, ActionUrl, Icon, IsRead, EmailSent)
+                - NotificationType enum: Info, NewDemand, NewResponse, ResponseAccepted, ResponseRejected, DemandStatusChanged, ContactMessage, System
+                - INotificationService + NotificationService
+                - NotificationsApiController (CRUD, mark-read, unread-count)
+                - SignalR NotificationHub (vendor/user group bazli)
+                - Dashboard header'da bell icon + dropdown
+                - Real-time toast bildirimleri (toastr.info)
+                - Otomatik reconnect ile WebSocket baglantisi
+
+                BILDIRIM TETIKLEME:
+                - DemandService.PublishDemandAsync: Kategori abonelerine bildirim
+                - DemandService.CreateResponseAsync: Talep sahibine bildirim
+                - DemandService.UpdateResponseStatusAsync: Tedarikçiye durum bildirimi
+
+                CATEGORY SUBSCRIPTION:
+                - CategorySubscription entity
+                - NotifyInApp, NotifyByEmail, MinQuantity, KeywordFilter
+                - Dashboard/SupplierProfile sayfasinda Subscriptions tab
+
+                SEO OPTIMIZASYONLARI:
+                - SitemapController: /sitemap.xml (demands + suppliers)
+                - /robots.txt endpoint
+                - JSON-LD Structured Data (Demands/Detail.cshtml)
+                - Meta tags: description, robots, canonical, og:*
+                - _Layout.cshtml: @section Head destegi
+            </Description>
+        </Task>
+        <Task id="64" date="2025-12-19">
+            <Title>Product Inquiry (Urun Istegi) Sistemi</Title>
+            <Description>
+                Alici-Satici arasinda urun bazli fiyat istegi ve teklif sistemi:
+
+                ENTITY'LER:
+                - ProductInquiry: ProductId, BuyerVendorId, SellerVendorId, Quantity, Unit, Message, SpecialRequirements, DeliveryCountryId/City/Address, DesiredDeliveryDate, ContactName/Email/Phone, Status, IsReadBySeller, ReadAt
+                - ProductInquiryResponse: InquiryId, UnitPrice, TotalPrice, Currency, OfferedQuantity/Unit, LeadTimeDays, EstimatedDeliveryDate, ValidUntil, Notes, TermsAndConditions, Status, IsReadByBuyer, ReadByBuyerAt
+
+                TYPE DEFINITIONS (TypeDefinitions.cs):
+                - ProductInquiryStatuses: Pending, Viewed, Responded, Accepted, Rejected, Cancelled, Expired
+                - ProductInquiryResponseStatuses: Pending, Viewed, Accepted, Rejected, CounterOffer, Expired
+
+                DOSYALAR:
+                - Models/Entities/ProductInquiry.cs
+                - Models/Entities/ProductInquiryResponse.cs
+                - Models/Enums/TypeDefinitions.cs (status class'lari)
+                - DTOs/ProductInquiry/ProductInquiryDtos.cs
+                - Services/Interfaces/IProductInquiryService.cs
+                - Services/ProductInquiryService.cs
+                - Controllers/Api/ProductInquiriesApiController.cs
+                - Controllers/DashboardController.cs (MyInquiries, IncomingInquiries actions)
+                - Views/Dashboard/MyInquiries.cshtml (alici sayfasi)
+                - Views/Dashboard/IncomingInquiries.cshtml (satici sayfasi)
+                - wwwroot/js/Dashboard/MyInquiries.js
+                - wwwroot/js/Dashboard/IncomingInquiries.js
+
+                API ENDPOINT'LER:
+                - GET/POST /api/product-inquiries/my (alici istekleri)
+                - GET /api/product-inquiries/my/{id} (alici istek detay)
+                - POST /api/product-inquiries/my/{id}/cancel (iptal)
+                - POST /api/product-inquiries/responses/{id}/accept (teklif kabul)
+                - POST /api/product-inquiries/responses/{id}/reject (teklif red)
+                - GET /api/product-inquiries/my/stats (alici istatistikleri)
+                - GET /api/product-inquiries/incoming (satici gelen istekler)
+                - GET /api/product-inquiries/incoming/{id} (satici istek detay)
+                - POST /api/product-inquiries/incoming/{id}/respond (teklif gonder)
+                - GET /api/product-inquiries/incoming/stats (satici istatistikleri)
+                - GET /api/product-inquiries/incoming/unread-count (okunmamis sayi)
+
+                MODÜLLER:
+                - my-inquiries (Id=47): Alici capability (Urun Isteklerim)
+                - incoming-inquiries (Id=48): Satici capability (Gelen Istekler)
+
+                Migration: AddProductInquiryTables
+            </Description>
+        </Task>
+        <Task id="65" date="2025-12-19">
+            <Title>API Controller VendorId Claim Duzeltmesi</Title>
+            <Description>
+                401 Unauthorized hatasi duzeltildi - VendorId claim'i cookie'de yoktu:
+
+                SORUN:
+                - API Controller'lari GetVendorId() metoduyla User.FindFirstValue("VendorId") cagiriyordu
+                - Ancak login sirasinda VendorId claim'i hic eklenmiyordu
+                - Bu nedenle tum API endpoint'leri 401 donuyordu
+
+                COZUM (Database-Fetch Pattern):
+                - VendorId claim yerine UserId ile database'den VendorId cekilir
+                - GetUserVendorIdAsync() metodu UserManager uzerinden kullanici bilgisi alir
+                - Bu pattern MVC Controller'larla tutarli (DashboardController, ProductsController vb.)
+
+                GUNCELLENEN DOSYALAR:
+                - Controllers/Api/ProductInquiriesApiController.cs
+                - Controllers/Api/NotificationsApiController.cs
+                - Controllers/Api/DemandsApiController.cs
+                - Controllers/Api/SuppliersApiController.cs
+
+                ESKI KOD:
+                private int? GetVendorId() => int.TryParse(User.FindFirstValue("VendorId"), out var id) ? id : null;
+
+                YENI KOD:
+                private async Task&lt;int?&gt; GetUserVendorIdAsync()
+                {
+                    var user = await GetCurrentUserAsync();
+                    return user?.VendorId;
+                }
+            </Description>
+        </Task>
+        <Task id="66" date="2025-12-19">
+            <Title>SupplierOffers 3-Tab Yeniden Yapilandirma</Title>
+            <Description>
+                Satici icin SupplierOffers sayfasi 3 sekme olarak yeniden yapilandirildi:
+
+                SEKME YAPISI:
+                1. Gelen Talepler: Urunlere gelen direkt teklif istekleri (ProductInquiry)
+                   - /api/product-inquiries/incoming API endpoint'i
+                   - Okunmamis talepler icin badge
+                   - Talep detay modal + teklif gonderme modal
+                   - Filtreleme: arama, durum, okunma durumu
+
+                2. Muhtemel Talepler: Takip edilen kategorilerdeki PublicDemand'ler
+                   - /api/demands/subscribed API endpoint'i
+                   - Teklif gonderdikten sonra 1. sekmeye gecer
+                   - Bilgi banner'i ile kullanici yonlendirmesi
+
+                3. Takip Ettigim Kategoriler: CategorySubscription yonetimi
+                   - /api/suppliers/subscriptions API endpoint'i
+                   - Kategori ekleme formu (dropdown + keyword filter + bildirim tercihleri)
+                   - Kategori silme ozelligi
+                   - Her kategoride talep sayisi badge'i
+
+                DOSYALAR:
+                - Views/Dashboard/SupplierOffers.cshtml (tamamen yeniden yazildi)
+                - wwwroot/js/Dashboard/SupplierOffers.js (tamamen yeniden yazildi)
+                - App_Data/Localization/resources.tr.xml (yeni key'ler eklendi)
+                - App_Data/Localization/resources.en.xml (yeni key'ler eklendi)
+
+                LOCALIZATION KEY'LER:
+                - SupplierOffers.Tab.Incoming, Potential, Subscriptions
+                - SupplierOffers.Incoming.*, Potential.*, Subscriptions.*
+                - Inquiry.Status.*, Inquiry.Respond.*
+                - Common.AllStatuses, AllCategories, ViewDetail, vb.
+            </Description>
+        </Task>
+        <Task id="67" date="2025-12-19">
+            <Title>IncomingInquiries Duplicate Temizligi</Title>
+            <Description>
+                SupplierOffers ile duplicate olan IncomingInquiries sayfasi kaldirildi:
+
+                KALDIRILAN DOSYALAR:
+                - Views/Dashboard/IncomingInquiries.cshtml
+                - wwwroot/js/Dashboard/IncomingInquiries.js
+                - DashboardController.IncomingInquiries() action
+
+                VERITABANI:
+                - PlatformModules Id=48 (incoming-inquiries) silindi
+                - CapabilityModuleMappings ilgili kayit silindi
+                - CompanyRoleModulePermissions ilgili kayit silindi
+
+                NEDEN:
+                - SupplierOffers sayfasinin 1. sekmesi "Gelen Talepler" ayni isi yapiyor
+                - /api/product-inquiries/incoming endpoint'i her ikisinde de kullaniliyordu
+                - Duplicate kaldirarak tek sayfa uzerinden yonetim saglandi
+            </Description>
+        </Task>
+        <Task id="68" date="2025-12-19">
+            <Title>Order Management System</Title>
+            <Description>
+                Buyer ve Seller perspektifinden siparis yonetimi sistemi:
+
+                ENTITY'LER:
+                - Order: OrderNumber, BuyerVendorId, SellerVendorId, SourceType, Amounts, Status, PaymentStatus
+                - OrderItem: ProductId, Quantity, UnitPrice, ShippedQuantity
+                - OrderShipment: CarrierCode, TrackingNumber, Status
+                - OrderShipmentItem: ShipmentId, OrderItemId, Quantity
+                - OrderStatusHistory: OldStatus, NewStatus, Notes
+                - StripePayment: PaymentIntentId, ChargeId, Amount, Status
+                - OrderServiceRequest: ServiceType (Logistics/Customs/Insurance/Survey)
+                - OrderServiceQuote: ProviderVendorId, Amount, LeadTimeDays
+                - OrderParticipant: VendorId, Role, Status
+                - OrderTask: Title, Description, Status
+                - OrderInvestment: InvestorVendorId, Amount, Type
+
+                ENUMLAR (TypeDefinitions.cs):
+                - OrderStatuses: 16 durum (Draft, PendingPayment, PaymentFailed, PendingConfirm, ...)
+                - PaymentStatuses: Pending, Processing, Succeeded, Failed, Refunded, PartiallyRefunded
+                - ShipmentStatuses: Preparing, ReadyToShip, Shipped, InTransit, ...
+                - ServiceTypes, TaskTypes, InvestmentTypes, ParticipantRoles
+
+                SERVISLER:
+                - IOrderService + OrderService: Buyer/Seller/ServiceProvider/Task/Investment operasyonlari
+                - IStripeService + StripeService: Stripe entegrasyonu
+
+                API CONTROLLER'LAR:
+                - OrdersApiController: Tum siparis operasyonlari
+                - PaymentsApiController: Stripe webhook, payment intent, refund
+
+                DASHBOARD SAYFALARI:
+                - MyOrders.cshtml + MyOrders.js (Buyer)
+                - SellerOrders.cshtml + SellerOrders.js (Seller)
+
+                PRODUCT GUNCELLEMESI:
+                - HSCode, GTIN, CountryOfOrigin alanlari eklendi (uluslararasi ticaret icin)
+
+                MODUL KAYITLARI:
+                - my-orders (Id=50): Buyer capability
+                - seller-orders (Id=51): Seller capability
+                - service-requests (Id=52): Service Provider capabilities
+                - investment-opportunities (Id=53): Investor capability
+
+                STRIPE ENTEGRASYONU:
+                - Stripe.net 50.1.0 NuGet paketi
+                - PaymentIntent olusturma ve yonetim
+                - Webhook handler (payment_intent.succeeded, failed, charge.refunded)
+                - Refund islemi
+            </Description>
+        </Task>
+        <Task id="69" date="2025-12-19">
+            <Title>RFQ/RFP Terminolojisi Temizligi</Title>
+            <Description>
+                RFQ ve RFP terimleri "Teklif Yonetimi" / "Proposal Management" olarak degistirildi:
+
+                DOSYA GUNCELLEMELERI:
+                - resources.en.xml: Module.Rfq, Module.Rfp -> Module.ProposalManagement
+                - resources.tr.xml: Ayni degisiklikler
+                - LocalizationSeed.cs: TR + EN kaynaklari guncellendi
+                - RbacSeeder.cs: RFQ/RFP modulleri tek "Proposals" modulu olarak birlestirildi
+                - ProductDto.cs, ProductService.cs, IProductService.cs, ProductsApiController.cs: Yorumlar guncellendi
+                - Role.RfqRfpAuctionsStaff -> Role.ProposalAuctionsStaff
+
+                DATABASE TEMIZLIGI:
+                - PlatformModules: Id=8 (RFQ's) -> "Proposals" olarak guncellendi
+                - PlatformModules: Id=9 (RFP's) silindi
+                - LocaleStringResources: Eski Module.Rfq, Module.Rfp key'leri -> Module.ProposalManagement
+                - LocaleStringResources: Role.RfqRfpAuctionsStaff -> Role.ProposalAuctionsStaff
+
+                Artik proje genelinde sadece "Teklif Yonetimi" / "Proposal Management" terminolojisi kullaniliyor.
+            </Description>
+        </Task>
+        <Task id="70" date="2025-12-19">
+            <Title>Seller: Teklif Yonetimi (Proposals) Dashboard</Title>
+            <Description>
+                Satici icin birlestik teklif yonetimi sayfasi:
+
+                DOSYALAR:
+                - DTOs/Proposal/ProposalDtos.cs: UnifiedProposalListDto, UnifiedProposalSearchResultDto, UnifiedProposalFilterDto, UnifiedProposalStatsDto
+                - Services/Interfaces/IProposalService.cs: Birlestik teklif servisi interface
+                - Services/ProposalService.cs: ProductInquiryResponse + DemandResponse birlestirme
+                - Controllers/Api/ProposalsApiController.cs: API endpoint'leri
+                - Controllers/DashboardController.cs: Proposals action
+                - Views/Dashboard/Proposals.cshtml: Birlesik gorunum
+                - wwwroot/js/Dashboard/Proposals.js: KnockoutJS ViewModel
+
+                OZELLIKLER:
+                - 3 Tab: Tumu, Urun Teklifleri, Talep Teklifleri
+                - Istatistik kartlari: Toplam, Bekleyen, Kabul Edilen, Bu Ay
+                - Arama ve durum filtreleme
+                - Kaynak tipi badge (Urun Istegi / Talep)
+                - Fiyat, miktar, durum gosterimi
+                - Sayfalama
+
+                API ENDPOINT'LER:
+                - GET /api/proposals - Tum teklifler
+                - GET /api/proposals/inquiry - Sadece urun teklifleri
+                - GET /api/proposals/demand - Sadece talep teklifleri
+                - GET /api/proposals/stats - Istatistikler
+
+                DATABASE:
+                - PlatformModules Id=8 (Proposals) Seller capability'sine mapping yapildi
+            </Description>
+        </Task>
+        <Task id="71" date="2025-12-20">
+            <Title>Account Section - Tum Sayfalar</Title>
+            <Description>
+                Kullanici hesap yonetimi icin tum sayfalar olusturuldu:
+
+                ENTITY:
+                - UserSettings: Bildirim tercihleri (email, in-app) icin entity
+
+                DTO'LAR (DTOs/Account/AccountDtos.cs):
+                - PersonalInfoDto, PersonalInfoUpdateDto, ProfileImageUpdateDto
+                - ChangePasswordDto, SecurityInfoDto
+                - NotificationSettingsDto, NotificationSettingsUpdateDto
+                - VerificationStatusDto
+                - LanguageOptionDto
+
+                SERVIS:
+                - IAccountService + AccountService: Kisisel bilgi, sifre, bildirim, dogrulama
+
+                API (Controllers/Api/AccountApiController.cs):
+                - GET/PUT /api/account/personal-info
+                - PUT /api/account/profile-image, DELETE /api/account/profile-image
+                - GET /api/account/security, POST /api/account/change-password
+                - GET/PUT /api/account/notifications
+                - GET /api/account/languages
+                - GET /api/account/verifications
+                - POST /api/account/send-email-verification
+
+                SAYFALAR:
+                1. PersonalInfo (/Dashboard/PersonalInfo): Ad, soyad, telefon, dil, profil resmi
+                2. SecuritySettings (/Dashboard/Settings/Security): Sifre degistirme, 2FA durumu
+                3. NotificationSettings (/Dashboard/Settings/Notifications): Email/in-app bildirim tercihleri
+                4. Verifications (/Dashboard/Verifications): KYC dogrulama durumlari
+                5. Billing (/Dashboard/Billing): Fatura ve banka bilgileri
+                6. StripeConnect (/Dashboard/StripeConnect): Stripe hesap baglantisi
+                7. SubscriptionSettings (/Dashboard/Settings/Subscriptions): Abonelik planlari
+                8. Documents (/Dashboard/Documents): KYC belgeleri (kimlik, vergi, banka)
+                9. Contracts (/Dashboard/Contracts): Siparis sozlesmeleri ve faturalar
+                10. ServiceConnections (/Dashboard/ServiceConnections): Coklu servis entegrasyonu
+
+                HER SAYFA ICIN:
+                - Views/Dashboard/{name}.cshtml (KnockoutJS binding)
+                - wwwroot/js/Dashboard/{name}.js (ViewModel)
+                - Dashboard layout entegrasyonu
+                - Localization destegi (Html.T())
+            </Description>
+        </Task>
+        <Task id="72" date="2025-12-20">
+            <Title>Servis Baglantilari (Service Connections) Sayfasi</Title>
+            <Description>
+                StripeConnect sayfasi genisletilerek coklu servis entegrasyonu destegi eklendi:
+
+                ENTITY:
+                - VendorServiceConnection: ServiceCode, Category, Status, Token bilgileri, Stripe-specific alanlar
+
+                DESTEKLENEN SERVISLER:
+                - Odeme: Stripe, iyzico, PayPal
+                - Lojistik: Aras Kargo, Yurtici Kargo, DHL Express, UPS
+                - Muhasebe: Parasut, Logo Yazilim, E-Fatura
+                - Pazar Yerleri: Trendyol, Hepsiburada, n11
+
+                DOSYALAR:
+                - Models/Entities/VendorServiceConnection.cs
+                - Views/Dashboard/ServiceConnections.cshtml (tab gorunumlu)
+                - wwwroot/js/Dashboard/ServiceConnections.js
+                - Controllers/Api/ServiceConnectionsApiController.cs
+
+                API ENDPOINT'LER:
+                - GET /api/services/connections
+                - POST /api/services/{code}/connect
+                - DELETE /api/services/{code}/disconnect
+                - POST /api/services/{code}/dashboard-link
+                - GET /api/services/stripe/callback
+
+                DATABASE:
+                - VendorServiceConnections tablosu eklendi
+                - PlatformModules Id=30: StripeConnect -> ServiceConnections
+                - LocaleStringResources: Module.ServiceConnections (TR/EN)
+
+                KALDIRILAN DOSYALAR:
+                - Views/Dashboard/StripeConnect.cshtml
+                - wwwroot/js/Dashboard/StripeConnect.js
+            </Description>
+        </Task>
+        <Task id="73" date="2025-12-20">
+            <Title>Admin/Categories: Silme Onay Sistemi + Cop Kutusu</Title>
+            <Description>
+                Kategori silme islemi icin onay workflow'u ve cop kutusu ozellikleri:
+
+                ENTITY DEGISIKLIKLERI (ProductCategory):
+                - DeletedAt, DeletedBy alanlari (BaseEntity'ye eklendi)
+                - DeletionStatus (Pending/Approved/Rejected)
+                - ReviewedBy, ReviewedAt, ReviewNote
+                - MigratedProductCount, MigratedToCategoryId, MigratedProductIds (JSON rollback icin)
+
+                ENUM (TypeDefinitions.cs):
+                - CategoryDeletionStatuses: Pending(0), Approved(1), Rejected(2)
+
+                SERVIS (AdminService):
+                - DeleteCategoryAsync: Soft delete + DeletionStatus=Pending + urun migration
+                - GetDeletedCategoriesAsync: Onaylanan silinmis kategoriler
+                - GetPendingDeletionCategoriesAsync: Onay bekleyen kategoriler
+                - ApproveDeletionAsync: Silme onaylama (silen kisi onaylayamaz)
+                - RejectDeletionAsync: Silme reddetme + kategori ve urunleri geri yukleme
+
+                API ENDPOINT'LER:
+                - GET /api/admin/categories/deleted (cop kutusu)
+                - GET /api/admin/categories/pending (onay bekleyenler)
+                - POST /api/admin/categories/{id}/approve
+                - POST /api/admin/categories/{id}/reject
+
+                UI (Categories.cshtml + Categories.js):
+                - 3 Tab: Kategoriler, Silinen, Onay Bekleyenler
+                - Expand/collapse tree gorunumu
+                - Alt kategori sayisi gosterimi
+                - Silme detay modal (kac urun, nereye tasinmis, kim silmis)
+                - Onaylama ve reddetme modal'lari
+
+                KURALLAR:
+                - Kategoriyi silen kisi onaylayamaz
+                - Urunler JSON'da saklanir (rollback icin)
+                - Reddedilirse kategori ve urunler eski haline doner
+            </Description>
+        </Task>
+        <Task id="74" date="2025-12-20">
+            <Title>Address Entity: Country/State ID Bazli Baglanti</Title>
+            <Description>
+                Address entity'sinde Country ve State artik ID ile baglanir:
+
+                ENTITY DEGISIKLIKLERI (Address):
+                - CountryId (int?) + CountryEntity navigation property
+                - StateId (int?) + StateEntity navigation property
+                - Eski Country/State string alanlari gecis icin tutuldu
+
+                MIGRATION:
+                - AddAddressCountryStateIds
+
+                VERI MIGRASYONU:
+                - Mevcut "Turkiye" string degerleri CountryId=430 olarak guncellendi
+
+                SERVIS KONTROLLERI (AdminService):
+                - DeleteCountryAsync: Adres kullanimini kontrol eder
+                - DeleteStateAsync: Adres kullanimini kontrol eder
+
+                GEOGRAPHY SAYFASI:
+                - Sadeleştirildi (sadece istatistik gosteriyor)
+                - CRUD arayuzu kaldirildi (veritabani dogrudan yonetilecek)
+                - Geography.js silindi
+
+                API ENDPOINT'LER (hala aktif):
+                - GET /api/admin/countries (liste)
+                - POST /api/admin/countries (olustur)
+                - PUT /api/admin/countries/{id} (guncelle)
+                - DELETE /api/admin/countries/{id} (sil)
+                - GET /api/admin/states (liste)
+                - POST /api/admin/states (olustur)
+                - PUT /api/admin/states/{id} (guncelle)
+                - DELETE /api/admin/states/{id} (sil)
+            </Description>
+        </Task>
+        <Task id="75" date="2025-12-20">
+            <Title>Public Urun Katalogu (Frontend)</Title>
+            <Description>
+                Ziyaretcilerin urunleri gorebilecegi public katalog sayfasi:
+
+                DOSYALAR:
+                - DTOs/Catalog/CatalogDtos.cs: Tum DTO'lar (List, Detail, Filter, Category, Stats)
+                - Services/Interfaces/ICatalogService.cs: Interface
+                - Services/CatalogService.cs: Implementation
+                - Controllers/CatalogController.cs: MVC (Index, Detail, Category, Vendor)
+                - Controllers/Api/CatalogApiController.cs: API endpoint'leri
+                - Views/Catalog/Index.cshtml: Ana katalog sayfasi (grid/list toggle, sidebar, filtreler)
+                - Views/Catalog/Detail.cshtml: Urun detay (galeri, fiyat esikleri, teklif modal)
+                - Views/Catalog/Category.cshtml: Kategori sayfasi
+                - Views/Catalog/_CategoryTreeItem.cshtml: Kategori tree partial
+                - Views/Catalog/_CategoryTreeItemActive.cshtml: Aktif kategori partial
+                - wwwroot/js/Catalog/Index.js: Katalog ViewModel
+                - wwwroot/js/Catalog/Detail.js: Detay sayfasi JS
+                - wwwroot/js/Catalog/Category.js: Kategori sayfasi ViewModel
+
+                OZELLIKLER:
+                - SEO-friendly URL'ler (/Catalog, /Catalog/{slug}, /Catalog/Category/{slug})
+                - Kategori agaci sidebar
+                - Grid ve liste gorunumu toggle
+                - Arama, siralama, stok filtresi
+                - Fiyat formatlama (TRY, USD, EUR, GBP)
+                - Toptan fiyatlandirma (PriceTiers) gosterimi
+                - Urun detayda gorsel galerisi + lightbox
+                - "Teklif Iste" modal (ProductInquiry entegrasyonu)
+                - Benzer urunler
+                - JSON-LD Structured Data (SEO)
+                - Breadcrumb navigasyonu
+                - Sayfalama
+
+                LOCALIZATION:
+                - 55+ yeni Catalog.* key (TR + EN)
+                - Common.Unit.* key'leri
+
+                API ENDPOINT'LER:
+                - GET /api/catalog/products (filtreli liste)
+                - GET /api/catalog/products/{slug} (detay)
+                - GET /api/catalog/products/category/{slug} (kategori urunleri)
+                - GET /api/catalog/products/vendor/{slug} (satici urunleri)
+                - GET /api/catalog/products/{id}/related (benzer urunler)
+                - GET /api/catalog/featured (anasayfa icin)
+                - GET /api/catalog/categories (tree yapisi)
+                - GET /api/catalog/stats (istatistikler)
+                - GET /api/catalog/search/suggestions (autocomplete)
+            </Description>
+        </Task>
+        <Task id="76" date="2025-12-20">
+            <Title>Admin/Geography: Ulke ve Eyalet Yonetimi</Title>
+            <Description>
+                Ulke ve eyalet verilerinin yonetimi icin Admin sayfasi:
+
+                ENTITY DEGISIKLIKLERI:
+                - Address: Eski Country/State string alanlari kaldirildi
+                - Address: Sadece CountryId/StateId + navigation property kullaniyor
+                - Migration: RemoveAddressStringFields
+
+                SERVIS (IAdminService + AdminService):
+                - GetCountriesAsync: Tum ulkeler + eyalet sayisi
+                - GetCountryDetailAsync: Ulke detay + dil cevirileri
+                - UpdateCountryTranslationsAsync: Ceviri kaydet
+                - ToggleCountryActiveAsync: Aktif/pasif toggle
+                - GetStatesAsync: Tum eyaletler + ulke adi
+                - GetStateDetailAsync: Eyalet detay + dil cevirileri
+                - UpdateStateTranslationsAsync: Eyalet cevirisi kaydet
+                - ToggleStateActiveAsync: Eyalet aktif/pasif toggle
+
+                DTO'LAR:
+                - AdminCountryDetailDto, AdminCountryTranslationDto, AdminCountryTranslationUpdateDto
+                - AdminStateDetailDto, AdminStateTranslationDto, AdminStateTranslationUpdateDto
+
+                API ENDPOINT'LER:
+                - GET /api/admin/countries, /api/admin/states (listeler)
+                - GET /api/admin/countries/{id}/detail, /api/admin/states/{id}/detail
+                - PUT /api/admin/countries/{id}/translations, /api/admin/states/{id}/translations
+                - POST /api/admin/countries/{id}/toggle-active, /api/admin/states/{id}/toggle-active
+
+                UI (Views/Admin/Geography.cshtml + wwwroot/js/Admin/Geography.js):
+                - Istatistik kartlari (ulke, eyalet, ceviri sayilari)
+                - 2 Tab: Ulkeler + Eyaletler
+                - Ulkeler: ID, Ad, ISO2, ISO3, Telefon, Para Birimi, Eyalet Sayisi
+                - Eyaletler: ID, Ad, Ulke (dropdown ile filtreleme)
+                - Aktif/Pasif toggle butonlari
+                - Ceviri duzenleme modal'lari (tum aktif diller icin)
+                - Ulkeden eyaletlere hizli gecis (eyalet sayisina tikla)
+            </Description>
+        </Task>
+        <Task id="77" date="2025-12-20">
+            <Title>Buyer Module: Tedarikci Kesfi ve Favoriler</Title>
+            <Description>
+                Alici (Buyer) modulu icin tedarikci arama ve favori yonetimi:
+
+                ENTITY'LER:
+                - FavoriteVendor: BuyerVendorId, SellerVendorId, Notes, Tags, AddedAt
+                - VendorReview: ReviewerVendorId, ReviewedVendorId, OrderId, OverallRating, QualityRating,
+                  DeliveryRating, CommunicationRating, ValueRating, Title, Comment, Pros, Cons, WouldRecommend
+                - Migration: AddBuyerFeatures
+
+                DTO'LAR (DTOs/Buyer/BuyerDtos.cs):
+                - SupplierListDto, SupplierDetailDto, SupplierFilterDto, SupplierSearchResultDto
+                - FavoriteVendorDto, FavoriteVendorCreateDto, FavoriteVendorUpdateDto
+                - VendorReviewDto, VendorReviewCreateDto, VendorReviewResponseDto
+                - BuyerStatsDto, SupplierRatingStatsDto
+
+                SERVIS (IBuyerService + BuyerService):
+                - SearchSuppliersAsync: Tedarikci arama (kategori, dogrulama, urun filtresi)
+                - GetSupplierDetailAsync: Tedarikci detay (adresler, urunler, yorumlar)
+                - GetRecommendedSuppliersAsync: Onerilen tedarikciler (kategori bazli)
+                - Favori CRUD: Add, Update, Remove, Get, IsFavorite
+                - Degerlendirme: GetVendorReviews, GetRatingStats, CreateReview, RespondToReview
+                - GetBuyerStatsAsync: Alici istatistikleri
+
+                API (BuyerApiController):
+                - GET /api/buyer/suppliers (arama)
+                - GET /api/buyer/suppliers/{id} (detay)
+                - GET /api/buyer/suppliers/recommended
+                - GET/POST/PUT/DELETE /api/buyer/favorites
+                - GET /api/buyer/suppliers/{id}/reviews
+                - GET /api/buyer/suppliers/{id}/rating-stats
+                - POST /api/buyer/reviews
+                - GET /api/buyer/stats
+
+                PLATFORM MODULLERI:
+                - DiscoverSuppliers (55) - /Dashboard/DiscoverSuppliers
+                - FavoriteSuppliers (56) - /Dashboard/FavoriteSuppliers
+                - CompareProposals (57) - /Dashboard/CompareProposals
+                - CapabilityModuleMappings: Buyer capability (3) icin eklendi
+
+                SAYFALAR:
+                - Views/Dashboard/DiscoverSuppliers.cshtml: Tedarikci arama sayfasi
+                  - Stats kartlari, filtreler (kategori, arama, siralama)
+                  - Grid gorunum, favori toggle, detay modal
+                  - Onerilen tedarikciler bolumu
+                  - Sayfalama
+                - Views/Dashboard/FavoriteSuppliers.cshtml: Favori listesi
+                  - Favori kartlari, not/etiket duzenleme
+                  - Silme islemi
+
+                JAVASCRIPT:
+                - wwwroot/js/Dashboard/DiscoverSuppliers.js
+                - wwwroot/js/Dashboard/FavoriteSuppliers.js
+            </Description>
+        </Task>
+        <Task id="78" date="2025-12-20">
+            <Title>Buyer: Teklif Karsilastirma ve Siparis Olusturma</Title>
+            <Description>
+                Alici (Buyer) icin teklif karsilastirma ve kabul edilen tekliften siparis olusturma:
+
+                DTO'LAR (DTOs/Buyer/BuyerDtos.cs):
+                - DemandWithProposalsDto: Talep + teklifleri
+                - InquiryWithProposalsDto: Urun istegi + teklifleri
+                - ProposalDto: Teklif detaylari (fiyat, teslimat, rating, badges)
+                - InquiryProposalDto: Urun istegi teklifi
+                - ProposalCompareStatsDto: Karsilastirma istatistikleri
+                - ProposalActionDto: Kabul/Red/Kisa liste islemi
+
+                SERVIS (IBuyerService + BuyerService):
+                - GetDemandsWithProposalsAsync: Talepleri teklifleriyle getir
+                - GetInquiriesWithProposalsAsync: Urun isteklerini teklifleriyle getir
+                - GetProposalCompareStatsAsync: Karsilastirma istatistikleri
+                - UpdateProposalStatusAsync: Teklif kabul/red/kisa liste
+                - UpdateInquiryProposalStatusAsync: Urun istegi teklifi kabul/red
+                - Teklif kabul edildiginde diger teklifler otomatik reddedilir
+                - Talep durumu "Kapatildi" olarak guncellenir
+
+                API ENDPOINT'LER:
+                - GET /api/buyer/proposals/demands
+                - GET /api/buyer/proposals/inquiries
+                - GET /api/buyer/proposals/stats
+                - POST /api/buyer/proposals/demands/{id}/action
+                - POST /api/buyer/proposals/inquiries/{id}/action
+
+                SAYFA (Views/Dashboard/CompareProposals.cshtml):
+                - Istatistik kartlari (teklifli talep, bekleyen, kisa liste, kabul edilen)
+                - 2 Tab: Talep Teklifleri + Urun Istekleri
+                - Tablo gorunum: Tedarikci, fiyat, teslimat, gecerlilik, puan, durum
+                - En ucuz/en hizli/en iyi puan badge'leri
+                - Teklif detay modal
+                - Kabul/Red/Kisa liste islemleri
+                - Kabul onay modal (diger tekliflerin reddedilecegi uyarisi)
+                - Red nedeni modal
+
+                SIPARIS OLUSTURMA:
+                - Kabul edilen teklife "Siparis Olustur" butonu
+                - Siparis modal'i: Tedarikci ozeti, adres secimi, not, kosul kabulu
+                - /api/orders/from-demand endpoint'i ile siparis olusturma
+                - Basarili siparis sonrasi MyOrders sayfasina yonlendirme
+
+                JAVASCRIPT:
+                - wwwroot/js/Dashboard/CompareProposals.js
+            </Description>
+        </Task>
+        <Task id="79" date="2025-12-20">
+            <Title>Seller: Siparis Yonetimi</Title>
+            <Description>
+                Seller Orders (SellerOrders) sayfasi olusturuldu. Satircilar gelen siparisleri gorur ve yonetir.
+
+                DOSYALAR:
+                - Views/Dashboard/SellerOrders.cshtml
+                - wwwroot/js/Dashboard/SellerOrders.js
+
+                OZELLIKLER:
+                - Siparis listesi: OrderNumber, Buyer, Product, Quantity, TotalPrice, Status, Date
+                - Durum filtreleme ve arama
+                - Siparis onaylama/reddetme/kargolama islemleri
+            </Description>
+        </Task>
+        <Task id="80" date="2025-12-20">
+            <Title>Seller: Stok Hareketi Sistemi</Title>
+            <Description>
+                Stok hareketi sistemi olusturuldu.
+
+                ENTITY:
+                - StockMovement (Models/Entities/StockMovement.cs)
+                - MovementType: In, Out, Transfer, Adjustment, Reserve, Unreserve
+                - ReferenceType: Order, Return, Manual, Transfer, Adjustment, PurchaseOrder
+
+                SERVICE/API:
+                - IStockService/StockService (stok CRUD islemleri)
+                - StockApiController (/api/stock/*)
+                  - GET /movements - Hareketleri listele
+                  - POST /in - Stok girisi
+                  - POST /out - Stok cikisi
+                  - POST /transfer - Depo transferi
+                  - POST /adjust - Stok duzeltmesi
+                  - GET /stats - Istatistikler
+                  - GET /alerts/low-stock - Dusuk stok alarmlari
+
+                SAYFA:
+                - Views/Dashboard/StockMovements.cshtml
+                - wwwroot/js/Dashboard/StockMovements.js
+                - Istatistik kartlari, dusuk stok alarmlari, filtreler
+                - Stok In/Out/Transfer/Adjustment modallari
+
+                ROUTE:
+                - /Dashboard/StockMovements
+            </Description>
+        </Task>
+    </CompletedTasks>
+</ProjectStatus>

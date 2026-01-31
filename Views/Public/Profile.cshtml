@@ -1,0 +1,311 @@
+@{
+    ViewData["Title"] = "Profil";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var slug = ViewData["Slug"] as string;
+}
+
+<div id="public-profile-app" class="container py-5" data-slug="@slug">
+    <!-- Loading State -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yukleniyor...</span>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div data-bind="visible: !isLoading() && error()" class="text-center py-5">
+        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+        <h3 class="mt-3">Profil Bulunamadi</h3>
+        <p class="text-muted" data-bind="text: error"></p>
+        <a href="/" class="btn btn-primary mt-3">Ana Sayfaya Don</a>
+    </div>
+
+    <!-- Profile Content -->
+    <div data-bind="visible: !isLoading() && !error() && profile()">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <!-- Cover Image -->
+                <div data-bind="visible: profile().coverImageUrl" class="rounded overflow-hidden mb-4" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <img data-bind="attr: { src: profile().coverImageUrl }" class="w-100 h-100" style="object-fit: cover;">
+                </div>
+                <div data-bind="visible: !profile().coverImageUrl" class="rounded mb-4" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column - Main Content -->
+            <div class="col-lg-8">
+                <!-- Company Info -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start gap-3">
+                            <!-- Logo -->
+                            <div data-bind="visible: profile().logoUrl">
+                                <img data-bind="attr: { src: profile().logoUrl }" class="rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                            </div>
+                            <div data-bind="visible: !profile().logoUrl" class="rounded bg-secondary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="bi bi-building text-white" style="font-size: 2rem;"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h2 class="mb-1" data-bind="text: profile().displayName || profile().companyName"></h2>
+                                <!-- ko if: profile().tagline -->
+                                <p class="text-muted mb-2" data-bind="text: profile().tagline"></p>
+                                <!-- /ko -->
+                                <span class="badge bg-primary" data-bind="text: profile().capabilityName"></span>
+                                <!-- ko if: profile().isVerified -->
+                                <span class="badge bg-success ms-2"><i class="bi bi-patch-check me-1"></i>Dogrulanmis</span>
+                                <!-- /ko -->
+                                <!-- ko if: !profile().acceptingNewRequests -->
+                                <span class="badge bg-secondary ms-2">Yeni talep kabul etmiyor</span>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div data-bind="visible: profile().description" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Hakkinda</h5>
+                    </div>
+                    <div class="card-body">
+                        <p data-bind="text: profile().description"></p>
+                    </div>
+                </div>
+
+                <!-- Services -->
+                <div data-bind="visible: profile().services" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>Hizmetler</h5>
+                    </div>
+                    <div class="card-body">
+                        <p data-bind="text: profile().services"></p>
+                    </div>
+                </div>
+
+                <!-- Certifications -->
+                <div data-bind="visible: profile().certifications" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-award me-2"></i>Sertifikalar</h5>
+                    </div>
+                    <div class="card-body">
+                        <p data-bind="text: profile().certifications"></p>
+                    </div>
+                </div>
+
+                <!-- Service Regions -->
+                <div data-bind="visible: profile().serviceRegions" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-globe me-2"></i>Hizmet Bolgeleri</h5>
+                    </div>
+                    <div class="card-body">
+                        <p data-bind="text: profile().serviceRegions"></p>
+                    </div>
+                </div>
+
+                <!-- Capability-specific info -->
+                <!-- Satici (2) -->
+                <div data-bind="visible: profile().capabilityId === 2 && (profile().productionCapacity || profile().minimumOrderValue || profile().leadTime)" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-shop me-2"></i>Satici Bilgileri</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().productionCapacity" class="mb-2">
+                            <strong>Uretim Kapasitesi:</strong> <span data-bind="text: profile().productionCapacity"></span>
+                        </div>
+                        <div data-bind="visible: profile().minimumOrderValue" class="mb-2">
+                            <strong>Min. Siparis:</strong> <span data-bind="text: profile().minimumOrderValue"></span>
+                        </div>
+                        <div data-bind="visible: profile().leadTime">
+                            <strong>Teslim Suresi:</strong> <span data-bind="text: profile().leadTime"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alici (3) -->
+                <div data-bind="visible: profile().capabilityId === 3 && (profile().industry || profile().businessType || profile().annualPurchaseVolume)" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cart me-2"></i>Alici Bilgileri</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().industry" class="mb-2">
+                            <strong>Sektor:</strong> <span data-bind="text: profile().industry"></span>
+                        </div>
+                        <div data-bind="visible: profile().businessType" class="mb-2">
+                            <strong>Is Tipi:</strong> <span data-bind="text: profile().businessType"></span>
+                        </div>
+                        <div data-bind="visible: profile().annualPurchaseVolume">
+                            <strong>Yillik Satin Alma:</strong> <span data-bind="text: profile().annualPurchaseVolume"></span> <span data-bind="text: profile().purchaseVolumeCurrency"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasimaci (4) -->
+                <div data-bind="visible: profile().capabilityId === 4 && (profile().fleetInfo || profile().transportModes || profile().routes)" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-truck me-2"></i>Lojistik Bilgileri</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().fleetInfo" class="mb-2">
+                            <strong>Filo:</strong> <span data-bind="text: profile().fleetInfo"></span>
+                        </div>
+                        <div data-bind="visible: profile().transportModes" class="mb-2">
+                            <strong>Tasima Yontemleri:</strong> <span data-bind="text: profile().transportModes"></span>
+                        </div>
+                        <div data-bind="visible: profile().routes">
+                            <strong>Rotalar:</strong> <span data-bind="text: profile().routes"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sigorta (5) -->
+                <div data-bind="visible: profile().capabilityId === 5 && (profile().insuranceTypes || profile().coverageTypes || profile().maxCoverageAmount)" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Sigorta Bilgileri</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().insuranceTypes" class="mb-2">
+                            <strong>Sigorta Turleri:</strong> <span data-bind="text: profile().insuranceTypes"></span>
+                        </div>
+                        <div data-bind="visible: profile().coverageTypes" class="mb-2">
+                            <strong>Teminat Turleri:</strong> <span data-bind="text: profile().coverageTypes"></span>
+                        </div>
+                        <div data-bind="visible: profile().maxCoverageAmount">
+                            <strong>Maks. Teminat:</strong> <span data-bind="text: profile().maxCoverageAmount"></span> <span data-bind="text: profile().maxCoverageCurrency"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gumruk (6) -->
+                <div data-bind="visible: profile().capabilityId === 6 && (profile().customsServices || profile().licenseNumbers || profile().customsOffices)" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-passport me-2"></i>Gumruk Bilgileri</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().customsServices" class="mb-2">
+                            <strong>Gumruk Hizmetleri:</strong> <span data-bind="text: profile().customsServices"></span>
+                        </div>
+                        <div data-bind="visible: profile().licenseNumbers" class="mb-2">
+                            <strong>Lisans No:</strong> <span data-bind="text: profile().licenseNumbers"></span>
+                        </div>
+                        <div data-bind="visible: profile().customsOffices">
+                            <strong>Calisilan Gumrukler:</strong> <span data-bind="text: profile().customsOffices"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gozetim (7) -->
+                <div data-bind="visible: profile().capabilityId === 7 && (profile().inspectionTypes || profile().inspectionStandards)" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-search me-2"></i>Gozetim Bilgileri</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().inspectionTypes" class="mb-2">
+                            <strong>Gozetim Turleri:</strong> <span data-bind="text: profile().inspectionTypes"></span>
+                        </div>
+                        <div data-bind="visible: profile().inspectionStandards">
+                            <strong>Standartlar:</strong> <span data-bind="text: profile().inspectionStandards"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Yatirimci (8) -->
+                <div data-bind="visible: profile().capabilityId === 8 && (profile().investmentTypes || profile().investmentFocus || profile().minInvestmentAmount)" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Yatirimci Bilgileri</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().investmentTypes" class="mb-2">
+                            <strong>Yatirim Turleri:</strong> <span data-bind="text: profile().investmentTypes"></span>
+                        </div>
+                        <div data-bind="visible: profile().investmentFocus" class="mb-2">
+                            <strong>Yatirim Odagi:</strong> <span data-bind="text: profile().investmentFocus"></span>
+                        </div>
+                        <div data-bind="visible: profile().minInvestmentAmount || profile().maxInvestmentAmount">
+                            <strong>Yatirim Araligi:</strong>
+                            <span data-bind="text: profile().minInvestmentAmount"></span> -
+                            <span data-bind="text: profile().maxInvestmentAmount"></span>
+                            <span data-bind="text: profile().investmentCurrency"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Contact & Stats -->
+            <div class="col-lg-4">
+                <!-- Contact Info (if showContactInfo) -->
+                <div data-bind="visible: profile().showContactInfo" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-telephone me-2"></i>Iletisim</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().publicEmail" class="mb-3">
+                            <i class="bi bi-envelope me-2 text-muted"></i>
+                            <a data-bind="attr: { href: 'mailto:' + profile().publicEmail }, text: profile().publicEmail"></a>
+                        </div>
+                        <div data-bind="visible: profile().publicPhone" class="mb-3">
+                            <i class="bi bi-phone me-2 text-muted"></i>
+                            <a data-bind="attr: { href: 'tel:' + profile().publicPhone }, text: profile().publicPhone"></a>
+                        </div>
+                        <div data-bind="visible: profile().publicWebsite" class="mb-3">
+                            <i class="bi bi-globe me-2 text-muted"></i>
+                            <a data-bind="attr: { href: profile().publicWebsite }, text: profile().publicWebsite" target="_blank"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div data-bind="visible: profile().countryName || profile().city || profile().address" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Konum</h5>
+                    </div>
+                    <div class="card-body">
+                        <div data-bind="visible: profile().countryName" class="mb-1">
+                            <strong data-bind="text: profile().countryName"></strong>
+                        </div>
+                        <div data-bind="visible: profile().city" class="mb-1" data-bind="text: profile().city"></div>
+                        <div data-bind="visible: profile().address" class="text-muted small" data-bind="text: profile().address"></div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Istatistikler</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Goruntulenme</span>
+                            <strong data-bind="text: profile().viewCount || 0"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Iletisim Talepleri</span>
+                            <strong data-bind="text: profile().contactRequestCount || 0"></strong>
+                        </div>
+                        <!-- ko if: profile().averageRating -->
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Ortalama Puan</span>
+                            <strong>
+                                <span data-bind="text: profile().averageRating.toFixed(1)"></span>/5
+                                <small class="text-muted">(<span data-bind="text: profile().ratingCount"></span>)</small>
+                            </strong>
+                        </div>
+                        <!-- /ko -->
+                    </div>
+                </div>
+
+                <!-- CTA Button -->
+                <div data-bind="visible: profile().acceptingNewRequests" class="d-grid gap-2">
+                    <a href="/Account/Login" class="btn btn-primary btn-lg">
+                        <i class="bi bi-chat-dots me-2"></i>Iletisime Gec
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Public/Profile.js"></script>
+}
