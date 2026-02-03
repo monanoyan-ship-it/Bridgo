@@ -145,6 +145,106 @@ public static class RbacSeeder
                 IsMenuSection = false
             },
 
+            // Capability-bazli Dashboard'lar
+            new()
+            {
+                ParentId = null,
+                Name = "SellerDashboard",
+                DisplayName = "Satici Paneli",
+                DisplayNameResourceKey = "Module.SellerDashboard",
+                Description = "Satici dashboard",
+                Icon = "bi-shop",
+                Route = "/Dashboard?cap=seller",
+                DisplayOrder = 2,
+                IsMenuItem = false,
+                IsActive = true,
+                IsMenuSection = false
+            },
+            new()
+            {
+                ParentId = null,
+                Name = "BuyerDashboard",
+                DisplayName = "Alici Paneli",
+                DisplayNameResourceKey = "Module.BuyerDashboard",
+                Description = "Alici dashboard",
+                Icon = "bi-cart",
+                Route = "/Dashboard?cap=buyer",
+                DisplayOrder = 3,
+                IsMenuItem = false,
+                IsActive = true,
+                IsMenuSection = false
+            },
+            new()
+            {
+                ParentId = null,
+                Name = "CarrierDashboard",
+                DisplayName = "Tasimaci Paneli",
+                DisplayNameResourceKey = "Module.CarrierDashboard",
+                Description = "Tasimaci dashboard",
+                Icon = "bi-truck",
+                Route = "/Dashboard?cap=carrier",
+                DisplayOrder = 4,
+                IsMenuItem = false,
+                IsActive = true,
+                IsMenuSection = false
+            },
+            new()
+            {
+                ParentId = null,
+                Name = "InsuranceDashboard",
+                DisplayName = "Sigorta Paneli",
+                DisplayNameResourceKey = "Module.InsuranceDashboard",
+                Description = "Sigorta dashboard",
+                Icon = "bi-shield-check",
+                Route = "/Dashboard?cap=insurance",
+                DisplayOrder = 5,
+                IsMenuItem = false,
+                IsActive = true,
+                IsMenuSection = false
+            },
+            new()
+            {
+                ParentId = null,
+                Name = "CustomsDashboard",
+                DisplayName = "Gumruk Paneli",
+                DisplayNameResourceKey = "Module.CustomsDashboard",
+                Description = "Gumruk dashboard",
+                Icon = "bi-flag",
+                Route = "/Dashboard?cap=customs",
+                DisplayOrder = 6,
+                IsMenuItem = false,
+                IsActive = true,
+                IsMenuSection = false
+            },
+            new()
+            {
+                ParentId = null,
+                Name = "SurveyDashboard",
+                DisplayName = "Gozetim Paneli",
+                DisplayNameResourceKey = "Module.SurveyDashboard",
+                Description = "Gozetim dashboard",
+                Icon = "bi-clipboard-check",
+                Route = "/Dashboard?cap=survey",
+                DisplayOrder = 7,
+                IsMenuItem = false,
+                IsActive = true,
+                IsMenuSection = false
+            },
+            new()
+            {
+                ParentId = null,
+                Name = "InvestorDashboard",
+                DisplayName = "Yatirimci Paneli",
+                DisplayNameResourceKey = "Module.InvestorDashboard",
+                Description = "Yatirimci dashboard",
+                Icon = "bi-graph-up-arrow",
+                Route = "/Dashboard?cap=investor",
+                DisplayOrder = 8,
+                IsMenuItem = false,
+                IsActive = true,
+                IsMenuSection = false
+            },
+
             // ========== ACTIONS ==========
             new()
             {

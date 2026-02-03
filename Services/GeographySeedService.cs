@@ -139,8 +139,8 @@ public class GeographySeedService
                         country.NumericCode = numericCode;
                 }
 
-                // Phone code
-                if (countryElement.TryGetProperty("phone_code", out var phoneCode))
+                // Phone code (dr5hn format: "phonecode" not "phone_code")
+                if (countryElement.TryGetProperty("phonecode", out var phoneCode))
                     country.PhoneCode = phoneCode.GetString();
 
                 // Currency
@@ -250,7 +250,8 @@ public class GeographySeedService
                     continue;
 
                 var stateName = stateElement.GetProperty("name").GetString() ?? "";
-                var stateCode = stateElement.TryGetProperty("state_code", out var sc) ? sc.GetString() : null;
+                // dr5hn format uses "iso2" for state code (e.g. "01", "CA", "NY")
+                var stateCode = stateElement.TryGetProperty("iso2", out var sc) ? sc.GetString() : null;
 
                 var state = await _context.States
                     .FirstOrDefaultAsync(s => s.CountryId == countryId && s.Name == stateName);
