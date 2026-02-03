@@ -189,6 +189,7 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
 builder.Services.AddScoped<IOrderOrchestrationService, OrderOrchestrationService>();
 builder.Services.AddScoped<IRiskScoringService, RiskScoringService>();
 

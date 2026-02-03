@@ -1,0 +1,533 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("ProductReview.Title", "Urun Degerlendirmeleri").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="product-reviews-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-star me-2"></i>@Html.T("ProductReview.Title", "Urun Degerlendirmeleri")</h4>
+            <p class="text-muted mb-0">@Html.T("ProductReview.Description", "Urun degerlendirmelerini yonetin")</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="my-reviews-tab" data-bs-toggle="tab" data-bs-target="#my-reviews-pane"
+                    type="button" role="tab">
+                <i class="bi bi-pencil-square me-1"></i> @Html.T("ProductReview.MyReviews", "Degerlendirmelerim")
+                <span class="badge bg-primary ms-1" data-bind="text: myReviews().length, visible: myReviews().length > 0"></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="incoming-reviews-tab" data-bs-toggle="tab" data-bs-target="#incoming-reviews-pane"
+                    type="button" role="tab">
+                <i class="bi bi-chat-left-text me-1"></i> @Html.T("ProductReview.IncomingReviews", "Gelen Degerlendirmeler")
+                <span class="badge bg-info ms-1" data-bind="text: incomingReviews().length, visible: incomingReviews().length > 0"></span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- ===== MY REVIEWS TAB (Buyer) ===== -->
+        <div class="tab-pane fade show active" id="my-reviews-pane" role="tabpanel">
+            <!-- Search/Filter -->
+            <div class="card mb-3">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control"
+                                       placeholder="@Html.T("ProductReview.SearchPlaceholder", "Urun adi veya yorum ara...")"
+                                       data-bind="value: mySearchQuery, valueUpdate: 'afterkeydown'" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" data-bind="value: myFilterRating">
+                                <option value="">@Html.T("ProductReview.AllRatings", "Tum Puanlar")</option>
+                                <option value="5">5 &#9733;</option>
+                                <option value="4">4 &#9733;</option>
+                                <option value="3">3 &#9733;</option>
+                                <option value="2">2 &#9733;</option>
+                                <option value="1">1 &#9733;</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="text-muted small" data-bind="text: filteredMyReviews().length + ' @Html.T("Common.Records", "kayit")'"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div data-bind="visible: isLoadingMy" class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+            </div>
+
+            <!-- Empty State -->
+            <div data-bind="visible: !isLoadingMy() && filteredMyReviews().length === 0" class="text-center py-5">
+                <i class="bi bi-star text-muted" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">@Html.T("ProductReview.EmptyMy", "Henuz degerlendirme yapmadiniz")</h5>
+                <p class="text-muted">@Html.T("ProductReview.EmptyMyDescription", "Satin aldiginiz urunleri degerlendirerek diger alicilara yardimci olun.")</p>
+            </div>
+
+            <!-- Reviews List -->
+            <div data-bind="visible: !isLoadingMy() && filteredMyReviews().length > 0">
+                <!-- ko foreach: filteredMyReviews -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-auto">
+                                <!-- ko if: productImageUrl -->
+                                <img data-bind="attr: { src: productImageUrl }" class="rounded" style="width: 64px; height: 64px; object-fit: cover;" />
+                                <!-- /ko -->
+                                <!-- ko ifnot: productImageUrl -->
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                    <i class="bi bi-box text-muted" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <!-- /ko -->
+                            </div>
+                            <div class="col">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1" data-bind="text: productName"></h6>
+                                        <small class="text-muted" data-bind="text: sellerCompanyName"></small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="mb-1">
+                                            <!-- ko foreach: $parent.getStars(overallRating) -->
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <!-- /ko -->
+                                            <!-- ko foreach: $parent.getEmptyStars(overallRating) -->
+                                            <i class="bi bi-star text-muted"></i>
+                                            <!-- /ko -->
+                                        </div>
+                                        <small class="text-muted" data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></small>
+                                        <!-- ko if: isVerified -->
+                                        <span class="badge bg-success ms-1"><i class="bi bi-patch-check-fill"></i> @Html.T("ProductReview.Verified", "Dogrulanmis")</span>
+                                        <!-- /ko -->
+                                    </div>
+                                </div>
+                                <!-- ko if: title -->
+                                <strong data-bind="text: title" class="d-block mt-2"></strong>
+                                <!-- /ko -->
+                                <!-- ko if: comment -->
+                                <p class="mb-1 mt-1" data-bind="text: comment"></p>
+                                <!-- /ko -->
+                                <div class="row mt-2">
+                                    <!-- ko if: pros -->
+                                    <div class="col-md-6">
+                                        <small class="text-success"><i class="bi bi-plus-circle me-1"></i>@Html.T("ProductReview.Pros", "Artilari")</small>
+                                        <p class="small mb-0" data-bind="text: pros"></p>
+                                    </div>
+                                    <!-- /ko -->
+                                    <!-- ko if: cons -->
+                                    <div class="col-md-6">
+                                        <small class="text-danger"><i class="bi bi-dash-circle me-1"></i>@Html.T("ProductReview.Cons", "Eksileri")</small>
+                                        <p class="small mb-0" data-bind="text: cons"></p>
+                                    </div>
+                                    <!-- /ko -->
+                                </div>
+                                <!-- Seller Response -->
+                                <!-- ko if: sellerResponse -->
+                                <div class="mt-2 p-2 bg-light rounded border-start border-3 border-primary">
+                                    <small class="text-primary fw-bold"><i class="bi bi-reply me-1"></i>@Html.T("ProductReview.SellerResponse", "Satici Yaniti")</small>
+                                    <p class="small mb-0 mt-1" data-bind="text: sellerResponse"></p>
+                                    <small class="text-muted" data-bind="text: sellerRespondedAt ? new Date(sellerRespondedAt).toLocaleDateString('tr-TR') : ''"></small>
+                                </div>
+                                <!-- /ko -->
+                                <!-- Actions -->
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-primary me-1" data-bind="click: $parent.openEditModal">
+                                        <i class="bi bi-pencil"></i> @Html.T("Common.Edit", "Duzenle")
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.confirmDelete">
+                                        <i class="bi bi-trash"></i> @Html.T("Common.Delete", "Sil")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+
+        <!-- ===== INCOMING REVIEWS TAB (Seller) ===== -->
+        <div class="tab-pane fade" id="incoming-reviews-pane" role="tabpanel">
+            <!-- Stats Cards -->
+            <div class="row mb-4" data-bind="visible: stats()">
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body py-2">
+                            <h3 class="mb-0" data-bind="text: stats() ? stats().totalReviews : 0"></h3>
+                            <small class="text-muted">@Html.T("ProductReview.TotalReviews", "Toplam")</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body py-2">
+                            <h3 class="mb-0 text-warning">
+                                <i class="bi bi-star-fill"></i> <span data-bind="text: stats() ? stats().averageRating : '-'"></span>
+                            </h3>
+                            <small class="text-muted">@Html.T("ProductReview.AvgRating", "Ortalama")</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body py-2">
+                            <h3 class="mb-0 text-success" data-bind="text: stats() ? stats().recommendPercentage + '%' : '-'"></h3>
+                            <small class="text-muted">@Html.T("ProductReview.Recommend", "Tavsiye")</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body py-2">
+                            <h3 class="mb-0 text-info" data-bind="text: stats() ? stats().verifiedCount : 0"></h3>
+                            <small class="text-muted">@Html.T("ProductReview.VerifiedCount", "Dogrulanmis")</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body py-2">
+                            <h3 class="mb-0 text-danger" data-bind="text: stats() ? stats().pendingResponseCount : 0"></h3>
+                            <small class="text-muted">@Html.T("ProductReview.PendingResponse", "Yanitlanmamis")</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <!-- Rating Distribution -->
+                    <div class="card">
+                        <div class="card-body py-2 px-3">
+                            <!-- ko if: stats() && stats().ratingDistribution -->
+                            <!-- ko foreach: [5,4,3,2,1] -->
+                            <div class="d-flex align-items-center" style="font-size: 0.7rem;">
+                                <span class="me-1" data-bind="text: $data"></span>
+                                <i class="bi bi-star-fill text-warning me-1" style="font-size: 0.6rem;"></i>
+                                <div class="progress flex-grow-1" style="height: 6px;">
+                                    <div class="progress-bar bg-warning"
+                                         data-bind="style: { width: ($parents[1].stats().totalReviews > 0 ? ($parents[1].stats().ratingDistribution[$data] / $parents[1].stats().totalReviews * 100) : 0) + '%' }"></div>
+                                </div>
+                                <span class="ms-1" data-bind="text: $parents[1].stats().ratingDistribution[$data] || 0"></span>
+                            </div>
+                            <!-- /ko -->
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search/Filter -->
+            <div class="card mb-3">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control"
+                                       placeholder="@Html.T("ProductReview.SearchPlaceholder", "Urun adi veya yorum ara...")"
+                                       data-bind="value: incomingSearchQuery, valueUpdate: 'afterkeydown'" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" data-bind="value: incomingFilterRating">
+                                <option value="">@Html.T("ProductReview.AllRatings", "Tum Puanlar")</option>
+                                <option value="5">5 &#9733;</option>
+                                <option value="4">4 &#9733;</option>
+                                <option value="3">3 &#9733;</option>
+                                <option value="2">2 &#9733;</option>
+                                <option value="1">1 &#9733;</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" data-bind="value: incomingFilterResponse">
+                                <option value="">@Html.T("ProductReview.AllResponses", "Tumu")</option>
+                                <option value="responded">@Html.T("ProductReview.Responded", "Yanitlanmis")</option>
+                                <option value="pending">@Html.T("ProductReview.NotResponded", "Yanitlanmamis")</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <span class="text-muted small" data-bind="text: filteredIncomingReviews().length + ' @Html.T("Common.Records", "kayit")'"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div data-bind="visible: isLoadingIncoming" class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">@Html.T("Common.Loading", "Yukleniyor...")</p>
+            </div>
+
+            <!-- Empty State -->
+            <div data-bind="visible: !isLoadingIncoming() && filteredIncomingReviews().length === 0" class="text-center py-5">
+                <i class="bi bi-chat-left-text text-muted" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">@Html.T("ProductReview.EmptyIncoming", "Henuz degerlendirme yok")</h5>
+                <p class="text-muted">@Html.T("ProductReview.EmptyIncomingDescription", "Urunlerinize gelen degerlendirmeler burada gorunecektir.")</p>
+            </div>
+
+            <!-- Incoming Reviews List -->
+            <div data-bind="visible: !isLoadingIncoming() && filteredIncomingReviews().length > 0">
+                <!-- ko foreach: filteredIncomingReviews -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-auto">
+                                <!-- ko if: productImageUrl -->
+                                <img data-bind="attr: { src: productImageUrl }" class="rounded" style="width: 64px; height: 64px; object-fit: cover;" />
+                                <!-- /ko -->
+                                <!-- ko ifnot: productImageUrl -->
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                    <i class="bi bi-box text-muted" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <!-- /ko -->
+                            </div>
+                            <div class="col">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1" data-bind="text: productName"></h6>
+                                        <small class="text-muted">
+                                            <i class="bi bi-building me-1"></i><span data-bind="text: buyerCompanyName"></span>
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="mb-1">
+                                            <!-- ko foreach: $parent.getStars(overallRating) -->
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <!-- /ko -->
+                                            <!-- ko foreach: $parent.getEmptyStars(overallRating) -->
+                                            <i class="bi bi-star text-muted"></i>
+                                            <!-- /ko -->
+                                        </div>
+                                        <small class="text-muted" data-bind="text: new Date(createdAt).toLocaleDateString('tr-TR')"></small>
+                                        <!-- ko if: isVerified -->
+                                        <span class="badge bg-success ms-1"><i class="bi bi-patch-check-fill"></i> @Html.T("ProductReview.Verified", "Dogrulanmis")</span>
+                                        <!-- /ko -->
+                                    </div>
+                                </div>
+                                <!-- ko if: title -->
+                                <strong data-bind="text: title" class="d-block mt-2"></strong>
+                                <!-- /ko -->
+                                <!-- ko if: comment -->
+                                <p class="mb-1 mt-1" data-bind="text: comment"></p>
+                                <!-- /ko -->
+                                <div class="row mt-2">
+                                    <!-- ko if: pros -->
+                                    <div class="col-md-6">
+                                        <small class="text-success"><i class="bi bi-plus-circle me-1"></i>@Html.T("ProductReview.Pros", "Artilari")</small>
+                                        <p class="small mb-0" data-bind="text: pros"></p>
+                                    </div>
+                                    <!-- /ko -->
+                                    <!-- ko if: cons -->
+                                    <div class="col-md-6">
+                                        <small class="text-danger"><i class="bi bi-dash-circle me-1"></i>@Html.T("ProductReview.Cons", "Eksileri")</small>
+                                        <p class="small mb-0" data-bind="text: cons"></p>
+                                    </div>
+                                    <!-- /ko -->
+                                </div>
+                                <!-- ko if: wouldRecommend -->
+                                <span class="badge bg-success-subtle text-success mt-1"><i class="bi bi-hand-thumbs-up me-1"></i>@Html.T("ProductReview.Recommends", "Tavsiye Ediyor")</span>
+                                <!-- /ko -->
+                                <!-- ko ifnot: wouldRecommend -->
+                                <span class="badge bg-danger-subtle text-danger mt-1"><i class="bi bi-hand-thumbs-down me-1"></i>@Html.T("ProductReview.NotRecommends", "Tavsiye Etmiyor")</span>
+                                <!-- /ko -->
+                                <!-- Seller Response -->
+                                <!-- ko if: sellerResponse -->
+                                <div class="mt-2 p-2 bg-light rounded border-start border-3 border-primary">
+                                    <small class="text-primary fw-bold"><i class="bi bi-reply me-1"></i>@Html.T("ProductReview.YourResponse", "Yanitiniz")</small>
+                                    <p class="small mb-0 mt-1" data-bind="text: sellerResponse"></p>
+                                    <small class="text-muted" data-bind="text: sellerRespondedAt ? new Date(sellerRespondedAt).toLocaleDateString('tr-TR') : ''"></small>
+                                </div>
+                                <!-- /ko -->
+                                <!-- Respond button -->
+                                <!-- ko ifnot: sellerResponse -->
+                                <button class="btn btn-sm btn-outline-primary mt-2" data-bind="click: $parent.openRespondModal">
+                                    <i class="bi bi-reply me-1"></i> @Html.T("ProductReview.Respond", "Yanit Ver")
+                                </button>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CREATE/EDIT REVIEW MODAL ===== -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <span data-bind="visible: !isEditing()"><i class="bi bi-star me-2"></i>@Html.T("ProductReview.NewReview", "Yeni Degerlendirme")</span>
+                        <span data-bind="visible: isEditing()"><i class="bi bi-pencil me-2"></i>@Html.T("ProductReview.EditReview", "Degerlendirme Duzenle")</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Error -->
+                    <div data-bind="visible: modalError()" class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-1"></i> <span data-bind="text: modalError()"></span>
+                    </div>
+
+                    <!-- Rating -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">@Html.T("ProductReview.OverallRating", "Genel Puan") <span class="text-danger">*</span></label>
+                        <div class="star-rating" data-bind="foreach: [1,2,3,4,5]">
+                            <i class="bi fs-3" style="cursor: pointer;"
+                               data-bind="css: $data <= $parent.form.overallRating() ? 'bi-star-fill text-warning' : 'bi-star text-muted',
+                                          click: function() { $parent.form.overallRating($data); }"></i>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("ProductReview.QualityRating", "Kalite Puani")</label>
+                            <div data-bind="foreach: [1,2,3,4,5]">
+                                <i class="bi" style="cursor: pointer;"
+                                   data-bind="css: $data <= ($parent.form.qualityRating() || 0) ? 'bi-star-fill text-info' : 'bi-star text-muted',
+                                              click: function() { $parent.form.qualityRating($data); }"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@Html.T("ProductReview.ValueRating", "Fiyat/Deger Puani")</label>
+                            <div data-bind="foreach: [1,2,3,4,5]">
+                                <i class="bi" style="cursor: pointer;"
+                                   data-bind="css: $data <= ($parent.form.valueRating() || 0) ? 'bi-star-fill text-info' : 'bi-star text-muted',
+                                              click: function() { $parent.form.valueRating($data); }"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("ProductReview.ReviewTitle", "Baslik")</label>
+                        <input type="text" class="form-control" maxlength="200"
+                               placeholder="@Html.T("ProductReview.TitlePlaceholder", "Degerlendirme basligi...")"
+                               data-bind="value: form.title" />
+                    </div>
+
+                    <!-- Comment -->
+                    <div class="mb-3">
+                        <label class="form-label">@Html.T("ProductReview.Comment", "Yorum")</label>
+                        <textarea class="form-control" rows="3" maxlength="2000"
+                                  placeholder="@Html.T("ProductReview.CommentPlaceholder", "Deneyiminizi paylasın...")"
+                                  data-bind="value: form.comment"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-success"><i class="bi bi-plus-circle me-1"></i>@Html.T("ProductReview.Pros", "Artilari")</label>
+                            <textarea class="form-control" rows="2" maxlength="500"
+                                      data-bind="value: form.pros"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-danger"><i class="bi bi-dash-circle me-1"></i>@Html.T("ProductReview.Cons", "Eksileri")</label>
+                            <textarea class="form-control" rows="2" maxlength="500"
+                                      data-bind="value: form.cons"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Would Recommend -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="wouldRecommend"
+                               data-bind="checked: form.wouldRecommend" />
+                        <label class="form-check-label" for="wouldRecommend">
+                            <i class="bi bi-hand-thumbs-up me-1"></i>@Html.T("ProductReview.WouldRecommend", "Bu urunu tavsiye ediyorum")
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        @Html.T("Common.Cancel", "Iptal")
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bind="click: saveReview, enable: !isSaving()">
+                        <span data-bind="visible: isSaving()" class="spinner-border spinner-border-sm me-1"></span>
+                        @Html.T("Common.Save", "Kaydet")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== RESPOND MODAL (Seller) ===== -->
+    <div class="modal fade" id="respondModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-reply me-2"></i>@Html.T("ProductReview.RespondTitle", "Degerlendirmeye Yanit Ver")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Review summary -->
+                    <div class="p-2 bg-light rounded mb-3" data-bind="if: respondingReview()">
+                        <div class="d-flex justify-content-between">
+                            <strong data-bind="text: respondingReview().productName"></strong>
+                            <div>
+                                <!-- ko foreach: getStars(respondingReview().overallRating) -->
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <small class="text-muted" data-bind="text: respondingReview().buyerCompanyName"></small>
+                        <!-- ko if: respondingReview().comment -->
+                        <p class="small mt-1 mb-0" data-bind="text: respondingReview().comment"></p>
+                        <!-- /ko -->
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">@Html.T("ProductReview.YourResponse", "Yanitiniz") <span class="text-danger">*</span></label>
+                        <textarea class="form-control" rows="4" maxlength="2000"
+                                  placeholder="@Html.T("ProductReview.ResponsePlaceholder", "Musteriye yanitinizi yazin...")"
+                                  data-bind="value: respondText"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        @Html.T("Common.Cancel", "Iptal")
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bind="click: submitResponse, enable: !isSaving()">
+                        <span data-bind="visible: isSaving()" class="spinner-border spinner-border-sm me-1"></span>
+                        <i class="bi bi-reply me-1"></i>@Html.T("ProductReview.Send", "Gonder")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DELETE CONFIRM MODAL ===== -->
+    <div class="modal fade" id="deleteReviewModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h6 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>@Html.T("Common.Delete", "Sil")</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Html.T("ProductReview.DeleteConfirm", "Bu degerlendirmeyi silmek istediginizden emin misiniz?")</p>
+                    <p class="fw-bold" data-bind="text: deleteReviewName()"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-bind="click: deleteReview">
+                        <i class="bi bi-trash me-1"></i>@Html.T("Common.Delete", "Sil")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/ProductReviews/Index.js"></script>
+}

@@ -438,7 +438,7 @@ public static class RbacSeeder
                 DisplayNameResourceKey = "Module.CategoryRequests",
                 Description = "Kategori talepleri olusturma ve takip",
                 Icon = "bi-folder-plus",
-                Route = "/Products/CategoryRequests",
+                Route = "/Products/Categories",
                 DisplayOrder = 6,
                 IsMenuItem = true,
                 IsActive = true,

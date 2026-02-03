@@ -67,9 +67,28 @@
                                     <label class="form-label">@Html.T("Account.Fields.Password", "Sifre") <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                                        <input type="password" class="form-control" data-bind="value: form.password, css: { 'is-invalid': errors.password }" placeholder="@Html.T("Account.Fields.Password.Placeholder", "En az 6 karakter")" />
+                                        <input type="password" class="form-control" data-bind="value: form.password, valueUpdate: 'afterkeydown', css: { 'is-invalid': errors.password }" placeholder="@Html.T("Account.Fields.Password.Placeholder", "En az 6 karakter")" />
                                     </div>
                                     <div class="invalid-feedback d-block" data-bind="text: errors.password, visible: errors.password"></div>
+                                    <!-- Password requirements checklist -->
+                                    <div data-bind="visible: form.password().length > 0" class="mt-1">
+                                        <small data-bind="css: form.password().length >= 6 ? 'text-success' : 'text-muted'">
+                                            <i class="bi" data-bind="css: form.password().length >= 6 ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                                            @Html.T("Validation.Password.MinLength", "en az 6 karakter")
+                                        </small><br/>
+                                        <small data-bind="css: /[a-z]/.test(form.password()) ? 'text-success' : 'text-muted'">
+                                            <i class="bi" data-bind="css: /[a-z]/.test(form.password()) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                                            @Html.T("Validation.Password.Lowercase", "en az bir kucuk harf (a-z)")
+                                        </small><br/>
+                                        <small data-bind="css: /[A-Z]/.test(form.password()) ? 'text-success' : 'text-muted'">
+                                            <i class="bi" data-bind="css: /[A-Z]/.test(form.password()) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                                            @Html.T("Validation.Password.Uppercase", "en az bir buyuk harf (A-Z)")
+                                        </small><br/>
+                                        <small data-bind="css: /[0-9]/.test(form.password()) ? 'text-success' : 'text-muted'">
+                                            <i class="bi" data-bind="css: /[0-9]/.test(form.password()) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                                            @Html.T("Validation.Password.Digit", "en az bir rakam (0-9)")
+                                        </small>
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">@Html.T("Account.Fields.ConfirmPassword", "Sifre Tekrar") <span class="text-danger">*</span></label>
@@ -891,12 +910,20 @@
                         self.errors.password('@Html.T("Validation.Required.Password", "Sifre gereklidir")');
                         errorMessages.push('Sifre');
                         isValid = false;
-                    } else if (self.form.password().length < 6) {
-                        self.errors.password('@Html.T("Validation.MinLength.Password", "Sifre en az 6 karakter olmalidir")');
-                        errorMessages.push('Sifre (min 6 karakter)');
-                        isValid = false;
+                    } else {
+                        var pwd = self.form.password();
+                        var pwdErrors = [];
+                        if (pwd.length < 6) pwdErrors.push('@Html.T("Validation.Password.MinLength", "en az 6 karakter")');
+                        if (!/[a-z]/.test(pwd)) pwdErrors.push('@Html.T("Validation.Password.Lowercase", "en az bir kucuk harf (a-z)")');
+                        if (!/[A-Z]/.test(pwd)) pwdErrors.push('@Html.T("Validation.Password.Uppercase", "en az bir buyuk harf (A-Z)")');
+                        if (!/[0-9]/.test(pwd)) pwdErrors.push('@Html.T("Validation.Password.Digit", "en az bir rakam (0-9)")');
+                        if (pwdErrors.length > 0) {
+                            self.errors.password('@Html.T("Validation.Password.Requirements", "Sifre gereksinimleri"): ' + pwdErrors.join(', '));
+                            errorMessages.push('Sifre');
+                            isValid = false;
+                        }
                     }
-                    if (self.form.password() !== self.form.confirmPassword()) {
+                    if (self.form.password() && self.form.password() !== self.form.confirmPassword()) {
                         self.errors.confirmPassword('@Html.T("Validation.PasswordMismatch", "Sifreler eslesmedi")');
                         errorMessages.push('Sifre tekrari');
                         isValid = false;

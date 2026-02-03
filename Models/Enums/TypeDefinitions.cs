@@ -1333,3 +1333,27 @@ public static class CustomsDeclarationStatuses
         public const int Error = 7;
     }
 }
+
+/// <summary>
+/// Urun degerlendirme durumlari
+/// </summary>
+public static class ProductReviewStatuses
+{
+    public static readonly TypeItem Published = new(1, "Published", "ProductReviewStatus.Published", "Yayinda", "bi-check-circle", "bg-success", 1, isDefault: true);
+    public static readonly TypeItem Pending = new(0, "Pending", "ProductReviewStatus.Pending", "Beklemede", "bi-hourglass-split", "bg-warning text-dark", 2);
+    public static readonly TypeItem Rejected = new(2, "Rejected", "ProductReviewStatus.Rejected", "Reddedildi", "bi-x-circle", "bg-danger", 3);
+    public static readonly TypeItem Hidden = new(3, "Hidden", "ProductReviewStatus.Hidden", "Gizlendi", "bi-eye-slash", "bg-secondary", 4);
+
+    public static IEnumerable<TypeItem> All => new[] { Pending, Published, Rejected, Hidden };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Pending = 0;
+        public const int Published = 1;
+        public const int Rejected = 2;
+        public const int Hidden = 3;
+    }
+}

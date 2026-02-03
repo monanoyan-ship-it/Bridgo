@@ -147,6 +147,14 @@
                 - 4 eksik modul seed'e eklendi
             </Description>
         </Task>
+        <Task id="140" completedAt="2026-02-04">
+            <Title>Capability-Modul Mapping Tamamlama</Title>
+            <Description>
+                Uygulama icinden tamamlandi.
+                Carrier(4), Insurance(5), Customs(6), Survey(7), Investor(8) capability'lerine
+                ilgili moduller CapabilityModuleMappings'e eklendi.
+            </Description>
+        </Task>
         <Task id="149" completedAt="2026-02-04">
             <Title>JWT Bearer Authentication (Dual Auth)</Title>
             <Description>
@@ -180,6 +188,23 @@
                 - Refresh token SHA256 hash olarak saklanir
                 - JWT claims CustomUserClaimsPrincipalFactory ile ayni (IsSystemAdmin, VendorId, VendorCapability)
                 - Migration: AddRefreshTokens (olusturuldu ve uyguland)
+            </Description>
+        </Task>
+        <Task id="151" completedAt="2026-02-04">
+            <Title>Product Reviews Modulu</Title>
+            <Description>
+                Urun bazli degerlendirme sistemi (Buyer yapar, Seller gorur ve cevaplar):
+                - ProductReview entity + migration (AddProductReviews)
+                - ProductReviewStatuses (TypeDefinitions.cs): Published(1), Pending(0), Rejected(2), Hidden(3)
+                - DTOs: Create, Update, List, SellerResponse, Stats
+                - ProductReviewService (ApplicationDbContext kullanir)
+                - ProductReviewsApiController: /api/product-reviews (my, incoming, stats, respond, can-review)
+                - ProductReviewsController (DashboardBaseController)
+                - Views/ProductReviews/Index.cshtml - 2 tab: Degerlendirmelerim + Gelen Degerlendirmeler
+                - wwwroot/js/ProductReviews/Index.js - KnockoutJS ViewModel
+                - Localization: 45+ key (tr + en)
+                - DI: IProductReviewService registered in Program.cs
+                - Ozellikler: yildiz rating, istatistik kartlari, filtre, seller yaniti, dogrulanmis satin alma
             </Description>
         </Task>
     </CompletedTasks>
@@ -278,18 +303,6 @@
         </Task>
 
         <!-- EKSIK MODUL IMPLEMENTASYONLARI (Seed'de tanimli, kod yok) -->
-        <Task id="140" priority="medium">
-            <Title>Capability-Modul Mapping Tamamlama</Title>
-            <Description>
-                Carrier(4), Insurance(5), Customs(6), Survey(7), Investor(8) capability'lerine
-                hic modul atanmamis. Ilgili modullerin CapabilityModuleMappings'e eklenmesi:
-                - Carrier: Logistics Requests, MyLogisticsJobs + ortak moduller
-                - Insurance: Insurance Requests, MyInsuranceJobs + ortak moduller
-                - Customs: Customs Requests, MyCustomsJobs + ortak moduller
-                - Survey: Survey Requests, MySurveyJobs + ortak moduller
-                - Investor: Investment Opportunities, MyInvestments + ortak moduller
-            </Description>
-        </Task>
         <Task id="141" priority="medium">
             <Title>Product Reviews Modulu</Title>
             <Description>

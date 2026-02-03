@@ -91,7 +91,22 @@ public class AccountController : Controller
         var result = await _userManager.CreateAsync(user, model.Password);
         if (!result.Succeeded)
         {
-            var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
+            var passwordErrorCodes = new[] {
+                "PasswordTooShort", "PasswordRequiresLower", "PasswordRequiresUpper",
+                "PasswordRequiresDigit", "PasswordRequiresNonAlphanumeric", "PasswordRequiresUniqueChars"
+            };
+            var isPasswordError = result.Errors.Any(e => passwordErrorCodes.Contains(e.Code));
+            var errorMessages = string.Join(" ", result.Errors.Select(e => e.Description));
+
+            if (isPasswordError)
+            {
+                return Json(new {
+                    success = false,
+                    message = errorMessages,
+                    errors = new Dictionary<string, string> { { "Password", errorMessages } }
+                });
+            }
+
             return Json(new { success = false, message = errorMessages });
         }
 
@@ -358,8 +373,23 @@ public class AccountController : Controller
         var result = await _userManager.CreateAsync(user, model.Password);
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Json(new { success = false, message = errors });
+            var passwordErrorCodes = new[] {
+                "PasswordTooShort", "PasswordRequiresLower", "PasswordRequiresUpper",
+                "PasswordRequiresDigit", "PasswordRequiresNonAlphanumeric", "PasswordRequiresUniqueChars"
+            };
+            var isPasswordError = result.Errors.Any(e => passwordErrorCodes.Contains(e.Code));
+            var errorMessages = string.Join(" ", result.Errors.Select(e => e.Description));
+
+            if (isPasswordError)
+            {
+                return Json(new {
+                    success = false,
+                    message = errorMessages,
+                    errors = new Dictionary<string, string> { { "Password", errorMessages } }
+                });
+            }
+
+            return Json(new { success = false, message = errorMessages });
         }
 
         // User rolunu ata (tum kayitli kullanicilar icin)

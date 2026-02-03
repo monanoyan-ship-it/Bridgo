@@ -106,6 +106,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     // Buyer Features - Favori Tedarikciler, Degerlendirmeler
     public DbSet<FavoriteVendor> FavoriteVendors => Set<FavoriteVendor>();
     public DbSet<VendorReview> VendorReviews => Set<VendorReview>();
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
 
     // Messaging - Mesajlasma Sistemi
     public DbSet<MessageThread> MessageThreads => Set<MessageThread>();
@@ -1679,6 +1680,45 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                   .OnDelete(DeleteBehavior.Restrict);
 
             // Order iliskisi (optional)
+            entity.HasOne(r => r.Order)
+                  .WithMany()
+                  .HasForeignKey(r => r.OrderId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ProductReview configuration
+        builder.Entity<ProductReview>(entity =>
+        {
+            entity.ToTable("ProductReviews");
+            entity.HasKey(r => r.Id);
+            entity.HasIndex(r => r.BuyerVendorId);
+            entity.HasIndex(r => r.SellerVendorId);
+            entity.HasIndex(r => r.ProductId);
+            entity.HasIndex(r => r.OrderId);
+            entity.HasIndex(r => new { r.ProductId, r.BuyerVendorId }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            entity.HasQueryFilter(r => !r.IsDeleted);
+
+            entity.Property(r => r.Title).HasMaxLength(200);
+            entity.Property(r => r.Comment).HasMaxLength(2000);
+            entity.Property(r => r.Pros).HasMaxLength(500);
+            entity.Property(r => r.Cons).HasMaxLength(500);
+            entity.Property(r => r.SellerResponse).HasMaxLength(2000);
+
+            entity.HasOne(r => r.Product)
+                  .WithMany()
+                  .HasForeignKey(r => r.ProductId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.BuyerVendor)
+                  .WithMany()
+                  .HasForeignKey(r => r.BuyerVendorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.SellerVendor)
+                  .WithMany()
+                  .HasForeignKey(r => r.SellerVendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(r => r.Order)
                   .WithMany()
                   .HasForeignKey(r => r.OrderId)
