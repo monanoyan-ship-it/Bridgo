@@ -5,7 +5,7 @@
         <Framework>.NET 9</Framework>
         <Database>PostgreSQL</Database>
         <DatabaseName>BridgoDb</DatabaseName>
-        <LastUpdated>2026-01-27</LastUpdated>
+        <LastUpdated>2026-02-03</LastUpdated>
         <ArchiveNote>
             Task 1-80: App_Data/Archive/PROJECT_STATUS_ARCHIVE.xml
             Task 81-101: App_Data/Archive/PROJECT_STATUS_ARCHIVE_20251228.xml
@@ -102,6 +102,49 @@
                 - Floating shapes animasyonlari
                 - Tab gecisleri (Alici/Satici)
                 - Mobile responsive
+            </Description>
+        </Task>
+        <Task id="139" completedAt="2026-02-03">
+            <Title>IIS Publish Profili ve PlatformModules Duzeltmesi</Title>
+            <Description>
+                IIS Deployment:
+                - publish.bat olusturuldu (dotnet publish -c Release -o publish)
+                - appsettings.json'a Kestrel endpoint'leri eklendi (5279 HTTP, 7083 HTTPS)
+
+                Admin Login Duzeltmesi:
+                - Program.cs'de admin seed guncellendi (sifre reset + loglama)
+                - VendorCapabilities tablosu kaldirildi (TypeDefinitions'a tasinmisti)
+                - RemoveVendorCapabilitiesTable migration duzeltildi (FK'ler + DROP)
+
+                PlatformModules Route Duzeltmeleri (DB):
+                - 17 yanlis route duzeltildi:
+                  /Dashboard/MyDemands -> /Demands/MyDemands
+                  /Dashboard/LogisticsRequests -> /Services/Logistics
+                  /Dashboard/CustomsRequests -> /Services/Customs
+                  /Dashboard/InsuranceRequests -> /Services/Insurance
+                  /Dashboard/SurveyRequests -> /Services/Survey
+                  /Dashboard/PersonalInfo -> /Settings/PersonalInfo
+                  /Dashboard/Documents -> /Settings/Documents
+                  /Dashboard/Contracts -> /Settings/Contracts
+                  /Dashboard/Verifications -> /Settings/Verifications
+                  /Dashboard/Billing -> /Settings/Billing
+                  /Dashboard/Settings/Notifications -> /Settings/Notifications
+                  /Dashboard/Settings/Subscriptions -> /Settings/Subscription
+                  /Dashboard/Settings/Security -> /Settings/Security
+                  /Dashboard/SupplierProfile -> /Suppliers/SupplierProfile
+                  /Products/Stock -> /Stock/Movements
+                  /Dashboard/Messages -> /Messages
+                  /Dashboard/Proposals -> /Proposals
+
+                Eksik Moduller Eklendi (DB + Seed):
+                - MyOrders (/Orders/MyOrders) - Buyer siparisleri
+                - SellerOrders (/Orders/SellerOrders) - Seller gelen siparisleri
+                - SupplierOffers (/Demands/SupplierOffers) - Seller gelen talepleri
+                - ServiceConnections (/Settings/ServiceConnections)
+
+                RbacSeeder.cs Guncellendi:
+                - Tum route'lar gercek controller action'lariyla eslesti
+                - 4 eksik modul seed'e eklendi
             </Description>
         </Task>
     </CompletedTasks>
@@ -256,8 +299,10 @@
             <Types>Billing, Shipping, Headquarters, Warehouse, Branch, Return</Types>
         </Model>
         <Model name="ApplicationUser">
-            <Description>Kullanici - Vendor altinda calisir</Description>
-            <Fields>VendorId, VendorRole (Owner, Admin, Supervisor, Manager, Employee)</Fields>
+            <Description>Kullanici - IdentityUser'dan turetilir</Description>
+            <Fields>FirstName, LastName, ProfileImageUrl, IsActive, CreatedAt, LastLoginAt</Fields>
+            <Fields>LanguageId, VendorId, IsSystemAdmin</Fields>
+            <Computed>FullName, HasVendor</Computed>
         </Model>
     </Models>
 

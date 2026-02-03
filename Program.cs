@@ -276,9 +276,11 @@ using (var scope = app.Services.CreateScope())
 
         // Default admin kullanici (VendorId olmadan - sistem admini)
         var adminEmail = "admin@bridgo.com";
-        if (await userManager.FindByEmailAsync(adminEmail) == null)
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        if (adminUser == null)
         {
-            var adminUser = new ApplicationUser
+            Log.Information("Admin kullanici bulunamadi, yeni olusturuluyor...");
+            adminUser = new ApplicationUser
             {
                 UserName = adminEmail,
                 Email = adminEmail,
@@ -293,8 +295,31 @@ using (var scope = app.Services.CreateScope())
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(adminUser, "User");  // Her kullanici User rolune sahip
-                await userManager.AddToRoleAsync(adminUser, "Admin"); // Admin ek olarak Admin rolune sahip
+                await userManager.AddToRoleAsync(adminUser, "User");
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+                Log.Information("Admin kullanici basariyla olusturuldu.");
+            }
+            else
+            {
+                Log.Error("Admin kullanici olusturulamadi: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
+        }
+        else
+        {
+            Log.Information("Admin kullanici bulundu (Id: {Id}), sifre resetleniyor...", adminUser.Id);
+            // Admin varsa şifreyi resetle
+            var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
+            var resetResult = await userManager.ResetPasswordAsync(adminUser, token, "Admin123!");
+            if (resetResult.Succeeded)
+            {
+                adminUser.IsActive = true;
+                adminUser.IsSystemAdmin = true;
+                await userManager.UpdateAsync(adminUser);
+                Log.Information("Admin sifre basariyla resetlendi.");
+            }
+            else
+            {
+                Log.Error("Admin sifre resetlenemedi: {Errors}", string.Join(", ", resetResult.Errors.Select(e => e.Description)));
             }
         }
     }

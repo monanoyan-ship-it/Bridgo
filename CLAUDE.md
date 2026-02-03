@@ -54,6 +54,30 @@ ASLA SORMADAN CALISTIRMA:
 - Herhangi bir geri alinamaz islem
 ```
 
+### YENI KURAL OLUSTUGUNDA BURAYA YAZ
+- Kullanici ile calısırken yeni bir kural/pattern olusursa CLAUDE.md'ye ekle
+- Bir hata yapip duzeltildiyse, o hatayi tekrarlamamak icin kural yaz
+- "Bundan sonra soyle yap" denildiyse, o kurali buraya ekle
+
+### ONCE KODA BAK, DOKUMANTASYONA DEGIL
+```
+YANLIS:
+1. XML/MD oku
+2. Oradaki bilgiye goven
+3. Yanlis bilgiyle islem yap
+
+DOGRU:
+1. Gercek koda bak (entity, controller, service, dbcontext)
+2. Kodu anla
+3. Islem yap
+4. Gerekirse dokumantasyonu KODDAN bakarak guncelle
+```
+
+### DOKUMANTASYONA UYDURMA BILGI YAZMA
+- Tablo/entity yapisi yazacaksan ONCE ilgili .cs dosyasini oku
+- Field isimleri, tipler, iliskiler - hepsi KODDAN alinmali
+- Hic bir seyi "hatirlayarak" veya "tahmin ederek" yazma
+
 ---
 
 ## !!! KRITIK - ONCE OKU !!!
@@ -187,7 +211,21 @@ wwwroot/js/          - JavaScript (modul bazli)
 Tum firma icin sayfalar `~/Views/Dashboard/_DashboardLayout.cshtml` kullanir.
 Menu rollere gore filtrelenir (isOwnerOrAdmin, isManagerOrAbove).
 
-### 6. Gelistirme Ortami ve Calistirma
+### 6. PostgreSQL Baglantisi (psql)
+```bash
+# psql yolu
+"/c/Program Files/PostgreSQL/17/bin/psql.exe"
+
+# Ornek kullanim (sifre ile)
+PGPASSWORD='1123Azs+-' "/c/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d BridgoDb -c "SELECT * FROM \"Tablo\";"
+
+# Coklu satir SQL
+PGPASSWORD='1123Azs+-' "/c/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d BridgoDb << 'EOF'
+SELECT * FROM "PlatformModules";
+EOF
+```
+
+### 7. Gelistirme Ortami ve Calistirma
 - **IDE**: Visual Studio (HTTPS debug modu)
 - **Port**: https://localhost:7083 (HTTPS), http://localhost:5279 (HTTP)
 - **Debug**: Kullanici Visual Studio'dan HTTPS ile debug eder
@@ -219,13 +257,17 @@ PlatformModules (Id, Name, DisplayName, DisplayNameResourceKey, Route, Icon, Par
   - Tum moduller burada tanimli (tek master liste)
   - ParentId: Ust modul (menu section icin)
   - IsMenuSection: true ise menu basligi, false ise sayfa
+  - RbacSeeder.cs ile seed edilir
 
-CapabilityModuleMappings (Id, CapabilityId, PlatformModuleId)
+CapabilityModuleMappings (Id, CapabilityId, PlatformModuleId, IsDeleted)
   - Hangi capability hangi modulleri gorebilir
-  - FK: VendorCapabilities.Id, PlatformModules.Id
+  - Sidebar'da capability bazli menu section'lari gostermek icin DOLDURULMALI
+  - _DashboardLayout.cshtml modulesByCapability ile okur
+  - Admin Panel'den veya SQL ile eklenir
 
-VendorCapabilities (Id, Name, NameResourceKey, Description, Icon, IsActive)
-  - Platform(1), Satici(2), Alici(3), Tasimaci(4), Sigorta(5), Gumruk(6)
+Capabilities (TypeDefinitions.cs - TABLO DEGIL!)
+  - Seller(2), Buyer(3), Carrier(4), Insurance(5), Customs(6), Survey(7), Investor(8)
+  - Capabilities.Ids.Seller, Capabilities.GetById(id) seklinde kullanilir
 
 CompanyRoles (Id, Name, NameResourceKey, Description, CapabilityId, IsDefault, IsSystem)
   - Firma icindeki roller (Account Manager, Order Staff, vb.)
@@ -238,10 +280,25 @@ CompanyRoleUserMappings (Id, UserId, CompanyRoleId, VendorId)
   - Kullaniciya atanan roller
 ```
 
+### Capability-Module Mapping Ornekleri
+```
+Seller (2): Products, Categories, Stock, Warehouses, SellerOrders, SupplierOffers, SupplierProfile
+Buyer (3): MyOrders, MyDemands, DiscoverSuppliers, FavoriteSuppliers, Proposals
+Carrier (4): Logistics Requests, MyLogisticsJobs
+Insurance (5): Insurance Requests, MyInsuranceJobs
+Customs (6): Customs Requests, MyCustomsJobs
+Survey (7): Survey Requests, MySurveyJobs
+Investor (8): InvestmentOpportunities, MyInvestments
+```
+
 ### Kullanici ve Firma
 ```
-AspNetUsers (Id, Email, FullName, VendorId, VendorRole, LanguageId, IsActive)
-  - VendorRole: Owner(0), Admin(1), Supervisor(2), Manager(3), Employee(4)
+Users (ApplicationUser - IdentityUser'dan turetilir)
+  - Id, Email, UserName (Identity'den)
+  - FirstName, LastName, ProfileImageUrl
+  - IsActive, CreatedAt, LastLoginAt
+  - LanguageId, VendorId, IsSystemAdmin
+  - FullName, HasVendor (computed)
 
 Vendors (Id, CompanyName, Email, Phone, TaxNumber, VendorStatusId, IsProfileComplete, IsVerified)
   - Multi-tenant root entity
