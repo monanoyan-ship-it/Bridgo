@@ -53,6 +53,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<Warehouse> Warehouses { get; }
     IRepository<ProductWarehouseStock> ProductWarehouseStocks { get; }
     IRepository<CategoryRequest> CategoryRequests { get; }
+    IRepository<RefreshToken> RefreshTokens { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

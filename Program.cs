@@ -102,7 +102,49 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(24);
     options.SlidingExpiration = true;
+
+    // API isteklerinde 401 donmesi icin (redirect yerine)
+    options.Events.OnRedirectToLogin = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        }
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        }
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
 });
+
+// JWT Bearer Authentication (mobil, desktop, 3. parti API erisimi icin)
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var jwtSecretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidateAudience = true,
+            ValidAudience = jwtSettings["Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 // Services
 builder.Services.AddHttpContextAccessor();
@@ -114,6 +156,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Application Services
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILocalizationService, LocalizationService>();
 builder.Services.AddScoped<IBranchService, BranchService>();
 // Type'lar artik static class olarak tanimli: AddressTypes, VendorStatuses, etc.
@@ -184,15 +227,27 @@ builder.Services.AddControllersWithViews();
 // SignalR
 builder.Services.AddSignalR();
 
-// Authorization Policies
+// Authorization Policies - Dual auth: Cookie + JWT Bearer
 builder.Services.AddAuthorization(options =>
 {
+    // Default policy: Cookie veya Bearer ile auth olabilir
+    options.DefaultPolicy = new AuthorizationPolicyBuilder(
+        IdentityConstants.ApplicationScheme,
+        JwtBearerDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser()
+        .Build();
+
     options.AddPolicy("SystemAdmin", policy =>
+    {
+        policy.AddAuthenticationSchemes(
+            IdentityConstants.ApplicationScheme,
+            JwtBearerDefaults.AuthenticationScheme);
         policy.RequireAssertion(context =>
         {
             var isSystemAdminClaim = context.User.FindFirst("IsSystemAdmin");
             return isSystemAdminClaim?.Value == "true";
-        }));
+        });
+    });
 });
 
 // Capability-based Authorization

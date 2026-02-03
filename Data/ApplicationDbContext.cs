@@ -119,6 +119,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     // Capability Request - Hizmet Talebi
     public DbSet<CapabilityRequest> CapabilityRequests => Set<CapabilityRequest>();
 
+    // JWT Refresh Tokens
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     // Capability Profile - Her capability icin profil
     public DbSet<CapabilityProfile> CapabilityProfiles => Set<CapabilityProfile>();
 
@@ -1846,6 +1849,27 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                   .WithMany()
                   .HasForeignKey(o => o.ResponseByUserId)
                   .OnDelete(DeleteBehavior.SetNull);
+        });
+        // =========================================
+        // JWT REFRESH TOKENS
+        // =========================================
+
+        builder.Entity<RefreshToken>(entity =>
+        {
+            entity.ToTable("RefreshTokens");
+            entity.HasIndex(r => r.TokenHash).IsUnique();
+            entity.HasIndex(r => r.UserId);
+            entity.HasIndex(r => r.JwtId);
+            entity.Property(r => r.TokenHash).HasMaxLength(128).IsRequired();
+            entity.Property(r => r.JwtId).HasMaxLength(50).IsRequired();
+            entity.Property(r => r.DeviceInfo).HasMaxLength(500);
+            entity.Property(r => r.IpAddress).HasMaxLength(50);
+            entity.HasQueryFilter(r => !r.IsDeleted);
+
+            entity.HasOne(r => r.User)
+                  .WithMany()
+                  .HasForeignKey(r => r.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

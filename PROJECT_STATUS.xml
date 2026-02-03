@@ -5,7 +5,7 @@
         <Framework>.NET 9</Framework>
         <Database>PostgreSQL</Database>
         <DatabaseName>BridgoDb</DatabaseName>
-        <LastUpdated>2026-02-03</LastUpdated>
+        <LastUpdated>2026-02-04</LastUpdated>
         <ArchiveNote>
             Task 1-80: App_Data/Archive/PROJECT_STATUS_ARCHIVE.xml
             Task 81-101: App_Data/Archive/PROJECT_STATUS_ARCHIVE_20251228.xml
@@ -147,6 +147,41 @@
                 - 4 eksik modul seed'e eklendi
             </Description>
         </Task>
+        <Task id="149" completedAt="2026-02-04">
+            <Title>JWT Bearer Authentication (Dual Auth)</Title>
+            <Description>
+                Cookie-based auth korunarak JWT Bearer auth eklendi.
+                Mobil, masaustu ve 3. parti API erisimi icin.
+
+                Yeni Dosyalar:
+                - Models/Entities/RefreshToken.cs (BaseEntity, UserId, TokenHash, JwtId, ExpiresAt, IsRevoked, DeviceInfo, IpAddress)
+                - DTOs/Auth/JwtAuthDtos.cs (JwtLoginRequest, JwtLoginResponse, JwtUserDto, RefreshTokenRequest/Response, RevokeTokenRequest)
+                - Services/AuthService.cs (IAuthService + AuthService: login, refresh, revoke, revoke-all, me)
+                - Controllers/Api/AuthApiController.cs (5 endpoint)
+
+                API Endpoint'leri:
+                - POST /api/auth/login (AllowAnonymous) - JWT token ile giris
+                - POST /api/auth/refresh (AllowAnonymous) - Refresh token ile yeni token
+                - POST /api/auth/revoke (Bearer) - Tek token iptal
+                - POST /api/auth/revoke-all (Bearer) - Tum tokenlar iptal
+                - GET /api/auth/me (Bearer) - Kullanici bilgileri
+
+                Guncellenen Dosyalar:
+                - Data/ApplicationDbContext.cs (RefreshTokens DbSet + config)
+                - Repositories/IRepository.cs + UnitOfWork.cs (RefreshTokens repository)
+                - Services/JwtService.cs (GenerateTokenPairAsync, RefreshTokenPairAsync, Revoke islemleri, VendorCapability claims)
+                - Program.cs (JWT Bearer scheme, dual auth default policy, IAuthService DI, API 401/403 JSON response)
+                - Authorization/CapabilityPolicyProvider.cs (dual scheme: Cookie + Bearer)
+                - DTOs/Auth/LoginDto.cs (UserDto.Id: Guid -> int)
+                - appsettings.json (AccessTokenExpirationMinutes: 15, RefreshTokenExpirationDays: 30)
+
+                Onemli:
+                - 38 mevcut API controller'a dokunulmadi (dual auth otomatik calisir)
+                - Refresh token SHA256 hash olarak saklanir
+                - JWT claims CustomUserClaimsPrincipalFactory ile ayni (IsSystemAdmin, VendorId, VendorCapability)
+                - Migration: AddRefreshTokens (olusturuldu ve uyguland)
+            </Description>
+        </Task>
     </CompletedTasks>
 
     <InProgressTasks>
@@ -239,6 +274,103 @@
                 - Rozet sistemi (Basari, Sertifika, Topluluk)
                 - Firma skor sistemi (0-100)
                 - Ucuncu parti entegrasyonlar (ISO, GOTS vb.)
+            </Description>
+        </Task>
+
+        <!-- EKSIK MODUL IMPLEMENTASYONLARI (Seed'de tanimli, kod yok) -->
+        <Task id="140" priority="medium">
+            <Title>Capability-Modul Mapping Tamamlama</Title>
+            <Description>
+                Carrier(4), Insurance(5), Customs(6), Survey(7), Investor(8) capability'lerine
+                hic modul atanmamis. Ilgili modullerin CapabilityModuleMappings'e eklenmesi:
+                - Carrier: Logistics Requests, MyLogisticsJobs + ortak moduller
+                - Insurance: Insurance Requests, MyInsuranceJobs + ortak moduller
+                - Customs: Customs Requests, MyCustomsJobs + ortak moduller
+                - Survey: Survey Requests, MySurveyJobs + ortak moduller
+                - Investor: Investment Opportunities, MyInvestments + ortak moduller
+            </Description>
+        </Task>
+        <Task id="141" priority="medium">
+            <Title>Product Reviews Modulu</Title>
+            <Description>
+                Route: /Dashboard/ProductReviews
+                Buyer capability'sine atanmis ama implementasyon yok.
+                - Urun degerlendirme/yorum entity + API
+                - Yildiz puanlama sistemi
+                - View + JS (SPA Modal pattern)
+            </Description>
+        </Task>
+        <Task id="142" priority="medium">
+            <Title>Auctions (Acik Artirma) Modulu</Title>
+            <Description>
+                Route: /Dashboard/Auctions
+                Buyer capability'sine atanmis ama implementasyon yok.
+                - Auction entity + API
+                - Acik artirma olusturma/katilma
+                - Teklif verme ve zamanlayici
+                - View + JS (SPA Modal pattern)
+            </Description>
+        </Task>
+        <Task id="143" priority="low">
+            <Title>Reward Points (Odul Puanlari) Modulu</Title>
+            <Description>
+                Route: /Dashboard/RewardPoints
+                Buyer capability'sine atanmis ama implementasyon yok.
+                - Puan kazanma/harcama entity + API
+                - Puan gecmisi listesi
+                - View + JS
+            </Description>
+        </Task>
+        <Task id="144" priority="low">
+            <Title>Back in Stock (Stok Bildirimi) Modulu</Title>
+            <Description>
+                Route: /Dashboard/BackInStock
+                Seed'de tanimli ama implementasyon yok.
+                - Stokta olmayan urun takip entity + API
+                - Bildirim gondermeyeEmail/InApp)
+                - View + JS
+            </Description>
+        </Task>
+        <Task id="145" priority="low">
+            <Title>Downloadable Products (Indirilebilir Urunler) Modulu</Title>
+            <Description>
+                Route: /Dashboard/DownloadableProducts
+                Seed'de tanimli ama implementasyon yok.
+                - Dijital urun/dosya entity + API
+                - Indirme linki yonetimi
+                - View + JS
+            </Description>
+        </Task>
+        <Task id="146" priority="medium">
+            <Title>Stripe Connect (Odeme Entegrasyonu) Modulu</Title>
+            <Description>
+                Route: /Dashboard/StripeConnect
+                Seller ve Buyer capability'sine atanmis ama implementasyon yok.
+                - Stripe hesap baglama akisi
+                - Odeme alma/yapma altyapisi
+                - View + JS
+            </Description>
+        </Task>
+        <Task id="147" priority="low">
+            <Title>Apps Modulleri (Marketplace Uygulamalari)</Title>
+            <Description>
+                Seed'de tanimli ama implementasyon yok:
+                - Apps.Logistics (/Dashboard/Apps/Logistics)
+                - Apps.Customs (/Dashboard/Apps/Customs)
+                - Apps.Finance (/Dashboard/Apps/Finance)
+                - Apps.SocialMedia (/Dashboard/Apps/SocialMedia)
+                - Apps.Marketplace (/Dashboard/Apps/Marketplace)
+                Uygulama marketi/entegrasyon altyapisi.
+            </Description>
+        </Task>
+        <Task id="148" priority="medium">
+            <Title>Service Provider Discovery Modulleri</Title>
+            <Description>
+                Seed'de tanimli ama implementasyon yok:
+                - Customs Broker (/Dashboard/ServiceProviders/CustomsBroker)
+                - Logistics Partner (/Dashboard/ServiceProviders/LogisticsPartner)
+                - Financing Partner (/Dashboard/ServiceProviders/FinancingPartner)
+                Hizmet saglayici arama/eslestirme sayfalarsi.
             </Description>
         </Task>
 
