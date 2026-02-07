@@ -1,0 +1,13 @@
+**/.git
+**/.vs
+**/bin
+**/obj
+**/publish
+**/node_modules
+**/.idea
+*.user
+*.suo
+*.md
+Tests/
+Docs/
+App_Data/Archive/

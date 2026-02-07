@@ -51,23 +51,31 @@ IDictionary<string, ColumnWriterBase> columnWriters = new Dictionary<string, Col
     { "ActionName", new SinglePropertyColumnWriter("ActionName", PropertyWriteMethod.ToString, NpgsqlDbType.Varchar) }
 };
 
-builder.Host.UseSerilog((context, services, configuration) => configuration
-    .ReadFrom.Configuration(context.Configuration)
-    .ReadFrom.Services(services)
-    .Enrich.FromLogContext()
-    .Enrich.WithMachineName()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-    .WriteTo.PostgreSQL(
-        connectionString: connectionString!,
-        tableName: "AppLogs",
-        columnOptions: columnWriters,
-        needAutoCreateTable: false,
-        restrictedToMinimumLevel: LogEventLevel.Information
-    ));
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithMachineName()
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+
+    // PostgreSQL log sink sadece Development'ta (Cloud'da AppLogs tablosu olmayabilir)
+    if (!context.HostingEnvironment.IsProduction())
+    {
+        configuration.WriteTo.PostgreSQL(
+            connectionString: connectionString!,
+            tableName: "AppLogs",
+            columnOptions: columnWriters,
+            needAutoCreateTable: false,
+            restrictedToMinimumLevel: LogEventLevel.Information
+        );
+    }
+});
 
 // PostgreSQL DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -192,6 +200,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
 builder.Services.AddScoped<IOrderOrchestrationService, OrderOrchestrationService>();
 builder.Services.AddScoped<IRiskScoringService, RiskScoringService>();
+builder.Services.AddScoped<IWaitlistService, WaitlistService>();
 
 // Evrim API Configuration
 builder.Services.Configure<EvrimApiSettings>(
@@ -255,6 +264,21 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddSingleton<IAuthorizationHandler, Bridgo.Authorization.CapabilityAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, Bridgo.Authorization.CapabilityPolicyProvider>();
 
+// CORS - Landing page (corplynk.com) icin
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("LandingPage", policy =>
+    {
+        policy.WithOrigins(
+                "https://corplynk.com",
+                "https://www.corplynk.com",
+                "https://corplynk-proxy.corplynkcmon.workers.dev",
+                "https://storage.googleapis.com")
+              .AllowAnyHeader()
+              .WithMethods("POST", "GET");
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -266,6 +290,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseCors("LandingPage");
 
 app.UseAuthentication();
 app.UseAuthorization();

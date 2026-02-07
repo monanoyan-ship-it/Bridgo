@@ -1,0 +1,14 @@
+.gcloudignore
+.git
+.gitignore
+bin/
+obj/
+*.user
+*.suo
+.vs/
+node_modules/
+publish/
+Properties/PublishProfiles/publish/
+*.md
+*.sql
+*.sln

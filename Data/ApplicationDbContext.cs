@@ -123,6 +123,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     // JWT Refresh Tokens
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    // Waitlist - Landing Page Email Capture
+    public DbSet<WaitlistEntry> WaitlistEntries => Set<WaitlistEntry>();
+
     // Capability Profile - Her capability icin profil
     public DbSet<CapabilityProfile> CapabilityProfiles => Set<CapabilityProfile>();
 
@@ -1890,6 +1893,20 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                   .HasForeignKey(o => o.ResponseByUserId)
                   .OnDelete(DeleteBehavior.SetNull);
         });
+        // =========================================
+        // WAITLIST - Landing Page Email Capture
+        // =========================================
+
+        builder.Entity<WaitlistEntry>(entity =>
+        {
+            entity.ToTable("WaitlistEntries");
+            entity.HasIndex(w => w.Email).IsUnique();
+            entity.Property(w => w.Email).HasMaxLength(256).IsRequired();
+            entity.Property(w => w.IpAddress).HasMaxLength(50);
+            entity.Property(w => w.UserAgent).HasMaxLength(500);
+            entity.Property(w => w.Source).HasMaxLength(50);
+        });
+
         // =========================================
         // JWT REFRESH TOKENS
         // =========================================

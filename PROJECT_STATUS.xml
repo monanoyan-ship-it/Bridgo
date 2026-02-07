@@ -5,7 +5,7 @@
         <Framework>.NET 9</Framework>
         <Database>PostgreSQL</Database>
         <DatabaseName>BridgoDb</DatabaseName>
-        <LastUpdated>2026-02-04</LastUpdated>
+        <LastUpdated>2026-02-07</LastUpdated>
         <ArchiveNote>
             Task 1-80: App_Data/Archive/PROJECT_STATUS_ARCHIVE.xml
             Task 81-101: App_Data/Archive/PROJECT_STATUS_ARCHIVE_20251228.xml
@@ -207,7 +207,133 @@
                 - Ozellikler: yildiz rating, istatistik kartlari, filtre, seller yaniti, dogrulanmis satin alma
             </Description>
         </Task>
+        <Task id="152" completedAt="2026-02-06">
+            <Title>Waitlist API Refactoring (CLAUDE.md Uyumluluk)</Title>
+            <Description>
+                WaitlistApiController CLAUDE.md pattern ihlalleri duzeltildi:
+
+                1. DbContext dogrudan kullanimi kaldirildi -> Service layer'a tasindi
+                2. WaitlistRequest DTO controller icinden DTOs/Waitlist/WaitlistDtos.cs'e tasindi
+                3. IUnitOfWork + UnitOfWork'e WaitlistEntries repository eklendi
+                4. IWaitlistService interface + WaitlistService implementation olusturuldu
+                5. Program.cs'e IWaitlistService DI kaydı eklendi
+
+                Yeni Dosyalar:
+                - DTOs/Waitlist/WaitlistDtos.cs
+                - Services/Interfaces/IWaitlistService.cs
+                - Services/WaitlistService.cs
+
+                Guncellenen Dosyalar:
+                - Controllers/Api/WaitlistApiController.cs (DbContext -> IWaitlistService)
+                - Repositories/IRepository.cs (IUnitOfWork.WaitlistEntries)
+                - Repositories/UnitOfWork.cs (WaitlistEntries property)
+                - Program.cs (DI registration)
+            </Description>
+        </Task>
+        <Task id="153" completedAt="2026-02-07">
+            <Title>Google Cloud Deploy + Cloudflare Worker Kurulumu</Title>
+            <Description>
+                Bridgo uygulamasi Google Cloud Run'a deploy edildi ve corplynk.com uzerinden erisime acildi.
+
+                Google Cloud Altyapisi:
+                - Cloud Run servisi: bridgo-app (europe-west1)
+                - Cloud SQL: bridgo-db (PostgreSQL 15, db-f1-micro, europe-west1)
+                - Artifact Registry: cloud-run-source-deploy
+                - Service URL: https://bridgo-app-267313553839.europe-west1.run.app
+                - Cloud SQL connection: project-648e1c7b-87e5-472b-bf1:europe-west1:bridgo-db
+
+                Yeni Dosyalar:
+                - Dockerfile (multi-stage .NET 9 build)
+                - .dockerignore
+                - appsettings.Production.json (Kestrel HTTP 8080)
+                - appsettings.Development.json (Kestrel HTTP 5279 + HTTPS 7083)
+
+                Guncellenen Dosyalar:
+                - appsettings.json (Kestrel section kaldirildi - Development'a tasindi)
+                - Program.cs (Serilog PostgreSQL sink sadece Development'ta aktif)
+
+                Cloudflare Worker (corplynk-proxy):
+                - corplynk.com/* ve www.corplynk.com/* route'lari Cloud Run'a proxy yapiyor
+                - Redirect'leri yakalayip Location header'ini corplynk.com'a yeniden yaziyor
+                - try/catch ile hata yonetimi, GET/HEAD body sorunu duzeltildi
+                - X-Powered-By: Corplynk header'i ekleniyor
+
+                Veritabani:
+                - Lokal DB pg_dump ile Cloud SQL'e restore edildi
+                - Cloud SQL sifre: Bridgo2026Prod
+
+                IAM Rolleri:
+                - compute SA: roles/storage.admin, roles/cloudsql.client, roles/logging.logWriter, roles/artifactregistry.writer
+
+                Deploy komutu: gcloud run deploy bridgo-app --source=. --region=europe-west1 --project=project-648e1c7b-87e5-472b-bf1 --quiet
+            </Description>
+        </Task>
+        <Task id="154" completedAt="2026-02-07">
+            <Title>Eksik Ulke ve Eyalet Verilerinin Tamamlanmasi</Title>
+            <Description>
+                Countries tablosuna 41 eksik ulke eklendi (209 -> 250):
+                - Turkiye, Ingiltere, Ispanya, Guney Kore, Isvec, Ukrayna, Vietnam, Tayland,
+                  Sri Lanka, Uruguay, Ozbekistan, Zimbabwe, Zambia, Yemen, ve diger 27 ulke
+                - Tum ulkeler ISO 3166-1 standardina uygun (iso2, iso3, numericCode, phoneCode, currency, flagEmoji, region, subRegion, capital, lat/lon)
+
+                States tablosuna 107 yeni eyalet/bolge eklendi (512 -> 619):
+                - Ingiltere (4): England, Scotland, Wales, Northern Ireland (constituent countries)
+                - Ispanya (19): 17 otonom topluluk + 2 otonom sehir (kendi parlamentolari var)
+                - Ukrayna (27): 24 oblast + Kirim + Kyiv/Sevastopol (secilmis meclis)
+                - Guney Kore (17): 8 metropolitan/ozel sehir + 9 eyalet (secilmis valiler)
+                - Isvec (21): 21 county/lan (secilmis bolge meclisleri)
+                - Uruguay (19): 19 departman (secilmis valiler/intendentes)
+
+                Eklenmeyenler (merkezi hukumet - valiler atanir):
+                - Turkiye (81 il - vali merkezden atanir)
+                - Tayland (76 il - merkezi hukumet)
+                - Vietnam (63 il - merkezi sosyalist yonetim)
+                - Sri Lanka (9 eyalet - merkezi atama)
+                - Ozbekistan (14 bolge - cumhurbaskani atar)
+
+                Hem lokal DB hem Cloud SQL guncellendi.
+                SQL dosyalari: missing_countries.sql, missing_states.sql
+            </Description>
+        </Task>
     </CompletedTasks>
+
+        <Task id="155" completedAt="2026-02-07">
+            <Title>Landing Page (Coming Soon / Waitlist)</Title>
+            <Description>
+                Bridgo icin minimalist, modern "Coming Soon" landing page olusturuldu.
+
+                Konsept:
+                - Dark tema (gradient koyu arka plan + radial glow)
+                - Glassmorphism waitlist karti
+                - Grid overlay animasyonu
+                - Ingilizce, mobil uyumlu (responsive)
+
+                Ozellikler:
+                - Login olmamis kullanicilar landing page gorur
+                - Login olmus kullanicilar Dashboard'a yonlendirilir (Admin ise Admin paneline)
+                - Waitlist e-posta toplama (POST /api/waitlist)
+                - Social proof: "Join X others on the waitlist" sayaci
+                - 3 feature card: Global Network, Verified and Trusted, All-in-One Platform
+                - Minimal footer + Login/Register linkleri
+
+                Yeni Dosyalar:
+                - Views/Shared/_LandingLayout.cshtml (navbar/footer olmayan minimal layout)
+                - .gcloudignore (deploy icin gereksiz dosyalari haric tutar)
+
+                Yeniden Yazilan Dosyalar:
+                - Views/Home/Index.cshtml (_LandingLayout kullanan landing page)
+                - wwwroot/css/landing.css (dark tema, glassmorphism, animasyonlar)
+                - wwwroot/js/landing.js (waitlist form submit, count loader)
+
+                Guncellenen Dosyalar:
+                - Controllers/HomeController.cs (login redirect: Auth -> Dashboard/Admin)
+
+                Deploy:
+                - Docker image lokal build + Artifact Registry push + Cloud Run deploy
+                - gcloud source upload ZIP timestamp bug'i workaround edildi
+                - Revision: bridgo-app-00006-8b6
+            </Description>
+        </Task>
 
     <InProgressTasks>
     </InProgressTasks>

@@ -30,6 +30,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<ProductWarehouseStock>? _productWarehouseStocks;
     private IRepository<CategoryRequest>? _categoryRequests;
     private IRepository<RefreshToken>? _refreshTokens;
+    private IRepository<WaitlistEntry>? _waitlistEntries;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -86,6 +87,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<RefreshToken> RefreshTokens =>
         _refreshTokens ??= new Repository<RefreshToken>(_context);
+
+    public IRepository<WaitlistEntry> WaitlistEntries =>
+        _waitlistEntries ??= new Repository<WaitlistEntry>(_context);
 
     public async Task<int> SaveChangesAsync()
     {
