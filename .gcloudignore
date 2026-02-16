@@ -12,3 +12,9 @@ Properties/PublishProfiles/publish/
 *.md
 *.sql
 *.sln
+twitter-bot/
+.claude/
+CLAUDE.md
+DEVELOPMENT_PATTERNS.md
+PROJECT_STATUS.xml
+nul

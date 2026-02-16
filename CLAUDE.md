@@ -87,16 +87,18 @@ DOGRU:
 ## Proje Hakkinda
 - **Proje**: Bridgo B2B Multi-Tenant Platform
 - **Framework**: .NET 9 + PostgreSQL + KnockoutJS
-- **Durum Dosyasi**: `PROJECT_STATUS.xml`
+- **Durum Takibi**: ClaudeManager (Proje ID: 16, API: http://127.0.0.1:41847)
 - **Pattern Dosyasi**: `DEVELOPMENT_PATTERNS.md` (MUTLAKA OKU!)
+- **Arsiv**: `PROJECT_STATUS.xml` (artik sadece arsiv, guncelleme YAPMA)
 
 ## Onemli Kurallar
 
-### 1. PROJECT_STATUS.xml Guncellemesi
-Her is tamamlandiginda `PROJECT_STATUS.xml` dosyasini guncelle:
-- Tamamlanan gorevleri `<CompletedTasks>` bolumune ekle
-- Yeni planlanan gorevleri `<PlannedTasks>` bolumune ekle
-- Task ID'lerini sirali tut
+### 1. Gorev Takibi (ClaudeManager)
+- `PROJECT_STATUS.xml` ARTIK ARSIV - guncelleme YAPMA
+- Tum gorev takibi ClaudeManager uzerinden yapilir
+- Is tamamlandiginda: `curl -s -X PUT "http://127.0.0.1:41847/api/tasks/{id}" -H "Content-Type: application/json" -d '{"status":"completed"}'`
+- Yeni gorev eklerken: once faz bul/olustur, sonra gorev ekle
+- Yeni kural/hata ogrenildiginde pattern olarak kaydet
 
 ### 2. Kod Standartlari
 - ID'ler **int** (GUID kullanilmaz)
@@ -348,8 +350,80 @@ Languages (Id, Name, LanguageCulture, UniqueSeoCode, IsActive, IsDefault)
 LocaleStringResources (Id, LanguageId, ResourceName, ResourceValue)
 ```
 
+## ClaudeManager Entegrasyonu
+Bu proje ClaudeManager ile entegredir. Her oturumda kullan:
+```bash
+# Oturum basinda proje rehberini oku
+curl -s "http://127.0.0.1:41847/api/guide?cwd=$(pwd)"
+
+# Pattern/kural ekle (HASSAS BILGI YAZMA - notes kullan!)
+curl -s -X POST "http://127.0.0.1:41847/api/patterns" -H "Content-Type: application/json" \
+  -d '{"project_id":16,"type":"rule|preference|mistake","title":"...","description":"..."}'
+
+# Roadmap goruntule
+curl -s "http://127.0.0.1:41847/api/projects/16/roadmap"
+```
+- **Proje ID:** 16
+- **API:** http://127.0.0.1:41847
+- **Pattern tipleri:** rule, preference, mistake (pattern tipi YOK!)
+- **Roadmap:** Fazlar (phases) ve gorevler (tasks) ile takip edilir
+- Yeni kural/hata/tercih ogrenildiginde ClaudeManager'a pattern olarak kaydet
+- Gorev tamamlandiginda roadmap'i guncelle
+
+### Notes API (Hassas/Ozel Bilgiler)
+Pattern'lere **ASLA** hassas bilgi yazma! API key, sifre, TC, telefon, wallet key gibi ozel bilgiler icin **Notes** kullan:
+```bash
+# Not listele
+curl -s "http://127.0.0.1:41847/api/projects/16/notes"
+
+# Kategoriye gore filtrele (teknik)
+curl -s "http://127.0.0.1:41847/api/projects/16/notes?category=teknik"
+
+# Not olustur
+curl -s -X POST "http://127.0.0.1:41847/api/projects/16/notes" -H "Content-Type: application/json" \
+  -d '{"title":"Baslik","content":"Icerik","category":"teknik"}'
+
+# Not guncelle
+curl -s -X PUT "http://127.0.0.1:41847/api/notes/{id}" -H "Content-Type: application/json" \
+  -d '{"title":"Yeni Baslik","content":"Yeni Icerik"}'
+
+# Not sil
+curl -s -X DELETE "http://127.0.0.1:41847/api/notes/{id}"
+```
+
+**Kural: Roadmap vs Journal vs Notes vs Pattern ayrimi:**
+| Yer | Ne Yazilir |
+|-----|-----------|
+| **Roadmap** | Sadece yazilim gelistirme gorevleri (kod, modul, feature) |
+| **Journal** | Gunluk isler, basvuru durumlari, pazarlama, operasyonel kayitlar |
+| **Notes** | SADECE hassas bilgiler (API key, sifre, TC, wallet key, credential) |
+| **Pattern** | Kod kurallari (rule), tercihler (preference), hatalar (mistake) |
+
+**KRITIK: Roadmap'e gunluk/operasyonel is YAZMA! Journal kullan.**
+**KRITIK: Notes'a gunluk is YAZMA! Notes SADECE hassas bilgiler icin.**
+
+### Journal API (Gunluk Kayitlar)
+```bash
+# Journal listele
+curl -s "http://127.0.0.1:41847/api/projects/16/journal"
+
+# Journal olustur
+curl -s -X POST "http://127.0.0.1:41847/api/projects/16/journal" -H "Content-Type: application/json" \
+  -d '{"title":"Baslik","content":"Icerik","category":"kategori","entry_date":"2026-02-16"}'
+
+# Kategoriler: pazarlama, gelistirme, basvuru, finans, guvenlik, altyapi, gelir, kisisel
+```
+
+**Mevcut Notes (SADECE hassas bilgiler):**
+- Kisisel Bilgiler (TC, tel, adres)
+- Hesap Bilgileri - Cloud & Domain (GCP, AWS, Cloudflare, Namecheap)
+- Email Yonlendirme (info@corplynk.com)
+- Twitter/X - Hesap ve API Keys
+- Bagis Kanallari - WAX & Solana (wallet key'ler dahil)
+- Moltbook API Key
+
 ## Her Oturum Baslangicinda
 1. Bu dosyayi oku
-2. `PROJECT_STATUS.xml` dosyasini kontrol et
+2. `curl -s "http://127.0.0.1:41847/api/guide?cwd=$(pwd)"` ile ClaudeManager rehberini oku
 3. Kullanicinin istegini dinle
-4. Is bitince `PROJECT_STATUS.xml` guncelle
+4. Is bitince ClaudeManager roadmap'i guncelle

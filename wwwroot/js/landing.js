@@ -101,3 +101,35 @@
         successEl.style.display = 'block';
     }
 })();
+
+/**
+ * Copy wallet address to clipboard
+ */
+function copyAddress(address, btnEl) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(address).then(function () {
+            showCopied(btnEl);
+        });
+    } else {
+        // Fallback
+        var ta = document.createElement('textarea');
+        ta.value = address;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showCopied(btnEl);
+    }
+}
+
+function showCopied(btnEl) {
+    var icon = btnEl.querySelector('i');
+    icon.className = 'bi bi-check-lg';
+    btnEl.classList.add('copied');
+    setTimeout(function () {
+        icon.className = 'bi bi-clipboard';
+        btnEl.classList.remove('copied');
+    }, 2000);
+}
