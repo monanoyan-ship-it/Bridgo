@@ -1,0 +1,152 @@
+[
+  {
+    "id": 1,
+    "category": "foundation",
+    "text": "Day 1: Started building the foundation. Multi-tenant architecture, PostgreSQL, .NET 9. The journey of a thousand miles begins with a single commit. #BuildInPublic #B2B #StartupLife"
+  },
+  {
+    "id": 2,
+    "category": "foundation",
+    "text": "Authentication system is live. Secure login, role-based access, team invitations. Building trust starts with security. #BuildInPublic #SaaS"
+  },
+  {
+    "id": 3,
+    "category": "foundation",
+    "text": "Multi-tenant data isolation complete. Every business gets its own secure space. Privacy by design, not by afterthought. #BuildInPublic #B2B"
+  },
+  {
+    "id": 4,
+    "category": "team",
+    "text": "Team management module done. Invite members, assign roles, control permissions. Collaboration is the backbone of B2B. #BuildInPublic #StartupLife"
+  },
+  {
+    "id": 5,
+    "category": "team",
+    "text": "Role-based access control (RBAC) implemented. Owner, Admin, Manager, Employee \u2014 each with fine-grained permissions. Security meets flexibility. #BuildInPublic"
+  },
+  {
+    "id": 6,
+    "category": "products",
+    "text": "Product catalog is taking shape. Categories, pricing tiers, multi-warehouse stock tracking. The core of any trade platform. #BuildInPublic #B2B #Ecommerce"
+  },
+  {
+    "id": 7,
+    "category": "products",
+    "text": "Product image management, SKU system, and slug-based URLs. Every product gets its own identity. #BuildInPublic #StartupLife"
+  },
+  {
+    "id": 8,
+    "category": "products",
+    "text": "Bulk pricing tiers for products. Buy more, pay less. Real B2B pricing logic, not just retail with a label. #BuildInPublic #B2B"
+  },
+  {
+    "id": 9,
+    "category": "warehouse",
+    "text": "Warehouse management system built. Track stock across multiple locations. Real-time inventory, no more spreadsheets. #BuildInPublic #SupplyChain"
+  },
+  {
+    "id": 10,
+    "category": "demands",
+    "text": "Public demand board is live. Buyers post what they need, sellers respond with offers. Reversing the traditional sales flow. #BuildInPublic #B2B"
+  },
+  {
+    "id": 11,
+    "category": "demands",
+    "text": "Demand response system complete. Sellers can bid on buyer requests with pricing and delivery terms. Marketplace dynamics in action. #BuildInPublic"
+  },
+  {
+    "id": 12,
+    "category": "capabilities",
+    "text": "Multi-capability system launched. One company can be a seller, buyer, carrier, insurer \u2014 all at once. Real business flexibility. #BuildInPublic #B2B"
+  },
+  {
+    "id": 13,
+    "category": "capabilities",
+    "text": "7 business capabilities: Seller, Buyer, Carrier, Insurance, Customs, Survey, Investor. Every role in the trade ecosystem, one platform. #BuildInPublic"
+  },
+  {
+    "id": 14,
+    "category": "orders",
+    "text": "Order management system taking shape. From inquiry to checkout, building the full trade lifecycle. #BuildInPublic #B2B #StartupLife"
+  },
+  {
+    "id": 15,
+    "category": "orders",
+    "text": "Product inquiry flow complete. Buyers ask, sellers respond with custom quotes. No fixed prices \u2014 real negotiation. #BuildInPublic #B2B"
+  },
+  {
+    "id": 16,
+    "category": "localization",
+    "text": "Full localization system implemented. Turkish + English, XML-based translations, T() helper everywhere. Going global from day one. #BuildInPublic #i18n"
+  },
+  {
+    "id": 17,
+    "category": "localization",
+    "text": "500+ translation keys added. Every button, label, and message speaks your language. #BuildInPublic #Localization"
+  },
+  {
+    "id": 18,
+    "category": "notifications",
+    "text": "In-app notification system built. Real-time alerts for orders, demands, team changes. Stay informed without email spam. #BuildInPublic #UX"
+  },
+  {
+    "id": 19,
+    "category": "subscriptions",
+    "text": "Category subscription system for sellers. Get notified when buyers post demands in your industry. Never miss an opportunity. #BuildInPublic #B2B"
+  },
+  {
+    "id": 20,
+    "category": "landing",
+    "text": "Landing page redesigned. Dark theme, glassmorphism, waitlist form. First impressions matter. corplynk.com #BuildInPublic #WebDesign"
+  },
+  {
+    "id": 21,
+    "category": "landing",
+    "text": "Early Supporter Program launched. Back the vision with even $1 and earn equity shares. Community-driven from the start. #BuildInPublic #StartupLife"
+  },
+  {
+    "id": 22,
+    "category": "deployment",
+    "text": "Deployed to Google Cloud Run with Cloudflare proxy. Zero-cost infrastructure for now. Bootstrapping at its finest. #BuildInPublic #CloudNative"
+  },
+  {
+    "id": 23,
+    "category": "deployment",
+    "text": "Custom domain live: corplynk.com. SSL, CDN, edge caching \u2014 all handled. Fast globally, free locally. #BuildInPublic #DevOps"
+  },
+  {
+    "id": 24,
+    "category": "vision",
+    "text": "Building a B2B platform where every business role is connected. Sellers, buyers, carriers, insurers, customs brokers \u2014 all in one ecosystem. #BuildInPublic"
+  },
+  {
+    "id": 25,
+    "category": "vision",
+    "text": "Why another B2B platform? Because existing ones treat small businesses as second-class. We're changing that. #BuildInPublic #StartupLife"
+  },
+  {
+    "id": 26,
+    "category": "vision",
+    "text": "Our mission: Make international trade accessible to every business, regardless of size. Technology should democratize trade. #BuildInPublic #B2B"
+  },
+  {
+    "id": 27,
+    "category": "trust",
+    "text": "Business verification system in progress. Every company on the platform will be verified. Trust is non-negotiable in B2B. #BuildInPublic"
+  },
+  {
+    "id": 28,
+    "category": "addresses",
+    "text": "Global address system with country/state support. 13 countries with state-level detail. Ready for international operations. #BuildInPublic #B2B"
+  },
+  {
+    "id": 29,
+    "category": "dashboard",
+    "text": "Dashboard with capability-based navigation. Your menu adapts to your business role. Seller sees products, buyer sees demands. Clean UX. #BuildInPublic"
+  },
+  {
+    "id": 30,
+    "category": "milestone",
+    "text": "30+ database tables, 15+ modules, 7 business capabilities, 2 languages, 1 vision. Still building. #BuildInPublic #StartupLife"
+  }
+]
