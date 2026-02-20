@@ -10,37 +10,76 @@
 **Tum kurallar, tercihler ve hatalar ClaudeManager'da tutulur.**
 CLAUDE.md'ye kural YAZMA - ClaudeManager'a pattern olarak kaydet.
 
-## ClaudeManager Entegrasyonu
+## ClaudeManager API Referansi
 - **Proje ID:** 16
-- **API:** http://127.0.0.1:41847
-- **Pattern tipleri:** rule, preference, mistake
+- **Base URL:** http://127.0.0.1:41847
 
+### Roadmap (Fazlar ve Gorevler)
 ```bash
-# Oturum basinda proje rehberini oku
-curl -s "http://127.0.0.1:41847/api/guide?cwd=$(pwd)"
-
-# Pattern/kural ekle (HASSAS BILGI YAZMA - notes kullan!)
-curl -s -X POST "http://127.0.0.1:41847/api/patterns" -H "Content-Type: application/json" \
-  -d '{"project_id":16,"type":"rule|preference|mistake","title":"...","description":"..."}'
-
-# Roadmap goruntule
+# Tum roadmap
 curl -s "http://127.0.0.1:41847/api/projects/16/roadmap"
+
+# Faz olustur
+curl -s -X POST "http://127.0.0.1:41847/api/projects/16/phases" -H "Content-Type: application/json" \
+  -d '{"phase_no":"X","title":"...","status":"planned"}'
+
+# Faz guncelle
+curl -s -X PUT "http://127.0.0.1:41847/api/phases/{id}" -H "Content-Type: application/json" \
+  -d '{"status":"completed"}'
+
+# Gorev ekle (faz icine)
+curl -s -X POST "http://127.0.0.1:41847/api/phases/{phase_id}/tasks" -H "Content-Type: application/json" \
+  -d '{"task_no":"X.Y","title":"...","detail":"...","status":"planned"}'
+
+# Gorev guncelle
+curl -s -X PUT "http://127.0.0.1:41847/api/tasks/{id}" -H "Content-Type: application/json" \
+  -d '{"status":"completed"}'
 ```
 
-### Notes API (Hassas/Ozel Bilgiler)
-Pattern'lere **ASLA** hassas bilgi yazma! API key, sifre, TC, telefon, wallet key gibi ozel bilgiler icin **Notes** kullan:
+### Patterns (Kurallar)
 ```bash
-curl -s "http://127.0.0.1:41847/api/projects/16/notes"
-curl -s -X POST "http://127.0.0.1:41847/api/projects/16/notes" -H "Content-Type: application/json" \
-  -d '{"title":"Baslik","content":"Icerik","category":"teknik"}'
+# Listele
+curl -s "http://127.0.0.1:41847/api/projects/16/patterns"
+
+# Ekle (tipler: rule, preference, mistake)
+curl -s -X POST "http://127.0.0.1:41847/api/patterns" -H "Content-Type: application/json" \
+  -d '{"project_id":16,"type":"rule","title":"...","description":"..."}'
+
+# Guncelle
+curl -s -X PUT "http://127.0.0.1:41847/api/patterns/{id}" -H "Content-Type: application/json" \
+  -d '{"title":"...","type":"rule"}'
 ```
 
-### Journal API (Gunluk Kayitlar)
+### Journal (Gunluk Kayitlar)
 ```bash
+# Listele
 curl -s "http://127.0.0.1:41847/api/projects/16/journal"
+
+# Ekle (kategoriler: pazarlama, gelistirme, basvuru, finans, guvenlik, altyapi, gelir, kisisel)
 curl -s -X POST "http://127.0.0.1:41847/api/projects/16/journal" -H "Content-Type: application/json" \
-  -d '{"title":"Baslik","content":"Icerik","category":"kategori","entry_date":"2026-02-20"}'
-# Kategoriler: pazarlama, gelistirme, basvuru, finans, guvenlik, altyapi, gelir, kisisel
+  -d '{"title":"...","content":"...","category":"gelistirme","entry_date":"2026-02-20"}'
+```
+
+### Notes (SADECE Hassas Bilgiler)
+```bash
+# Listele
+curl -s "http://127.0.0.1:41847/api/projects/16/notes"
+
+# Ekle
+curl -s -X POST "http://127.0.0.1:41847/api/projects/16/notes" -H "Content-Type: application/json" \
+  -d '{"title":"...","content":"...","category":"teknik"}'
+
+# Guncelle
+curl -s -X PUT "http://127.0.0.1:41847/api/notes/{id}" -H "Content-Type: application/json" \
+  -d '{"title":"...","content":"..."}'
+
+# Sil
+curl -s -X DELETE "http://127.0.0.1:41847/api/notes/{id}"
+```
+
+### Rehber (Oturum basi)
+```bash
+curl -s "http://127.0.0.1:41847/api/guide?cwd=$(pwd)"
 ```
 
 | Yer | Ne Yazilir |
