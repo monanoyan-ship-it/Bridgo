@@ -7,10 +7,12 @@ namespace Bridgo.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IWebHostEnvironment _env;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, IWebHostEnvironment env)
     {
         _logger = logger;
+        _env = env;
     }
 
     public IActionResult Index()
@@ -21,6 +23,10 @@ public class HomeController : Controller
                 return RedirectToAction("Index", "Admin");
             return RedirectToAction("Index", "Dashboard");
         }
+
+        if (_env.IsDevelopment())
+            return RedirectToAction("Login", "Auth");
+
         return View();
     }
 
