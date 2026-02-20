@@ -7,26 +7,26 @@ namespace Bridgo.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
-    private readonly IWebHostEnvironment _env;
+    private readonly bool _isLandingOnly;
 
-    public HomeController(ILogger<HomeController> logger, IWebHostEnvironment env)
+    public HomeController(ILogger<HomeController> logger, IConfiguration configuration)
     {
         _logger = logger;
-        _env = env;
+        _isLandingOnly = configuration.GetValue<bool>("LandingOnly");
     }
 
     public IActionResult Index()
     {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            if (User.IsInRole("Admin"))
-                return RedirectToAction("Index", "Admin");
-            return RedirectToAction("Index", "Dashboard");
-        }
+        // Landing-only modda (production deploy) sadece waitlist sayfasi
+        if (_isLandingOnly)
+            return View();
 
-        if (_env.IsDevelopment())
-            return RedirectToAction("Login", "Auth");
+        // Normal mod: her zaman ana sayfa
+        return View("Index2");
+    }
 
+    public IActionResult Index2()
+    {
         return View();
     }
 

@@ -1064,6 +1064,63 @@ public static class RbacSeeder
             }
             await context.SaveChangesAsync();
         }
+
+        // RewardPoints, BackInStock, DownloadableProducts, StripeConnect → Seller + Buyer
+        var sellerBuyerModuleKeys = new[]
+        {
+            "Module.RewardPoints", "Module.BackInStock",
+            "Module.DownloadableProducts", "Module.StripeConnect"
+        };
+        var sellerBuyerCapIds = new[] { Capabilities.Ids.Seller, Capabilities.Ids.Buyer };
+        foreach (var key in sellerBuyerModuleKeys)
+        {
+            var mod = await context.PlatformModules.FirstOrDefaultAsync(m => m.DisplayNameResourceKey == key);
+            if (mod != null)
+            {
+                foreach (var capId in sellerBuyerCapIds)
+                {
+                    if (!await context.CapabilityModuleMappings.AnyAsync(c => c.PlatformModuleId == mod.Id && c.CapabilityId == capId))
+                    {
+                        context.CapabilityModuleMappings.Add(new CapabilityModuleMapping
+                        {
+                            CapabilityId = capId,
+                            PlatformModuleId = mod.Id
+                        });
+                    }
+                }
+            }
+        }
+
+        // Apps alt modulleri → tum capability'ler
+        var appsModuleKeys = new[]
+        {
+            "Module.AppsLogistics", "Module.AppsCustoms", "Module.AppsFinance",
+            "Module.AppsSocialMedia", "Module.AppsMarketplace"
+        };
+        var allCaps = new[] {
+            Capabilities.Ids.Seller, Capabilities.Ids.Buyer, Capabilities.Ids.Carrier,
+            Capabilities.Ids.Insurance, Capabilities.Ids.Customs, Capabilities.Ids.Survey,
+            Capabilities.Ids.Investor
+        };
+        foreach (var key in appsModuleKeys)
+        {
+            var mod = await context.PlatformModules.FirstOrDefaultAsync(m => m.DisplayNameResourceKey == key);
+            if (mod != null)
+            {
+                foreach (var capId in allCaps)
+                {
+                    if (!await context.CapabilityModuleMappings.AnyAsync(c => c.PlatformModuleId == mod.Id && c.CapabilityId == capId))
+                    {
+                        context.CapabilityModuleMappings.Add(new CapabilityModuleMapping
+                        {
+                            CapabilityId = capId,
+                            PlatformModuleId = mod.Id
+                        });
+                    }
+                }
+            }
+        }
+        await context.SaveChangesAsync();
     }
 
     private static async Task SeedRolesAsync(ApplicationDbContext context)
