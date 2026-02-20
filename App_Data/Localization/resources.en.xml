@@ -1006,4 +1006,60 @@
   <LocaleResource Name="BidStatus.Rejected"><Value>Rejected</Value></LocaleResource>
   <LocaleResource Name="BidStatus.Cancelled"><Value>Cancelled</Value></LocaleResource>
   <LocaleResource Name="BidStatus.Winning"><Value>Winning</Value></LocaleResource>
+  <!-- Reward Points -->
+  <LocaleResource Name="Module.RewardPoints"><Value>Reward Points</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Title"><Value>Reward Points</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Subtitle"><Value>Earn and spend points</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.TotalPoints"><Value>Total Points</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.EarnedThisMonth"><Value>Earned This Month</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.SpentThisMonth"><Value>Spent This Month</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.AllActions"><Value>All Actions</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Date"><Value>Date</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Action"><Value>Action</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Description"><Value>Description</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Points"><Value>Points</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Balance"><Value>Balance</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.NoHistory"><Value>No point history found yet.</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.Earned"><Value>Earned</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.Spent"><Value>Spent</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.OrderBonus"><Value>Order Bonus</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.Referral"><Value>Referral Bonus</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.Expired"><Value>Expired</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.AdminAdjustment"><Value>Admin Adjustment</Value></LocaleResource>
+  <!-- Back in Stock -->
+  <LocaleResource Name="Module.BackInStock"><Value>Back in Stock Alerts</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Title"><Value>Back in Stock Alerts</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Subtitle"><Value>Get notified when products are back in stock</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Product"><Value>Product</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Sku"><Value>SKU</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Status"><Value>Status</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.SubscribedAt"><Value>Subscribed At</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Notified"><Value>Notified</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Waiting"><Value>Waiting</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.NoSubscriptions"><Value>No stock alert subscriptions yet.</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.HowTo"><Value>You can subscribe to stock alerts from product detail pages.</Value></LocaleResource>
+  <!-- Downloadable Products -->
+  <LocaleResource Name="Module.DownloadableProducts"><Value>Downloadable Products</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.Title"><Value>Downloadable Products</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.Subtitle"><Value>Manage your digital products</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.ProductName"><Value>Product Name</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.FileName"><Value>File Name</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.Downloads"><Value>Downloads</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.NoProducts"><Value>No downloadable products yet.</Value></LocaleResource>
+  <!-- Apps -->
+  <LocaleResource Name="Module.Apps"><Value>Apps</Value></LocaleResource>
+  <LocaleResource Name="Apps.Title"><Value>Apps</Value></LocaleResource>
+  <LocaleResource Name="Apps.Subtitle"><Value>Discover apps for your business</Value></LocaleResource>
+  <LocaleResource Name="Apps.Logistics"><Value>Logistics</Value></LocaleResource>
+  <LocaleResource Name="Apps.LogisticsDesc"><Value>Shipping and logistics integrations</Value></LocaleResource>
+  <LocaleResource Name="Apps.Customs"><Value>Customs</Value></LocaleResource>
+  <LocaleResource Name="Apps.CustomsDesc"><Value>Customs operations and declaration management</Value></LocaleResource>
+  <LocaleResource Name="Apps.Finance"><Value>Finance</Value></LocaleResource>
+  <LocaleResource Name="Apps.FinanceDesc"><Value>Payment, accounting and financing tools</Value></LocaleResource>
+  <LocaleResource Name="Apps.SocialMedia"><Value>Social Media</Value></LocaleResource>
+  <LocaleResource Name="Apps.SocialMediaDesc"><Value>Social media management tools</Value></LocaleResource>
+  <LocaleResource Name="Apps.Marketplace"><Value>Marketplace</Value></LocaleResource>
+  <LocaleResource Name="Apps.MarketplaceDesc"><Value>Marketplace integrations</Value></LocaleResource>
+  <LocaleResource Name="Apps.ComingSoon"><Value>Coming soon</Value></LocaleResource>
+  <LocaleResource Name="Apps.Explore"><Value>Explore</Value></LocaleResource>
 </Language>

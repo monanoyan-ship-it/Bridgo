@@ -1,0 +1,140 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("StripeConnect.Title", "Stripe Hesap Baglantisi").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="stripe-connect-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-stripe text-primary me-2"></i>
+                @Html.T("StripeConnect.Title", "Stripe Hesap Baglantisi")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("StripeConnect.Subtitle", "Odeme almak icin Stripe hesabinizi baglayin")</p>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+
+    <div data-bind="visible: !isLoading()">
+        <!-- Not Connected State -->
+        <div data-bind="visible: !isConnected()">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-stripe display-1 text-muted mb-3 d-block"></i>
+                    <h5>@Html.T("StripeConnect.NotConnected.Title", "Stripe Hesabi Bagli Degil")</h5>
+                    <p class="text-muted mb-4">@Html.T("StripeConnect.NotConnected.Description", "Platformda odeme alabilmek icin Stripe hesabinizi baglayiniz. Stripe Connect ile guvenli odeme altyapisi kurulur.")</p>
+                    <button class="btn btn-primary btn-lg" data-bind="click: connectStripe, enable: !isConnecting()">
+                        <span data-bind="visible: isConnecting" class="spinner-border spinner-border-sm me-1"></span>
+                        <i class="bi bi-link-45deg me-1" data-bind="visible: !isConnecting()"></i>
+                        @Html.T("StripeConnect.Connect", "Stripe Hesabini Bagla")
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connected State -->
+        <div data-bind="visible: isConnected()">
+            <div class="row g-4">
+                <!-- Status Card -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-check-circle text-success me-2"></i>@Html.T("StripeConnect.Status", "Baglanti Durumu")</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">@Html.T("StripeConnect.AccountId", "Stripe Hesap ID")</small>
+                                <span class="fw-semibold" data-bind="text: connection().externalAccountId || '-'"></span>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted d-block">@Html.T("StripeConnect.Status", "Durum")</small>
+                                <span class="badge bg-success" data-bind="visible: connection().status === 'connected'">@Html.T("StripeConnect.Status.Connected", "Bagli")</span>
+                                <span class="badge bg-warning text-dark" data-bind="visible: connection().status === 'pending'">@Html.T("StripeConnect.Status.Pending", "Beklemede")</span>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted d-block">@Html.T("StripeConnect.ChargesEnabled", "Odeme Alma")</small>
+                                <span data-bind="visible: connection().chargesEnabled"><i class="bi bi-check-circle text-success"></i> @Html.T("Common.Active", "Aktif")</span>
+                                <span data-bind="visible: !connection().chargesEnabled"><i class="bi bi-x-circle text-danger"></i> @Html.T("Common.Inactive", "Pasif")</span>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted d-block">@Html.T("StripeConnect.PayoutsEnabled", "Odeme Yapma")</small>
+                                <span data-bind="visible: connection().payoutsEnabled"><i class="bi bi-check-circle text-success"></i> @Html.T("Common.Active", "Aktif")</span>
+                                <span data-bind="visible: !connection().payoutsEnabled"><i class="bi bi-x-circle text-danger"></i> @Html.T("Common.Inactive", "Pasif")</span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">@Html.T("StripeConnect.ConnectedAt", "Baglanti Tarihi")</small>
+                                <span data-bind="text: connection().connectedAt ? formatDateTime(connection().connectedAt) : '-'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Card -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-gear me-2"></i>@Html.T("StripeConnect.Actions", "Islemler")</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary" data-bind="click: openStripeDashboard">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>@Html.T("StripeConnect.OpenDashboard", "Stripe Dashboard'u Ac")
+                                </button>
+                                <button class="btn btn-outline-secondary" data-bind="click: refreshStatus">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>@Html.T("StripeConnect.Refresh", "Durumu Yenile")
+                                </button>
+                                <button class="btn btn-outline-danger" data-bind="click: disconnectStripe">
+                                    <i class="bi bi-x-circle me-2"></i>@Html.T("StripeConnect.Disconnect", "Baglantiyi Kes")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Payments -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>@Html.T("StripeConnect.RecentPayments", "Son Odemeler")</h6>
+                </div>
+                <div class="card-body">
+                    <div data-bind="visible: payments().length === 0" class="text-center py-3">
+                        <p class="text-muted mb-0">@Html.T("StripeConnect.NoPayments", "Henuz odeme yok")</p>
+                    </div>
+                    <div class="table-responsive" data-bind="visible: payments().length > 0">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>@Html.T("StripeConnect.Payment.Order", "Siparis")</th>
+                                    <th class="text-end">@Html.T("StripeConnect.Payment.Amount", "Tutar")</th>
+                                    <th>@Html.T("StripeConnect.Payment.Status", "Durum")</th>
+                                    <th>@Html.T("StripeConnect.Payment.Date", "Tarih")</th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: payments">
+                                <tr>
+                                    <td><span data-bind="text: '#' + orderId"></span></td>
+                                    <td class="text-end fw-semibold" data-bind="text: $parent.formatPrice(amount, currency)"></td>
+                                    <td>
+                                        <span class="badge" data-bind="text: status, css: { 'bg-success': status === 'succeeded', 'bg-warning text-dark': status === 'pending', 'bg-danger': status === 'failed' }"></span>
+                                    </td>
+                                    <td><small data-bind="text: $parent.formatDateTime(createdAt)"></small></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/StripeConnect/Index.js" asp-append-version="true"></script>
+}

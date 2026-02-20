@@ -1457,3 +1457,31 @@ public static class BidStatuses
         public const int Winning = 5;
     }
 }
+
+// ============================================================
+// REWARD POINT ACTION TYPES
+// ============================================================
+public static class RewardPointActionTypes
+{
+    public static readonly TypeItem Earned = new(1, "Earned", "RewardPointAction.Earned", "Kazanildi", "bi-plus-circle", "bg-success", 1, isDefault: true);
+    public static readonly TypeItem Spent = new(2, "Spent", "RewardPointAction.Spent", "Harcandi", "bi-dash-circle", "bg-danger", 2);
+    public static readonly TypeItem OrderBonus = new(3, "OrderBonus", "RewardPointAction.OrderBonus", "Siparis bonusu", "bi-cart-check", "bg-info", 3);
+    public static readonly TypeItem Referral = new(4, "Referral", "RewardPointAction.Referral", "Referans bonusu", "bi-people", "bg-primary", 4);
+    public static readonly TypeItem Expired = new(5, "Expired", "RewardPointAction.Expired", "Suresi doldu", "bi-clock-history", "bg-secondary", 5);
+    public static readonly TypeItem AdminAdjustment = new(6, "AdminAdjustment", "RewardPointAction.AdminAdjustment", "Admin duzeltmesi", "bi-shield-check", "bg-warning text-dark", 6);
+
+    public static IEnumerable<TypeItem> All => new[] { Earned, Spent, OrderBonus, Referral, Expired, AdminAdjustment };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Earned = 1;
+        public const int Spent = 2;
+        public const int OrderBonus = 3;
+        public const int Referral = 4;
+        public const int Expired = 5;
+        public const int AdminAdjustment = 6;
+    }
+}

@@ -1,0 +1,149 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("RewardPoints.Title", "Odul Puanlari").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="reward-points-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-star text-warning me-2"></i>
+                @Html.T("RewardPoints.Title", "Odul Puanlari")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("RewardPoints.Subtitle", "Puan kazanin ve harcayin")</p>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+
+    <div data-bind="visible: !isLoading()">
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-2">
+                            <i class="bi bi-star-fill text-warning" style="font-size: 2rem;"></i>
+                        </div>
+                        <h3 class="mb-1 fw-bold" data-bind="text: summary().totalPoints || 0"></h3>
+                        <small class="text-muted">@Html.T("RewardPoints.TotalPoints", "Toplam Puan")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-2">
+                            <i class="bi bi-plus-circle text-success" style="font-size: 2rem;"></i>
+                        </div>
+                        <h3 class="mb-1 fw-bold text-success" data-bind="text: '+' + (summary().earnedThisMonth || 0)"></h3>
+                        <small class="text-muted">@Html.T("RewardPoints.EarnedThisMonth", "Bu Ay Kazanilan")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-2">
+                            <i class="bi bi-dash-circle text-danger" style="font-size: 2rem;"></i>
+                        </div>
+                        <h3 class="mb-1 fw-bold text-danger" data-bind="text: '-' + (summary().spentThisMonth || 0)"></h3>
+                        <small class="text-muted">@Html.T("RewardPoints.SpentThisMonth", "Bu Ay Harcanan")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <select class="form-select form-select-sm" data-bind="value: filterActionTypeId">
+                            <option value="">@Html.T("RewardPoints.AllActions", "Tum Islemler")</option>
+                            <!-- ko foreach: actionTypes -->
+                            <option data-bind="value: id, text: systemName"></option>
+                            <!-- /ko -->
+                        </select>
+                    </div>
+                    <div class="col-md-4 offset-md-4 text-end">
+                        <button class="btn btn-sm btn-outline-primary" data-bind="click: refresh">
+                            <i class="bi bi-arrow-clockwise me-1"></i> @Html.T("Common.Refresh", "Yenile")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>@Html.T("RewardPoints.Date", "Tarih")</th>
+                                <th>@Html.T("RewardPoints.Action", "Islem")</th>
+                                <th>@Html.T("RewardPoints.Description", "Aciklama")</th>
+                                <th class="text-end">@Html.T("RewardPoints.Points", "Puan")</th>
+                                <th class="text-end">@Html.T("RewardPoints.Balance", "Bakiye")</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: history">
+                            <tr>
+                                <td data-bind="text: $parent.formatDateTime(createdAt)"></td>
+                                <td>
+                                    <span class="badge" data-bind="text: actionTypeName, css: actionTypeCssClass"></span>
+                                </td>
+                                <td data-bind="text: description || '-'"></td>
+                                <td class="text-end fw-bold">
+                                    <span data-bind="text: (points > 0 ? '+' : '') + points, css: points > 0 ? 'text-success' : 'text-danger'"></span>
+                                </td>
+                                <td class="text-end" data-bind="text: balanceAfter"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div data-bind="visible: history().length === 0" class="text-center py-5">
+                    <i class="bi bi-star text-muted display-4 d-block mb-3"></i>
+                    <p class="text-muted">@Html.T("RewardPoints.NoHistory", "Henuz puan gecmisiniz bulunmuyor.")</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div data-bind="visible: totalPages() > 1" class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted" data-bind="text: totalCount() + ' @Html.T("Common.Records", "kayit")'"></small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" data-bind="css: { disabled: currentPage() <= 1 }">
+                        <a class="page-link" href="#" data-bind="click: prevPage">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    <!-- ko foreach: pageNumbers -->
+                    <li class="page-item" data-bind="css: { active: $data === $parent.currentPage() }">
+                        <a class="page-link" href="#" data-bind="text: $data, click: function() { $parent.goToPage($data); }"></a>
+                    </li>
+                    <!-- /ko -->
+                    <li class="page-item" data-bind="css: { disabled: currentPage() >= totalPages() }">
+                        <a class="page-link" href="#" data-bind="click: nextPage">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/RewardPoints/Index.js"></script>
+}

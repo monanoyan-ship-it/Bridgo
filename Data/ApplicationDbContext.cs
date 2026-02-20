@@ -151,6 +151,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<AuctionBid> AuctionBids => Set<AuctionBid>();
     public DbSet<AuctionWatcher> AuctionWatchers => Set<AuctionWatcher>();
 
+    // Reward Points - Odul Puan Sistemi
+    public DbSet<RewardPointHistory> RewardPointHistories => Set<RewardPointHistory>();
+
+    // Back in Stock - Stok Bildirim Sistemi
+    public DbSet<BackInStockSubscription> BackInStockSubscriptions => Set<BackInStockSubscription>();
+
     // Type Tables - Artik code-based (ITypeResolver.cs): AddressTypes, VendorStatuses, etc.
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -2149,6 +2155,42 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.HasOne(w => w.WatcherVendor)
                   .WithMany()
                   .HasForeignKey(w => w.WatcherVendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ========== BACK IN STOCK ==========
+        builder.Entity<BackInStockSubscription>(entity =>
+        {
+            entity.ToTable("BackInStockSubscriptions");
+            entity.HasIndex(s => new { s.VendorId, s.ProductId }).IsUnique();
+            entity.HasIndex(s => s.ProductId);
+            entity.Property(s => s.Email).HasMaxLength(200);
+            entity.HasQueryFilter(s => !s.IsDeleted);
+
+            entity.HasOne(s => s.Product)
+                  .WithMany()
+                  .HasForeignKey(s => s.ProductId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.Vendor)
+                  .WithMany()
+                  .HasForeignKey(s => s.VendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ========== REWARD POINTS ==========
+        builder.Entity<RewardPointHistory>(entity =>
+        {
+            entity.ToTable("RewardPointHistories");
+            entity.HasIndex(r => r.VendorId);
+            entity.HasIndex(r => new { r.VendorId, r.CreatedAt });
+            entity.HasIndex(r => r.ActionTypeId);
+            entity.Property(r => r.Description).HasMaxLength(500);
+            entity.HasQueryFilter(r => !r.IsDeleted);
+
+            entity.HasOne(r => r.Vendor)
+                  .WithMany()
+                  .HasForeignKey(r => r.VendorId)
                   .OnDelete(DeleteBehavior.Restrict);
         });
     }

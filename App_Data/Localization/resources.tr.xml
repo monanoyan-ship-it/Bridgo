@@ -1007,4 +1007,60 @@
   <LocaleResource Name="BidStatus.Rejected"><Value>Reddedildi</Value></LocaleResource>
   <LocaleResource Name="BidStatus.Cancelled"><Value>Iptal</Value></LocaleResource>
   <LocaleResource Name="BidStatus.Winning"><Value>Kazanan</Value></LocaleResource>
+  <!-- Reward Points -->
+  <LocaleResource Name="Module.RewardPoints"><Value>Odul Puanlari</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Title"><Value>Odul Puanlari</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Subtitle"><Value>Puan kazanin ve harcayin</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.TotalPoints"><Value>Toplam Puan</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.EarnedThisMonth"><Value>Bu Ay Kazanilan</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.SpentThisMonth"><Value>Bu Ay Harcanan</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.AllActions"><Value>Tum Islemler</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Date"><Value>Tarih</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Action"><Value>Islem</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Description"><Value>Aciklama</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Points"><Value>Puan</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.Balance"><Value>Bakiye</Value></LocaleResource>
+  <LocaleResource Name="RewardPoints.NoHistory"><Value>Henuz puan gecmisiniz bulunmuyor.</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.Earned"><Value>Kazanildi</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.Spent"><Value>Harcandi</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.OrderBonus"><Value>Siparis Bonusu</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.Referral"><Value>Referans Bonusu</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.Expired"><Value>Suresi Doldu</Value></LocaleResource>
+  <LocaleResource Name="RewardPointAction.AdminAdjustment"><Value>Admin Duzeltmesi</Value></LocaleResource>
+  <!-- Back in Stock -->
+  <LocaleResource Name="Module.BackInStock"><Value>Stok Bildirimleri</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Title"><Value>Stok Bildirimleri</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Subtitle"><Value>Urunler tekrar stoga girdiginde bildirim alin</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Product"><Value>Urun</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Sku"><Value>SKU</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Status"><Value>Durum</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.SubscribedAt"><Value>Abone Tarihi</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Notified"><Value>Bildirildi</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.Waiting"><Value>Bekleniyor</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.NoSubscriptions"><Value>Henuz stok bildirim aboneliginiz yok.</Value></LocaleResource>
+  <LocaleResource Name="BackInStock.HowTo"><Value>Urun detay sayfasindan stok bildirimi icin abone olabilirsiniz.</Value></LocaleResource>
+  <!-- Downloadable Products -->
+  <LocaleResource Name="Module.DownloadableProducts"><Value>Indirilebilir Urunler</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.Title"><Value>Indirilebilir Urunler</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.Subtitle"><Value>Dijital urunlerinizi yonetin</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.ProductName"><Value>Urun Adi</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.FileName"><Value>Dosya Adi</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.Downloads"><Value>Indirme Sayisi</Value></LocaleResource>
+  <LocaleResource Name="DownloadableProducts.NoProducts"><Value>Henuz indirilebilir urun bulunmuyor.</Value></LocaleResource>
+  <!-- Apps -->
+  <LocaleResource Name="Module.Apps"><Value>Uygulamalar</Value></LocaleResource>
+  <LocaleResource Name="Apps.Title"><Value>Uygulamalar</Value></LocaleResource>
+  <LocaleResource Name="Apps.Subtitle"><Value>Isletmeniz icin uygulamalari kesfet</Value></LocaleResource>
+  <LocaleResource Name="Apps.Logistics"><Value>Lojistik</Value></LocaleResource>
+  <LocaleResource Name="Apps.LogisticsDesc"><Value>Kargo ve lojistik entegrasyonlari</Value></LocaleResource>
+  <LocaleResource Name="Apps.Customs"><Value>Gumruk</Value></LocaleResource>
+  <LocaleResource Name="Apps.CustomsDesc"><Value>Gumruk islemleri ve beyanname yonetimi</Value></LocaleResource>
+  <LocaleResource Name="Apps.Finance"><Value>Finans</Value></LocaleResource>
+  <LocaleResource Name="Apps.FinanceDesc"><Value>Odeme, muhasebe ve finansman araclari</Value></LocaleResource>
+  <LocaleResource Name="Apps.SocialMedia"><Value>Sosyal Medya</Value></LocaleResource>
+  <LocaleResource Name="Apps.SocialMediaDesc"><Value>Sosyal medya yonetim araclari</Value></LocaleResource>
+  <LocaleResource Name="Apps.Marketplace"><Value>Pazar Yeri</Value></LocaleResource>
+  <LocaleResource Name="Apps.MarketplaceDesc"><Value>Pazar yeri entegrasyonlari</Value></LocaleResource>
+  <LocaleResource Name="Apps.ComingSoon"><Value>Yakin zamanda</Value></LocaleResource>
+  <LocaleResource Name="Apps.Explore"><Value>Kesfet</Value></LocaleResource>
 </Language>

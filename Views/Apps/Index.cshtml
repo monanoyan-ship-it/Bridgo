@@ -1,0 +1,118 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Apps.Title", "Uygulamalar").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="apps-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-grid text-primary me-2"></i>
+                @Html.T("Apps.Title", "Uygulamalar")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Apps.Subtitle", "Isletmeniz icin uygulamalari kesfet")</p>
+        </div>
+    </div>
+
+    <!-- App Categories Grid -->
+    <div class="row g-4">
+        <!-- Logistics -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="bi bi-truck text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">@Html.T("Apps.Logistics", "Lojistik")</h5>
+                    <p class="card-text text-muted">@Html.T("Apps.LogisticsDesc", "Kargo ve lojistik entegrasyonlari")</p>
+                    <a href="/Apps/Logistics" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i> @Html.T("Apps.Explore", "Kesfet")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customs -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="bi bi-building-check text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">@Html.T("Apps.Customs", "Gumruk")</h5>
+                    <p class="card-text text-muted">@Html.T("Apps.CustomsDesc", "Gumruk islemleri ve beyanname yonetimi")</p>
+                    <a href="/Apps/Customs" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i> @Html.T("Apps.Explore", "Kesfet")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finance -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="bi bi-bank text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">@Html.T("Apps.Finance", "Finans")</h5>
+                    <p class="card-text text-muted">@Html.T("Apps.FinanceDesc", "Odeme, muhasebe ve finansman araclari")</p>
+                    <a href="/Apps/Finance" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i> @Html.T("Apps.Explore", "Kesfet")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Media -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="bi bi-share text-info" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">@Html.T("Apps.SocialMedia", "Sosyal Medya")</h5>
+                    <p class="card-text text-muted">@Html.T("Apps.SocialMediaDesc", "Sosyal medya yonetim araclari")</p>
+                    <a href="/Apps/SocialMedia" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i> @Html.T("Apps.Explore", "Kesfet")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marketplace -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="bi bi-shop-window text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">@Html.T("Apps.Marketplace", "Pazar Yeri")</h5>
+                    <p class="card-text text-muted">@Html.T("Apps.MarketplaceDesc", "Pazar yeri entegrasyonlari")</p>
+                    <a href="/Apps/Marketplace" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i> @Html.T("Apps.Explore", "Kesfet")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coming Soon Placeholder -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-light">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="bi bi-plus-circle-dotted text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title text-muted">@Html.T("Apps.ComingSoon", "Yakin zamanda")</h5>
+                    <p class="card-text text-muted">...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Apps/Index.js"></script>
+}

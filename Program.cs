@@ -208,6 +208,8 @@ builder.Services.Configure<EvrimApiSettings>(
 builder.Services.AddScoped<IEvrimApiService, EvrimApiService>();
 builder.Services.AddScoped<ISocialFeedService, SocialFeedService>();
 builder.Services.AddScoped<IAuctionService, AuctionService>();
+builder.Services.AddScoped<IRewardPointService, RewardPointService>();
+builder.Services.AddScoped<IBackInStockService, BackInStockService>();
 
 // Evrim API HttpClient
 builder.Services.AddHttpClient("EvrimApi", client =>
