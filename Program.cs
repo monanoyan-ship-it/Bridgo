@@ -206,6 +206,7 @@ builder.Services.AddScoped<IWaitlistService, WaitlistService>();
 builder.Services.Configure<EvrimApiSettings>(
     builder.Configuration.GetSection("EvrimApi"));
 builder.Services.AddScoped<IEvrimApiService, EvrimApiService>();
+builder.Services.AddScoped<ISocialFeedService, SocialFeedService>();
 
 // Evrim API HttpClient
 builder.Services.AddHttpClient("EvrimApi", client =>

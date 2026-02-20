@@ -245,6 +245,22 @@ public static class RbacSeeder
                 IsMenuSection = false
             },
 
+            // ========== FEED (Platform-level, tum capability'ler) ==========
+            new()
+            {
+                ParentId = null,
+                Name = "Feed",
+                DisplayName = "Feed",
+                DisplayNameResourceKey = "Module.Feed",
+                Description = "Sosyal paylasim akisi",
+                Icon = "bi-rss",
+                Route = "/Feed",
+                DisplayOrder = 2,
+                IsMenuItem = true,
+                IsActive = true,
+                IsMenuSection = false
+            },
+
             // ========== ACTIONS ==========
             new()
             {
@@ -1012,6 +1028,26 @@ public static class RbacSeeder
 
         context.PlatformModules.AddRange(modules);
         await context.SaveChangesAsync();
+
+        // Feed modulu tum capability'lere atansin
+        var feedModule = await context.PlatformModules.FirstOrDefaultAsync(m => m.DisplayNameResourceKey == "Module.Feed");
+        if (feedModule != null)
+        {
+            var allCapabilityIds = new[] {
+                Capabilities.Ids.Seller, Capabilities.Ids.Buyer, Capabilities.Ids.Carrier,
+                Capabilities.Ids.Insurance, Capabilities.Ids.Customs, Capabilities.Ids.Survey,
+                Capabilities.Ids.Investor
+            };
+            foreach (var capId in allCapabilityIds)
+            {
+                context.CapabilityModuleMappings.Add(new CapabilityModuleMapping
+                {
+                    CapabilityId = capId,
+                    PlatformModuleId = feedModule.Id
+                });
+            }
+            await context.SaveChangesAsync();
+        }
     }
 
     private static async Task SeedRolesAsync(ApplicationDbContext context)

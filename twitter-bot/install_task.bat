@@ -21,7 +21,11 @@ echo Old tasks removed.
 echo.
 
 REM Create daily recurring hourly task (12:00-21:00 TR time)
+REM RandomDelay (PT45M = 0-45 min) handled via XML import for natural timing
 schtasks /create /tn "CorplynkTwitterBot" /tr "\"%PYTHON_PATH%\" \"%BOT_DIR%bot.py\"" /sc daily /st 12:00 /ri 60 /du 09:00 /f
+
+REM Add RandomDelay via PowerShell (schtasks doesn't support it natively)
+powershell -Command "$task = Get-ScheduledTask -TaskName 'CorplynkTwitterBot'; $task.Triggers[0].RandomDelay = 'PT45M'; Set-ScheduledTask -InputObject $task"
 if %ERRORLEVEL% EQU 0 (
     echo SUCCESS: Hourly task created (12:00-21:00 TR, every hour, daily)
 ) else (

@@ -1357,3 +1357,49 @@ public static class ProductReviewStatuses
         public const int Hidden = 3;
     }
 }
+
+// ============================================================
+// SOCIAL POST TYPES (Sosyal Paylasim Tipleri)
+// ============================================================
+public static class SocialPostTypes
+{
+    public static readonly TypeItem Text = new(1, "Text", "SocialPostType.Text", "Metin paylasimi", "bi-chat-text", "bg-primary", 1, isDefault: true);
+    public static readonly TypeItem Article = new(2, "Article", "SocialPostType.Article", "Makale", "bi-newspaper", "bg-info", 2);
+    public static readonly TypeItem Announcement = new(3, "Announcement", "SocialPostType.Announcement", "Duyuru", "bi-megaphone", "bg-warning text-dark", 3);
+    public static readonly TypeItem ProductShowcase = new(4, "ProductShowcase", "SocialPostType.ProductShowcase", "Urun Tanitimi", "bi-box-seam", "bg-success", 4);
+
+    public static IEnumerable<TypeItem> All => new[] { Text, Article, Announcement, ProductShowcase };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Text = 1;
+        public const int Article = 2;
+        public const int Announcement = 3;
+        public const int ProductShowcase = 4;
+    }
+}
+
+// ============================================================
+// SOCIAL POST STATUSES (Sosyal Paylasim Durumlari)
+// ============================================================
+public static class SocialPostStatuses
+{
+    public static readonly TypeItem Draft = new(1, "Draft", "SocialPostStatus.Draft", "Taslak", "bi-file-earmark", "bg-secondary", 1, isDefault: true);
+    public static readonly TypeItem Published = new(2, "Published", "SocialPostStatus.Published", "Yayinda", "bi-check-circle", "bg-success", 2);
+    public static readonly TypeItem Archived = new(3, "Archived", "SocialPostStatus.Archived", "Arsivlendi", "bi-archive", "bg-dark", 3);
+
+    public static IEnumerable<TypeItem> All => new[] { Draft, Published, Archived };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Draft = 1;
+        public const int Published = 2;
+        public const int Archived = 3;
+    }
+}

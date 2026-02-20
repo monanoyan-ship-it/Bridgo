@@ -285,5 +285,29 @@ public enum NotificationType
     /// <summary>
     /// Pazarlik suresi doldu
     /// </summary>
-    NegotiationExpired = 54
+    NegotiationExpired = 54,
+
+    // ============================================
+    // SOCIAL FEED NOTIFICATIONS
+    // ============================================
+
+    /// <summary>
+    /// Yeni sosyal paylasim (takip edilen firmadan)
+    /// </summary>
+    NewSocialPost = 60,
+
+    /// <summary>
+    /// Paylasim begeni aldı
+    /// </summary>
+    SocialPostLiked = 61,
+
+    /// <summary>
+    /// Paylasima yorum yapildi
+    /// </summary>
+    SocialPostCommented = 62,
+
+    /// <summary>
+    /// Yeni takipci
+    /// </summary>
+    NewFollower = 63
 }

@@ -910,4 +910,37 @@
   <LocaleResource Name="ProductReviewStatus.Pending"><Value>Beklemede</Value></LocaleResource>
   <LocaleResource Name="ProductReviewStatus.Rejected"><Value>Reddedildi</Value></LocaleResource>
   <LocaleResource Name="ProductReviewStatus.Hidden"><Value>Gizlendi</Value></LocaleResource>
+
+  <!-- SOCIAL FEED -->
+  <LocaleResource Name="Module.Feed"><Value>Feed</Value></LocaleResource>
+  <LocaleResource Name="Feed.Title"><Value>Feed</Value></LocaleResource>
+  <LocaleResource Name="Feed.Subtitle"><Value>Firmalarin paylasimlarini takip edin</Value></LocaleResource>
+  <LocaleResource Name="Feed.Tab.Feed"><Value>Feed</Value></LocaleResource>
+  <LocaleResource Name="Feed.Tab.Discover"><Value>Kesfet</Value></LocaleResource>
+  <LocaleResource Name="Feed.Tab.MyPosts"><Value>Paylasimlarim</Value></LocaleResource>
+  <LocaleResource Name="Feed.PostType.Text"><Value>Metin</Value></LocaleResource>
+  <LocaleResource Name="Feed.PostType.Article"><Value>Makale</Value></LocaleResource>
+  <LocaleResource Name="Feed.PostType.Announcement"><Value>Duyuru</Value></LocaleResource>
+  <LocaleResource Name="Feed.PostType.ProductShowcase"><Value>Urun Tanitimi</Value></LocaleResource>
+  <LocaleResource Name="Feed.Compose.Title"><Value>Baslik (opsiyonel)</Value></LocaleResource>
+  <LocaleResource Name="Feed.Compose.Placeholder"><Value>Ne paylasmak istiyorsunuz?</Value></LocaleResource>
+  <LocaleResource Name="Feed.Compose.SelectProduct"><Value>Urun secin...</Value></LocaleResource>
+  <LocaleResource Name="Feed.Compose.SaveDraft"><Value>Taslak</Value></LocaleResource>
+  <LocaleResource Name="Feed.Compose.Publish"><Value>Paylas</Value></LocaleResource>
+  <LocaleResource Name="Feed.Empty"><Value>Henuz paylasim yok</Value></LocaleResource>
+  <LocaleResource Name="Feed.Empty.Feed"><Value>Firmalari takip ederek feed'inizi olusturun</Value></LocaleResource>
+  <LocaleResource Name="Feed.Status.Draft"><Value>Taslak</Value></LocaleResource>
+  <LocaleResource Name="Feed.Action.Publish"><Value>Yayinla</Value></LocaleResource>
+  <LocaleResource Name="Feed.ProductShowcase"><Value>Urun Tanitimi</Value></LocaleResource>
+  <LocaleResource Name="Feed.Comment.Placeholder"><Value>Yorum yazin...</Value></LocaleResource>
+  <LocaleResource Name="Feed.LoadMore"><Value>Daha fazla yukle</Value></LocaleResource>
+  <LocaleResource Name="Feed.Delete.Title"><Value>Paylasimi Sil</Value></LocaleResource>
+  <LocaleResource Name="Feed.Delete.Confirm"><Value>Bu paylasimi silmek istediginize emin misiniz?</Value></LocaleResource>
+  <LocaleResource Name="SocialPostType.Text"><Value>Metin</Value></LocaleResource>
+  <LocaleResource Name="SocialPostType.Article"><Value>Makale</Value></LocaleResource>
+  <LocaleResource Name="SocialPostType.Announcement"><Value>Duyuru</Value></LocaleResource>
+  <LocaleResource Name="SocialPostType.ProductShowcase"><Value>Urun Tanitimi</Value></LocaleResource>
+  <LocaleResource Name="SocialPostStatus.Draft"><Value>Taslak</Value></LocaleResource>
+  <LocaleResource Name="SocialPostStatus.Published"><Value>Yayinda</Value></LocaleResource>
+  <LocaleResource Name="SocialPostStatus.Archived"><Value>Arsivlendi</Value></LocaleResource>
 </Language>

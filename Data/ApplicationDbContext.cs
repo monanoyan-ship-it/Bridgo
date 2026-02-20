@@ -139,6 +139,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<DocumentNumberSequence> DocumentNumberSequences => Set<DocumentNumberSequence>();
     public DbSet<TransactionDocumentMapping> TransactionDocumentMappings => Set<TransactionDocumentMapping>();
 
+    // Social Feed - Sosyal Paylasim Sistemi
+    public DbSet<SocialPost> SocialPosts => Set<SocialPost>();
+    public DbSet<SocialPostImage> SocialPostImages => Set<SocialPostImage>();
+    public DbSet<SocialPostLike> SocialPostLikes => Set<SocialPostLike>();
+    public DbSet<SocialPostComment> SocialPostComments => Set<SocialPostComment>();
+    public DbSet<VendorFollow> VendorFollows => Set<VendorFollow>();
+
     // Type Tables - Artik code-based (ITypeResolver.cs): AddressTypes, VendorStatuses, etc.
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -1930,6 +1937,139 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                   .WithMany()
                   .HasForeignKey(r => r.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+        // =========================================
+        // SOCIAL FEED - Sosyal Paylasim Sistemi
+        // =========================================
+
+        // SocialPost configuration
+        builder.Entity<SocialPost>(entity =>
+        {
+            entity.ToTable("SocialPosts");
+            entity.HasIndex(p => new { p.VendorId, p.StatusId });
+            entity.HasIndex(p => new { p.StatusId, p.PublishedAt });
+            entity.HasIndex(p => p.AuthorUserId);
+            entity.HasIndex(p => p.PublishedAt).IsDescending();
+            entity.Property(p => p.Title).HasMaxLength(200);
+            entity.Property(p => p.Content).HasMaxLength(4000).IsRequired();
+            entity.HasQueryFilter(p => !p.IsDeleted);
+
+            // PostTypeId - code-based type (SocialPostTypes static class)
+            // StatusId - code-based type (SocialPostStatuses static class)
+
+            // Vendor iliskisi
+            entity.HasOne(p => p.Vendor)
+                  .WithMany()
+                  .HasForeignKey(p => p.VendorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Author iliskisi
+            entity.HasOne(p => p.Author)
+                  .WithMany()
+                  .HasForeignKey(p => p.AuthorUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Product iliskisi (optional - ProductShowcase icin)
+            entity.HasOne(p => p.Product)
+                  .WithMany()
+                  .HasForeignKey(p => p.ProductId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // SocialPostImage configuration
+        builder.Entity<SocialPostImage>(entity =>
+        {
+            entity.ToTable("SocialPostImages");
+            entity.HasIndex(i => new { i.SocialPostId, i.DisplayOrder });
+            entity.Property(i => i.Url).HasMaxLength(500).IsRequired();
+            entity.Property(i => i.AltText).HasMaxLength(200);
+            entity.Property(i => i.MimeType).HasMaxLength(50);
+            entity.HasQueryFilter(i => !i.IsDeleted);
+
+            entity.HasOne(i => i.SocialPost)
+                  .WithMany(p => p.Images)
+                  .HasForeignKey(i => i.SocialPostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // SocialPostLike configuration
+        builder.Entity<SocialPostLike>(entity =>
+        {
+            entity.ToTable("SocialPostLikes");
+            entity.HasIndex(l => new { l.SocialPostId, l.UserId }).IsUnique();
+            entity.HasIndex(l => l.SocialPostId);
+            entity.HasQueryFilter(l => !l.IsDeleted);
+
+            entity.HasOne(l => l.SocialPost)
+                  .WithMany(p => p.Likes)
+                  .HasForeignKey(l => l.SocialPostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(l => l.User)
+                  .WithMany()
+                  .HasForeignKey(l => l.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(l => l.Vendor)
+                  .WithMany()
+                  .HasForeignKey(l => l.VendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SocialPostComment configuration
+        builder.Entity<SocialPostComment>(entity =>
+        {
+            entity.ToTable("SocialPostComments");
+            entity.HasIndex(c => c.SocialPostId);
+            entity.HasIndex(c => new { c.SocialPostId, c.CreatedAt });
+            entity.Property(c => c.Content).HasMaxLength(2000).IsRequired();
+            entity.HasQueryFilter(c => !c.IsDeleted);
+
+            entity.HasOne(c => c.SocialPost)
+                  .WithMany(p => p.Comments)
+                  .HasForeignKey(c => c.SocialPostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.User)
+                  .WithMany()
+                  .HasForeignKey(c => c.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(c => c.Vendor)
+                  .WithMany()
+                  .HasForeignKey(c => c.VendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Self-referencing for replies
+            entity.HasOne(c => c.ParentComment)
+                  .WithMany(c => c.Replies)
+                  .HasForeignKey(c => c.ParentCommentId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // VendorFollow configuration
+        builder.Entity<VendorFollow>(entity =>
+        {
+            entity.ToTable("VendorFollows");
+            entity.HasIndex(f => new { f.FollowerVendorId, f.FollowedVendorId }).IsUnique();
+            entity.HasIndex(f => f.FollowerVendorId);
+            entity.HasIndex(f => f.FollowedVendorId);
+            entity.HasQueryFilter(f => !f.IsDeleted);
+
+            entity.HasOne(f => f.FollowerVendor)
+                  .WithMany()
+                  .HasForeignKey(f => f.FollowerVendorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(f => f.FollowedVendor)
+                  .WithMany()
+                  .HasForeignKey(f => f.FollowedVendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(f => f.FollowedByUser)
+                  .WithMany()
+                  .HasForeignKey(f => f.FollowedByUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

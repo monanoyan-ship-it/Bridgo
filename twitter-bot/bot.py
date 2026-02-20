@@ -163,12 +163,7 @@ def main():
         save_state(state)  # Save updated daily_count/last_date
         return
 
-    # Random delay (0-55 minutes) so tweets don't always land on :00
-    delay_minutes = random.randint(0, 55)
-    logger.info(f"Waiting {delay_minutes} minutes before posting...")
-    time.sleep(delay_minutes * 60)
-
-    # Post
+    # Post (random delay handled by Task Scheduler's RandomDelay setting)
     try:
         logger.info(f"Posting tweet #{tweet['id']}: {tweet['text'][:50]}...")
         response = post_tweet(tweet["text"])

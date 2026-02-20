@@ -1,0 +1,287 @@
+@using Bridgo.Extensions
+@{
+    ViewData["Title"] = Html.T("Feed.Title", "Feed").ToString();
+    Layout = "~/Views/Dashboard/_DashboardLayout.cshtml";
+}
+
+<div id="feed-app">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-rss text-primary me-2"></i>
+                @Html.T("Feed.Title", "Feed")
+            </h4>
+            <p class="text-muted mb-0">@Html.T("Feed.Subtitle", "Firmalarin paylasimlarini takip edin")</p>
+        </div>
+    </div>
+
+    <!-- Compose Box -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex gap-3">
+                <div class="flex-shrink-0">
+                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                        <i class="bi bi-person text-primary"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="mb-2">
+                        <select class="form-select form-select-sm d-inline-block" style="width:auto;" data-bind="value: newPost.postTypeId">
+                            <option value="1">@Html.T("Feed.PostType.Text", "Metin")</option>
+                            <option value="2">@Html.T("Feed.PostType.Article", "Makale")</option>
+                            <option value="3">@Html.T("Feed.PostType.Announcement", "Duyuru")</option>
+                            <option value="4">@Html.T("Feed.PostType.ProductShowcase", "Urun Tanitimi")</option>
+                        </select>
+                    </div>
+                    <!-- ko if: newPost.postTypeId() !== '1' -->
+                    <input type="text" class="form-control form-control-sm mb-2"
+                           placeholder="@Html.T("Feed.Compose.Title", "Baslik (opsiyonel)")"
+                           data-bind="value: newPost.title" />
+                    <!-- /ko -->
+                    <textarea class="form-control mb-2" rows="3"
+                              placeholder="@Html.T("Feed.Compose.Placeholder", "Ne paylasmak istiyorsunuz?")"
+                              data-bind="value: newPost.content"></textarea>
+                    <!-- ko if: newPost.postTypeId() === '4' -->
+                    <select class="form-select form-select-sm mb-2"
+                            data-bind="options: products, optionsText: 'name', optionsValue: 'id', optionsCaption: '@Html.T("Feed.Compose.SelectProduct", "Urun secin...")', value: newPost.productId">
+                    </select>
+                    <!-- /ko -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" data-bind="click: saveDraft, enable: newPost.content()">
+                            <i class="bi bi-file-earmark me-1"></i> @Html.T("Feed.Compose.SaveDraft", "Taslak")
+                        </button>
+                        <button class="btn btn-primary btn-sm" data-bind="click: publishPost, enable: newPost.content()">
+                            <i class="bi bi-send me-1"></i> @Html.T("Feed.Compose.Publish", "Paylas")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'feed' }, click: function() { setTab('feed'); }" href="#">
+                <i class="bi bi-rss"></i> @Html.T("Feed.Tab.Feed", "Feed")
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'discover' }, click: function() { setTab('discover'); }" href="#">
+                <i class="bi bi-compass"></i> @Html.T("Feed.Tab.Discover", "Kesfet")
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bind="css: { active: activeTab() === 'myPosts' }, click: function() { setTab('myPosts'); }" href="#">
+                <i class="bi bi-person-lines-fill"></i> @Html.T("Feed.Tab.MyPosts", "Paylasimlarim")
+            </a>
+        </li>
+    </ul>
+
+    <!-- Loading -->
+    <div data-bind="visible: isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@Html.T("Common.Loading", "Yukleniyor...")</span>
+        </div>
+    </div>
+
+    <!-- Posts List -->
+    <div data-bind="visible: !isLoading()">
+        <!-- Empty state -->
+        <div data-bind="visible: posts().length === 0" class="text-center py-5">
+            <i class="bi bi-rss display-1 text-muted"></i>
+            <p class="text-muted mt-3">@Html.T("Feed.Empty", "Henuz paylasim yok")</p>
+            <!-- ko if: activeTab() === 'feed' -->
+            <p class="text-muted small">@Html.T("Feed.Empty.Feed", "Firmalari takip ederek feed'inizi olusturun")</p>
+            <!-- /ko -->
+        </div>
+
+        <!-- Post cards -->
+        <div data-bind="foreach: posts">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <!-- Post header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex gap-2 align-items-center">
+                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;">
+                                <!-- ko if: vendorLogoUrl -->
+                                <img data-bind="attr: { src: vendorLogoUrl }" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;" />
+                                <!-- /ko -->
+                                <!-- ko ifnot: vendorLogoUrl -->
+                                <i class="bi bi-building text-primary"></i>
+                                <!-- /ko -->
+                            </div>
+                            <div>
+                                <div class="fw-semibold" data-bind="text: vendorName"></div>
+                                <small class="text-muted">
+                                    <span data-bind="text: authorName"></span>
+                                    <span class="mx-1">&middot;</span>
+                                    <span data-bind="text: $parent.formatTime(publishedAt || createdAt)"></span>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Post type badge -->
+                            <!-- ko if: postTypeId !== 1 -->
+                            <span class="badge" data-bind="text: $parent.getPostTypeName(postTypeId), css: postTypeCssClass"></span>
+                            <!-- /ko -->
+                            <!-- Draft badge -->
+                            <!-- ko if: statusId === 1 -->
+                            <span class="badge bg-secondary">@Html.T("Feed.Status.Draft", "Taslak")</span>
+                            <!-- /ko -->
+                            <!-- Own post actions -->
+                            <!-- ko if: isOwnPost -->
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <!-- ko if: statusId === 1 -->
+                                    <li><a class="dropdown-item" href="#" data-bind="click: function() { $parent.publishDraft($data); }">
+                                        <i class="bi bi-send me-2"></i>@Html.T("Feed.Action.Publish", "Yayinla")
+                                    </a></li>
+                                    <!-- /ko -->
+                                    <li><a class="dropdown-item text-danger" href="#" data-bind="click: function() { $parent.deletePost($data); }">
+                                        <i class="bi bi-trash me-2"></i>@Html.T("Common.Delete", "Sil")
+                                    </a></li>
+                                </ul>
+                            </div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+
+                    <!-- Post title -->
+                    <!-- ko if: title -->
+                    <h5 class="mb-2" data-bind="text: title"></h5>
+                    <!-- /ko -->
+
+                    <!-- Post content -->
+                    <p class="mb-2" style="white-space: pre-wrap;" data-bind="text: content"></p>
+
+                    <!-- Post images -->
+                    <!-- ko if: images && images.length > 0 -->
+                    <div class="mb-3">
+                        <!-- ko foreach: images -->
+                        <img class="rounded me-1 mb-1" style="max-height:200px;max-width:100%;"
+                             data-bind="attr: { src: url, alt: altText || '' }" />
+                        <!-- /ko -->
+                    </div>
+                    <!-- /ko -->
+
+                    <!-- Product showcase -->
+                    <!-- ko if: productId -->
+                    <div class="card bg-light mb-3">
+                        <div class="card-body py-2 d-flex align-items-center gap-3">
+                            <!-- ko if: productImageUrl -->
+                            <img class="rounded" style="width:50px;height:50px;object-fit:cover;" data-bind="attr: { src: productImageUrl }" />
+                            <!-- /ko -->
+                            <div>
+                                <small class="text-muted">@Html.T("Feed.ProductShowcase", "Urun Tanitimi")</small>
+                                <div class="fw-semibold" data-bind="text: productName"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+
+                    <!-- Actions -->
+                    <div class="d-flex align-items-center gap-4 pt-2 border-top">
+                        <button class="btn btn-sm btn-link text-decoration-none p-0" data-bind="click: function() { $parent.toggleLike($data); }">
+                            <!-- ko if: isLikedByCurrentUser -->
+                            <i class="bi bi-heart-fill text-danger me-1"></i>
+                            <!-- /ko -->
+                            <!-- ko ifnot: isLikedByCurrentUser -->
+                            <i class="bi bi-heart me-1"></i>
+                            <!-- /ko -->
+                            <span data-bind="text: likeCount"></span>
+                        </button>
+                        <button class="btn btn-sm btn-link text-decoration-none p-0" data-bind="click: function() { $parent.toggleComments($data); }">
+                            <i class="bi bi-chat me-1"></i>
+                            <span data-bind="text: commentCount"></span>
+                        </button>
+                        <small class="text-muted ms-auto">
+                            <i class="bi bi-eye me-1"></i><span data-bind="text: viewCount"></span>
+                        </small>
+                    </div>
+
+                    <!-- Comments section (toggled) -->
+                    <!-- ko if: $parent.expandedPostId() === id -->
+                    <div class="mt-3 pt-3 border-top">
+                        <!-- Comment input -->
+                        <div class="d-flex gap-2 mb-3">
+                            <input type="text" class="form-control form-control-sm"
+                                   placeholder="@Html.T("Feed.Comment.Placeholder", "Yorum yazin...")"
+                                   data-bind="value: $parent.newCommentText, event: { keypress: function(d,e) { if(e.keyCode===13) { $parent.addComment($data); return false; } return true; } }" />
+                            <button class="btn btn-sm btn-primary" data-bind="click: function() { $parent.addComment($data); }">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                        <!-- Comments list -->
+                        <!-- ko foreach: $parent.currentComments() -->
+                        <div class="d-flex gap-2 mb-2">
+                            <div class="rounded-circle bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;">
+                                <i class="bi bi-person small"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="bg-light rounded p-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="fw-semibold" data-bind="text: vendorName"></small>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <small class="text-muted" data-bind="text: $parents[1].formatTime(createdAt)"></small>
+                                            <!-- ko if: isOwnComment -->
+                                            <button class="btn btn-sm btn-link text-danger p-0 ms-1" data-bind="click: function() { $parents[1].deleteComment($data); }">
+                                                <i class="bi bi-trash small"></i>
+                                            </button>
+                                            <!-- /ko -->
+                                        </div>
+                                    </div>
+                                    <small data-bind="text: content"></small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                        <div data-bind="visible: $parent.commentsLoading()" class="text-center py-2">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Load more / Infinite scroll trigger -->
+        <div data-bind="visible: hasMore() && !isLoadingMore()" class="text-center py-3">
+            <button class="btn btn-outline-primary btn-sm" data-bind="click: loadMore">
+                <i class="bi bi-arrow-down me-1"></i> @Html.T("Feed.LoadMore", "Daha fazla yukle")
+            </button>
+        </div>
+        <div data-bind="visible: isLoadingMore()" class="text-center py-3">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Html.T("Feed.Delete.Title", "Paylasimi Sil")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Html.T("Feed.Delete.Confirm", "Bu paylasimi silmek istediginize emin misiniz?")</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Html.T("Common.Cancel", "Iptal")</button>
+                    <button type="button" class="btn btn-danger" data-bind="click: confirmDelete">
+                        <i class="bi bi-trash me-1"></i> @Html.T("Common.Delete", "Sil")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Feed/Index.js" asp-append-version="true"></script>
+}
