@@ -47,19 +47,19 @@ public class FeedApiController : ControllerBase
     // ============================================
 
     [HttpGet]
-    public async Task<IActionResult> GetFeed([FromQuery] int? lastPostId, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetFeed([FromQuery] int? lastPostId, [FromQuery] int pageSize = 20, [FromQuery] string? sort = null)
     {
         var vendorId = await GetUserVendorIdAsync();
         if (vendorId == null) return Unauthorized();
 
-        var result = await _feedService.GetFeedAsync(vendorId.Value, GetUserId(), lastPostId, pageSize);
+        var result = await _feedService.GetFeedAsync(vendorId.Value, GetUserId(), lastPostId, pageSize, sort);
         return Ok(result);
     }
 
     [HttpGet("discover")]
-    public async Task<IActionResult> GetDiscoverFeed([FromQuery] int? lastPostId, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetDiscoverFeed([FromQuery] int? lastPostId, [FromQuery] int pageSize = 20, [FromQuery] string? sort = null)
     {
-        var result = await _feedService.GetDiscoverFeedAsync(GetUserId(), lastPostId, pageSize);
+        var result = await _feedService.GetDiscoverFeedAsync(GetUserId(), lastPostId, pageSize, sort);
         return Ok(result);
     }
 
@@ -170,6 +170,59 @@ public class FeedApiController : ControllerBase
         if (vendorId == null) return Unauthorized();
 
         var result = await _feedService.DeleteCommentAsync(id, GetUserId(), vendorId.Value);
+        if (!result.Success) return BadRequest(new { message = result.Message });
+        return Ok(new { message = result.Message });
+    }
+
+    // ============================================
+    // HASHTAGS
+    // ============================================
+
+    [HttpGet("hashtags/trending")]
+    public async Task<IActionResult> GetTrendingHashtags([FromQuery] int count = 10, [FromQuery] int hours = 24)
+    {
+        var result = await _feedService.GetTrendingHashtagsAsync(count, hours);
+        return Ok(result);
+    }
+
+    [HttpGet("hashtags/{tag}")]
+    public async Task<IActionResult> GetPostsByHashtag(string tag, [FromQuery] int? lastPostId, [FromQuery] int pageSize = 20)
+    {
+        var result = await _feedService.GetPostsByHashtagAsync(tag, GetUserId(), lastPostId, pageSize);
+        return Ok(result);
+    }
+
+    // ============================================
+    // SEARCH
+    // ============================================
+
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchPosts([FromQuery] string? query, [FromQuery] int? postTypeId, [FromQuery] int? vendorId, [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
+    {
+        var dto = new FeedSearchDto
+        {
+            Query = query,
+            PostTypeId = postTypeId,
+            VendorId = vendorId,
+            DateFrom = dateFrom,
+            DateTo = dateTo
+        };
+
+        var result = await _feedService.SearchPostsAsync(dto, GetUserId());
+        return Ok(result);
+    }
+
+    // ============================================
+    // REPORTS
+    // ============================================
+
+    [HttpPost("posts/{id:int}/report")]
+    public async Task<IActionResult> ReportPost(int id, [FromBody] SocialPostReportCreateDto dto)
+    {
+        var vendorId = await GetUserVendorIdAsync();
+        if (vendorId == null) return Unauthorized();
+
+        var result = await _feedService.ReportPostAsync(id, dto, GetUserId(), vendorId.Value);
         if (!result.Success) return BadRequest(new { message = result.Message });
         return Ok(new { message = result.Message });
     }

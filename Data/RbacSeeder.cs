@@ -261,6 +261,22 @@ public static class RbacSeeder
                 IsMenuSection = false
             },
 
+            // ========== SPONSORED POSTS ==========
+            new()
+            {
+                ParentId = null,
+                Name = "SponsoredPosts",
+                DisplayName = "Sponsorlu Icerikler",
+                DisplayNameResourceKey = "Module.SponsoredPosts",
+                Description = "Sponsorlu icerik yonetimi",
+                Icon = "bi-megaphone",
+                Route = "/SponsoredPosts",
+                DisplayOrder = 3,
+                IsMenuItem = true,
+                IsActive = true,
+                IsMenuSection = false
+            },
+
             // ========== ACTIONS ==========
             new()
             {
@@ -1046,6 +1062,18 @@ public static class RbacSeeder
                     PlatformModuleId = feedModule.Id
                 });
             }
+            await context.SaveChangesAsync();
+        }
+
+        // SponsoredPosts modulu Seller capability'sine atansin
+        var sponsoredModule = await context.PlatformModules.FirstOrDefaultAsync(m => m.DisplayNameResourceKey == "Module.SponsoredPosts");
+        if (sponsoredModule != null)
+        {
+            context.CapabilityModuleMappings.Add(new CapabilityModuleMapping
+            {
+                CapabilityId = Capabilities.Ids.Seller,
+                PlatformModuleId = sponsoredModule.Id
+            });
             await context.SaveChangesAsync();
         }
 

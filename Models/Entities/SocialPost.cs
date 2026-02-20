@@ -44,4 +44,5 @@ public class SocialPost : BaseEntity
     public virtual ICollection<SocialPostImage> Images { get; set; } = new List<SocialPostImage>();
     public virtual ICollection<SocialPostLike> Likes { get; set; } = new List<SocialPostLike>();
     public virtual ICollection<SocialPostComment> Comments { get; set; } = new List<SocialPostComment>();
+    public virtual ICollection<SocialPostHashtag> Hashtags { get; set; } = new List<SocialPostHashtag>();
 }

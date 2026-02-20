@@ -5,8 +5,8 @@ namespace Bridgo.Services.Interfaces;
 public interface ISocialFeedService
 {
     // Posts
-    Task<FeedPageDto> GetFeedAsync(int vendorId, int currentUserId, int? lastPostId = null, int pageSize = 20);
-    Task<FeedPageDto> GetDiscoverFeedAsync(int currentUserId, int? lastPostId = null, int pageSize = 20);
+    Task<FeedPageDto> GetFeedAsync(int vendorId, int currentUserId, int? lastPostId = null, int pageSize = 20, string? sortMode = null);
+    Task<FeedPageDto> GetDiscoverFeedAsync(int currentUserId, int? lastPostId = null, int pageSize = 20, string? sortMode = null);
     Task<FeedPageDto> GetVendorPostsAsync(int vendorId, int currentUserId, int? lastPostId = null, int pageSize = 20);
     Task<SocialPostDto?> GetPostByIdAsync(int postId, int? currentUserId = null);
     Task<ServiceResult<int>> CreatePostAsync(SocialPostCreateDto dto, int vendorId, int userId);
@@ -28,4 +28,16 @@ public interface ISocialFeedService
     Task<FollowStatsDto> GetFollowStatsAsync(int vendorId);
     Task<List<VendorSummaryDto>> GetFollowersAsync(int vendorId, int currentVendorId, int pageSize = 20, int? lastId = null);
     Task<List<VendorSummaryDto>> GetFollowingAsync(int vendorId, int currentVendorId, int pageSize = 20, int? lastId = null);
+
+    // Hashtags
+    Task<List<TrendingHashtagDto>> GetTrendingHashtagsAsync(int count = 10, int hoursWindow = 24);
+    Task<FeedPageDto> GetPostsByHashtagAsync(string tag, int currentUserId, int? lastPostId = null, int pageSize = 20);
+
+    // Search
+    Task<FeedPageDto> SearchPostsAsync(FeedSearchDto dto, int currentUserId);
+
+    // Reports
+    Task<ServiceResult> ReportPostAsync(int postId, SocialPostReportCreateDto dto, int userId, int vendorId);
+    Task<List<SocialPostReportDto>> GetPendingReportsAsync(int pageSize = 20, int? lastId = null);
+    Task<ServiceResult> ReviewReportAsync(int reportId, SocialPostReportReviewDto dto, int adminUserId);
 }

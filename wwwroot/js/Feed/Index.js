@@ -12,6 +12,7 @@
         self.hasMore = ko.observable(false);
         self.nextCursor = ko.observable(null);
         self.products = ko.observableArray([]);
+        self.sortMode = ko.observable('recent');
 
         // Compose
         self.newPost = {
@@ -30,6 +31,19 @@
         // Delete
         self.postToDelete = ko.observable(null);
 
+        // Hashtags
+        self.trendingHashtags = ko.observableArray([]);
+        self.activeHashtag = ko.observable(null);
+
+        // Search
+        self.searchQuery = ko.observable('');
+        self.searchPostTypeId = ko.observable('');
+
+        // Report
+        self.reportPostId = ko.observable(null);
+        self.reportReasonId = ko.observable('1');
+        self.reportDescription = ko.observable('');
+
         // Post type names
         var postTypeNames = {
             1: 'Metin',
@@ -42,14 +56,36 @@
             return postTypeNames[typeId] || '';
         };
 
+        // Content formatting - hashtags to links
+        self.formatContent = function (content) {
+            if (!content) return '';
+            // Escape HTML first
+            var div = document.createElement('div');
+            div.textContent = content;
+            var escaped = div.innerHTML;
+            // Convert hashtags to clickable links
+            return escaped.replace(/#(\w{2,50})/g, '<a href="#" class="text-primary text-decoration-none fw-semibold" onclick="window.__feedVM.filterByHashtag(\'$1\'); return false;">#$1</a>');
+        };
+
         // Tab management
         self.setTab = function (tab) {
             if (self.activeTab() === tab) return;
             self.activeTab(tab);
+            self.activeHashtag(null);
             self.posts([]);
             self.nextCursor(null);
             self.hasMore(false);
             self.expandedPostId(null);
+            self.loadPosts();
+        };
+
+        // Sort mode
+        self.setSortMode = function (mode) {
+            if (self.sortMode() === mode) return;
+            self.sortMode(mode);
+            self.posts([]);
+            self.nextCursor(null);
+            self.hasMore(false);
             self.loadPosts();
         };
 
@@ -68,8 +104,136 @@
             return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
         };
 
-        // Load posts based on active tab
+        // ============================================
+        // HASHTAGS
+        // ============================================
+
+        self.loadTrendingHashtags = function () {
+            $.get('/api/feed/hashtags/trending?count=10&hours=48')
+                .done(function (data) {
+                    self.trendingHashtags(data || []);
+                });
+        };
+
+        self.filterByHashtag = function (tag) {
+            tag = tag.replace(/^#/, '').toLowerCase();
+            self.activeHashtag(tag);
+            self.posts([]);
+            self.nextCursor(null);
+            self.hasMore(false);
+
+            self.isLoading(true);
+            var params = new URLSearchParams();
+            params.append('pageSize', '20');
+            if (self.nextCursor()) params.append('lastPostId', self.nextCursor());
+
+            $.get('/api/feed/hashtags/' + encodeURIComponent(tag) + '?' + params.toString())
+                .done(function (data) {
+                    self.posts(data.posts || []);
+                    self.hasMore(data.hasMore || false);
+                    self.nextCursor(data.nextCursor || null);
+                })
+                .fail(function () {
+                    toastr.error('Hashtag postlari yuklenemedi');
+                })
+                .always(function () {
+                    self.isLoading(false);
+                });
+        };
+
+        self.clearHashtagFilter = function () {
+            self.activeHashtag(null);
+            self.posts([]);
+            self.nextCursor(null);
+            self.hasMore(false);
+            self.loadPosts();
+        };
+
+        // ============================================
+        // SEARCH
+        // ============================================
+
+        self.searchPosts = function () {
+            var query = self.searchQuery();
+            var typeId = self.searchPostTypeId();
+
+            if (!query && !typeId) return;
+
+            self.activeHashtag(null);
+            self.isLoading(true);
+
+            var params = new URLSearchParams();
+            if (query) params.append('query', query);
+            if (typeId) params.append('postTypeId', typeId);
+
+            $.get('/api/feed/search?' + params.toString())
+                .done(function (data) {
+                    self.posts(data.posts || []);
+                    self.hasMore(data.hasMore || false);
+                    self.nextCursor(data.nextCursor || null);
+                })
+                .fail(function () {
+                    toastr.error('Arama basarisiz');
+                })
+                .always(function () {
+                    self.isLoading(false);
+                });
+        };
+
+        self.clearSearch = function () {
+            self.searchQuery('');
+            self.searchPostTypeId('');
+            self.posts([]);
+            self.nextCursor(null);
+            self.hasMore(false);
+            self.loadPosts();
+        };
+
+        // ============================================
+        // REPORT
+        // ============================================
+
+        self.showReportModal = function (post) {
+            self.reportPostId(post.id);
+            self.reportReasonId('1');
+            self.reportDescription('');
+            var modal = new bootstrap.Modal(document.getElementById('reportModal'));
+            modal.show();
+        };
+
+        self.submitReport = function () {
+            var postId = self.reportPostId();
+            if (!postId) return;
+
+            $.ajax({
+                url: '/api/feed/posts/' + postId + '/report',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    reasonId: parseInt(self.reportReasonId()),
+                    description: self.reportDescription() || null
+                })
+            })
+                .done(function () {
+                    toastr.success('Sikayet gonderildi');
+                    bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+                })
+                .fail(function (xhr) {
+                    var msg = xhr.responseJSON?.message || 'Hata olustu';
+                    toastr.error(msg);
+                });
+        };
+
+        // ============================================
+        // LOAD POSTS
+        // ============================================
+
         self.loadPosts = function () {
+            if (self.activeHashtag()) {
+                self.filterByHashtag(self.activeHashtag());
+                return;
+            }
+
             self.isLoading(true);
             var url;
             var tab = self.activeTab();
@@ -79,15 +243,18 @@
             } else if (tab === 'discover') {
                 url = '/api/feed/discover';
             } else {
-                url = '/api/feed/vendor/0'; // Will be replaced with current vendor
+                url = '/api/feed/vendor/0';
             }
 
             var params = new URLSearchParams();
             if (self.nextCursor()) params.append('lastPostId', self.nextCursor());
             params.append('pageSize', '20');
 
+            if (tab !== 'myPosts' && self.sortMode() === 'recommended') {
+                params.append('sort', 'recommended');
+            }
+
             if (tab === 'myPosts') {
-                // Get current vendor's posts
                 self.getCurrentVendorId(function (vendorId) {
                     url = '/api/feed/vendor/' + vendorId;
                     self.fetchPosts(url + '?' + params.toString(), false);
@@ -98,13 +265,11 @@
         };
 
         self.getCurrentVendorId = function (callback) {
-            // VendorId is available from the page data
             var vendorEl = document.querySelector('[data-vendor-id]');
             if (vendorEl) {
                 callback(vendorEl.getAttribute('data-vendor-id'));
                 return;
             }
-            // Fallback: use feed endpoint which auto-detects
             callback(0);
         };
 
@@ -135,11 +300,35 @@
         self.loadMore = function () {
             if (!self.hasMore() || self.isLoadingMore()) return;
 
+            // Hashtag mode
+            if (self.activeHashtag()) {
+                self.isLoadingMore(true);
+                var params = new URLSearchParams();
+                params.append('lastPostId', self.nextCursor());
+                params.append('pageSize', '20');
+
+                $.get('/api/feed/hashtags/' + encodeURIComponent(self.activeHashtag()) + '?' + params.toString())
+                    .done(function (data) {
+                        var existing = self.posts();
+                        self.posts(existing.concat(data.posts || []));
+                        self.hasMore(data.hasMore || false);
+                        self.nextCursor(data.nextCursor || null);
+                    })
+                    .always(function () {
+                        self.isLoadingMore(false);
+                    });
+                return;
+            }
+
             var tab = self.activeTab();
             var url;
             var params = new URLSearchParams();
             params.append('lastPostId', self.nextCursor());
             params.append('pageSize', '20');
+
+            if (tab !== 'myPosts' && self.sortMode() === 'recommended') {
+                params.append('sort', 'recommended');
+            }
 
             if (tab === 'feed') {
                 url = '/api/feed';
@@ -156,7 +345,10 @@
             self.fetchPosts(url + '?' + params.toString(), true);
         };
 
-        // Compose
+        // ============================================
+        // COMPOSE
+        // ============================================
+
         self.publishPost = function () {
             if (!self.newPost.content()) return;
 
@@ -177,10 +369,10 @@
                 .done(function () {
                     toastr.success('Paylasim yapildi');
                     self.resetCompose();
-                    // Reload current tab posts
                     self.posts([]);
                     self.nextCursor(null);
                     self.loadPosts();
+                    self.loadTrendingHashtags();
                 })
                 .fail(function (xhr) {
                     var msg = xhr.responseJSON?.message || 'Hata olustu';
@@ -235,13 +427,12 @@
             })
                 .done(function () {
                     toastr.success('Paylasim yayinlandi');
-                    // Update post in list
                     var posts = self.posts();
                     var index = posts.findIndex(function (p) { return p.id === post.id; });
                     if (index !== -1) {
                         posts[index].statusId = 2;
                         posts[index].publishedAt = new Date().toISOString();
-                        self.posts(posts.slice()); // trigger re-render
+                        self.posts(posts.slice());
                     }
                 })
                 .fail(function (xhr) {
@@ -293,7 +484,7 @@
                             posts[index].isLikedByCurrentUser = true;
                             posts[index].likeCount++;
                         }
-                        self.posts(posts.slice()); // trigger re-render
+                        self.posts(posts.slice());
                     }
                 })
                 .fail(function () {
@@ -341,7 +532,6 @@
                 .done(function () {
                     self.newCommentText('');
                     self.loadComments(post.id);
-                    // Update comment count
                     var posts = self.posts();
                     var index = posts.findIndex(function (p) { return p.id === post.id; });
                     if (index !== -1) {
@@ -363,7 +553,6 @@
                 .done(function () {
                     toastr.success('Yorum silindi');
                     self.currentComments.remove(function (c) { return c.id === comment.id; });
-                    // Update comment count
                     var postId = self.expandedPostId();
                     var posts = self.posts();
                     var index = posts.findIndex(function (p) { return p.id === postId; });
@@ -401,6 +590,10 @@
         // Init
         self.loadPosts();
         self.loadProducts();
+        self.loadTrendingHashtags();
+
+        // Expose VM for hashtag click handlers in formatted content
+        window.__feedVM = self;
     }
 
     $(function () {

@@ -1405,6 +1405,80 @@ public static class SocialPostStatuses
 }
 
 // ============================================================
+// SOCIAL POST REPORT REASONS (Sikayet Nedenleri)
+// ============================================================
+public static class SocialPostReportReasons
+{
+    public static readonly TypeItem Spam = new(1, "Spam", "SocialPostReportReason.Spam", "Spam", "bi-exclamation-triangle", "bg-warning text-dark", 1, isDefault: true);
+    public static readonly TypeItem Inappropriate = new(2, "Inappropriate", "SocialPostReportReason.Inappropriate", "Uygunsuz Icerik", "bi-shield-exclamation", "bg-danger", 2);
+    public static readonly TypeItem Misleading = new(3, "Misleading", "SocialPostReportReason.Misleading", "Yaniltici", "bi-info-circle", "bg-info", 3);
+    public static readonly TypeItem Other = new(4, "Other", "SocialPostReportReason.Other", "Diger", "bi-three-dots", "bg-secondary", 4);
+
+    public static IEnumerable<TypeItem> All => new[] { Spam, Inappropriate, Misleading, Other };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Spam = 1;
+        public const int Inappropriate = 2;
+        public const int Misleading = 3;
+        public const int Other = 4;
+    }
+}
+
+// ============================================================
+// SOCIAL POST REPORT STATUSES (Sikayet Durumlari)
+// ============================================================
+public static class SocialPostReportStatuses
+{
+    public static readonly TypeItem Pending = new(1, "Pending", "SocialPostReportStatus.Pending", "Beklemede", "bi-hourglass-split", "bg-warning text-dark", 1, isDefault: true);
+    public static readonly TypeItem Reviewed = new(2, "Reviewed", "SocialPostReportStatus.Reviewed", "Incelendi", "bi-eye", "bg-info", 2);
+    public static readonly TypeItem ActionTaken = new(3, "ActionTaken", "SocialPostReportStatus.ActionTaken", "Islem Yapildi", "bi-check-circle", "bg-success", 3);
+    public static readonly TypeItem Dismissed = new(4, "Dismissed", "SocialPostReportStatus.Dismissed", "Reddedildi", "bi-x-circle", "bg-secondary", 4);
+
+    public static IEnumerable<TypeItem> All => new[] { Pending, Reviewed, ActionTaken, Dismissed };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Pending = 1;
+        public const int Reviewed = 2;
+        public const int ActionTaken = 3;
+        public const int Dismissed = 4;
+    }
+}
+
+// ============================================================
+// SPONSORED POST STATUSES (Sponsorlu Icerik Durumlari)
+// ============================================================
+public static class SponsoredPostStatuses
+{
+    public static readonly TypeItem Draft = new(1, "Draft", "SponsoredPostStatus.Draft", "Taslak", "bi-file-earmark", "bg-secondary", 1, isDefault: true);
+    public static readonly TypeItem Active = new(2, "Active", "SponsoredPostStatus.Active", "Aktif", "bi-play-circle", "bg-success", 2);
+    public static readonly TypeItem Paused = new(3, "Paused", "SponsoredPostStatus.Paused", "Duraklatildi", "bi-pause-circle", "bg-warning text-dark", 3);
+    public static readonly TypeItem Completed = new(4, "Completed", "SponsoredPostStatus.Completed", "Tamamlandi", "bi-check-circle", "bg-info", 4);
+    public static readonly TypeItem Expired = new(5, "Expired", "SponsoredPostStatus.Expired", "Suresi Doldu", "bi-clock-history", "bg-dark", 5);
+
+    public static IEnumerable<TypeItem> All => new[] { Draft, Active, Paused, Completed, Expired };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Draft = 1;
+        public const int Active = 2;
+        public const int Paused = 3;
+        public const int Completed = 4;
+        public const int Expired = 5;
+    }
+}
+
+// ============================================================
 // AUCTION STATUSES
 // ============================================================
 public static class AuctionStatuses

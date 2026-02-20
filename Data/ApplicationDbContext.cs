@@ -145,6 +145,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<SocialPostLike> SocialPostLikes => Set<SocialPostLike>();
     public DbSet<SocialPostComment> SocialPostComments => Set<SocialPostComment>();
     public DbSet<VendorFollow> VendorFollows => Set<VendorFollow>();
+    public DbSet<SocialPostHashtag> SocialPostHashtags => Set<SocialPostHashtag>();
+    public DbSet<SocialPostReport> SocialPostReports => Set<SocialPostReport>();
+    public DbSet<SponsoredPost> SponsoredPosts => Set<SponsoredPost>();
 
     // Auctions - Acik Artirma Sistemi
     public DbSet<Auction> Auctions => Set<Auction>();
@@ -2081,6 +2084,76 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                   .WithMany()
                   .HasForeignKey(f => f.FollowedByUserId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SocialPostHashtag configuration
+        builder.Entity<SocialPostHashtag>(entity =>
+        {
+            entity.ToTable("SocialPostHashtags");
+            entity.HasIndex(h => h.Tag);
+            entity.HasIndex(h => new { h.Tag, h.CreatedAt });
+            entity.HasIndex(h => h.SocialPostId);
+            entity.Property(h => h.Tag).HasMaxLength(100).IsRequired();
+            entity.HasQueryFilter(h => !h.IsDeleted);
+
+            entity.HasOne(h => h.SocialPost)
+                  .WithMany(p => p.Hashtags)
+                  .HasForeignKey(h => h.SocialPostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // SocialPostReport configuration
+        builder.Entity<SocialPostReport>(entity =>
+        {
+            entity.ToTable("SocialPostReports");
+            entity.HasIndex(r => new { r.StatusId, r.CreatedAt });
+            entity.HasIndex(r => r.SocialPostId);
+            entity.Property(r => r.Description).HasMaxLength(1000);
+            entity.Property(r => r.AdminNote).HasMaxLength(2000);
+            entity.HasQueryFilter(r => !r.IsDeleted);
+
+            entity.HasOne(r => r.SocialPost)
+                  .WithMany()
+                  .HasForeignKey(r => r.SocialPostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.ReporterUser)
+                  .WithMany()
+                  .HasForeignKey(r => r.ReporterUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.ReporterVendor)
+                  .WithMany()
+                  .HasForeignKey(r => r.ReporterVendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.ReviewedByUser)
+                  .WithMany()
+                  .HasForeignKey(r => r.ReviewedByUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SponsoredPost configuration
+        builder.Entity<SponsoredPost>(entity =>
+        {
+            entity.ToTable("SponsoredPosts");
+            entity.HasIndex(s => s.VendorId);
+            entity.HasIndex(s => s.StatusId);
+            entity.HasIndex(s => new { s.StatusId, s.EndDate });
+            entity.Property(s => s.Currency).HasMaxLength(10);
+            entity.Property(s => s.BudgetAmount).HasColumnType("decimal(18,2)");
+            entity.Property(s => s.SpentAmount).HasColumnType("decimal(18,2)");
+            entity.HasQueryFilter(s => !s.IsDeleted);
+
+            entity.HasOne(s => s.SocialPost)
+                  .WithMany()
+                  .HasForeignKey(s => s.SocialPostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.Vendor)
+                  .WithMany()
+                  .HasForeignKey(s => s.VendorId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // ========== AUCTION ==========

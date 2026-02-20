@@ -207,6 +207,7 @@ builder.Services.Configure<EvrimApiSettings>(
     builder.Configuration.GetSection("EvrimApi"));
 builder.Services.AddScoped<IEvrimApiService, EvrimApiService>();
 builder.Services.AddScoped<ISocialFeedService, SocialFeedService>();
+builder.Services.AddScoped<ISponsoredPostService, SponsoredPostService>();
 builder.Services.AddScoped<IAuctionService, AuctionService>();
 builder.Services.AddScoped<IRewardPointService, RewardPointService>();
 builder.Services.AddScoped<IBackInStockService, BackInStockService>();

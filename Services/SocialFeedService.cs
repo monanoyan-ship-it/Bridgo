@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Bridgo.Data;
 using Bridgo.DTOs.Notification;
@@ -8,7 +9,7 @@ using Bridgo.Services.Interfaces;
 
 namespace Bridgo.Services;
 
-public class SocialFeedService : ISocialFeedService
+public partial class SocialFeedService : ISocialFeedService
 {
     private readonly ApplicationDbContext _context;
     private readonly INotificationService _notificationService;
@@ -19,19 +20,21 @@ public class SocialFeedService : ISocialFeedService
         _notificationService = notificationService;
     }
 
+    [GeneratedRegex(@"#(\w{2,50})", RegexOptions.Compiled)]
+    private static partial Regex HashtagRegex();
+
     // ============================================
     // POSTS
     // ============================================
 
-    public async Task<FeedPageDto> GetFeedAsync(int vendorId, int currentUserId, int? lastPostId = null, int pageSize = 20)
+    public async Task<FeedPageDto> GetFeedAsync(int vendorId, int currentUserId, int? lastPostId = null, int pageSize = 20, string? sortMode = null)
     {
-        // My Feed: own posts + followed vendors' published posts
         var followedVendorIds = await _context.VendorFollows
             .Where(f => f.FollowerVendorId == vendorId)
             .Select(f => f.FollowedVendorId)
             .ToListAsync();
 
-        followedVendorIds.Add(vendorId); // Include own posts
+        followedVendorIds.Add(vendorId);
 
         var query = _context.SocialPosts
             .Include(p => p.Vendor)
@@ -39,13 +42,19 @@ public class SocialFeedService : ISocialFeedService
             .Include(p => p.Images)
             .Include(p => p.Product)
             .Where(p => followedVendorIds.Contains(p.VendorId))
-            .Where(p => p.StatusId == SocialPostStatuses.Ids.Published || (p.VendorId == vendorId))
+            .Where(p => p.StatusId == SocialPostStatuses.Ids.Published || p.VendorId == vendorId)
             .AsQueryable();
+
+        // Algoritma modu: "recommended" ise skor bazli siralama
+        if (sortMode == "recommended")
+        {
+            return await BuildScoredFeedPageAsync(query, currentUserId, vendorId, followedVendorIds, lastPostId, pageSize);
+        }
 
         return await BuildFeedPageAsync(query, currentUserId, vendorId, lastPostId, pageSize);
     }
 
-    public async Task<FeedPageDto> GetDiscoverFeedAsync(int currentUserId, int? lastPostId = null, int pageSize = 20)
+    public async Task<FeedPageDto> GetDiscoverFeedAsync(int currentUserId, int? lastPostId = null, int pageSize = 20, string? sortMode = null)
     {
         var query = _context.SocialPosts
             .Include(p => p.Vendor)
@@ -55,9 +64,13 @@ public class SocialFeedService : ISocialFeedService
             .Where(p => p.StatusId == SocialPostStatuses.Ids.Published)
             .AsQueryable();
 
-        // currentUserId'nin vendorId'sini bul
         var user = await _context.Users.FindAsync(currentUserId);
         var vendorId = user?.VendorId ?? 0;
+
+        if (sortMode == "recommended")
+        {
+            return await BuildScoredFeedPageAsync(query, currentUserId, vendorId, new List<int>(), lastPostId, pageSize);
+        }
 
         return await BuildFeedPageAsync(query, currentUserId, vendorId, lastPostId, pageSize);
     }
@@ -75,7 +88,6 @@ public class SocialFeedService : ISocialFeedService
             .Where(p => p.VendorId == vendorId)
             .AsQueryable();
 
-        // Kendi vendor'umuz degilse sadece published postlari goster
         if (vendorId != currentVendorId)
             query = query.Where(p => p.StatusId == SocialPostStatuses.Ids.Published);
 
@@ -120,7 +132,9 @@ public class SocialFeedService : ISocialFeedService
         _context.SocialPosts.Add(post);
         await _context.SaveChangesAsync();
 
-        // Yayinlandiysa takipcilere bildirim gonder
+        // Hashtag'leri kaydet
+        await SaveHashtagsAsync(post.Id, post.Content);
+
         if (dto.PublishImmediately)
             await NotifyFollowersAsync(post);
 
@@ -138,6 +152,10 @@ public class SocialFeedService : ISocialFeedService
         post.ProductId = dto.ProductId;
 
         await _context.SaveChangesAsync();
+
+        // Hashtag'leri guncelle
+        await SaveHashtagsAsync(post.Id, post.Content);
+
         return ServiceResult.Ok();
     }
 
@@ -186,14 +204,12 @@ public class SocialFeedService : ISocialFeedService
 
         if (existingLike != null)
         {
-            // Unlike - soft delete
             existingLike.IsDeleted = true;
             existingLike.DeletedAt = DateTime.UtcNow;
             post.LikeCount = Math.Max(0, post.LikeCount - 1);
         }
         else
         {
-            // Like
             _context.SocialPostLikes.Add(new SocialPostLike
             {
                 SocialPostId = postId,
@@ -202,7 +218,6 @@ public class SocialFeedService : ISocialFeedService
             });
             post.LikeCount++;
 
-            // Post sahibine bildirim (kendi postunu begenmediyse)
             if (post.VendorId != vendorId)
             {
                 var vendor = await _context.Vendors.FindAsync(vendorId);
@@ -245,7 +260,6 @@ public class SocialFeedService : ISocialFeedService
             .Take(pageSize)
             .ToListAsync();
 
-        // Load replies
         var commentIds = comments.Select(c => c.Id).ToList();
         var replies = await _context.SocialPostComments
             .Include(c => c.User)
@@ -276,7 +290,6 @@ public class SocialFeedService : ISocialFeedService
         post.CommentCount++;
         await _context.SaveChangesAsync();
 
-        // Post sahibine bildirim (kendi postuna yorum yapmadiysa)
         if (post.VendorId != vendorId)
         {
             var vendor = await _context.Vendors.FindAsync(vendorId);
@@ -306,7 +319,6 @@ public class SocialFeedService : ISocialFeedService
         if (comment == null)
             return ServiceResult.Fail("Yorum bulunamadi");
 
-        // Yorum sahibi veya post sahibi silebilir
         if (comment.UserId != userId && comment.SocialPost.VendorId != vendorId)
             return ServiceResult.Fail("Bu yorumu silme yetkiniz yok");
 
@@ -331,13 +343,11 @@ public class SocialFeedService : ISocialFeedService
 
         if (existingFollow != null)
         {
-            // Unfollow - soft delete
             existingFollow.IsDeleted = true;
             existingFollow.DeletedAt = DateTime.UtcNow;
         }
         else
         {
-            // Follow
             _context.VendorFollows.Add(new VendorFollow
             {
                 FollowerVendorId = followerVendorId,
@@ -345,7 +355,6 @@ public class SocialFeedService : ISocialFeedService
                 FollowedByUserId = userId
             });
 
-            // Takip edilen firmaya bildirim
             var followerVendor = await _context.Vendors.FindAsync(followerVendorId);
             await _notificationService.CreateAsync(new NotificationCreateDto
             {
@@ -440,8 +449,240 @@ public class SocialFeedService : ISocialFeedService
     }
 
     // ============================================
+    // HASHTAGS
+    // ============================================
+
+    public async Task<List<TrendingHashtagDto>> GetTrendingHashtagsAsync(int count = 10, int hoursWindow = 24)
+    {
+        var since = DateTime.UtcNow.AddHours(-hoursWindow);
+
+        return await _context.SocialPostHashtags
+            .Where(h => h.CreatedAt >= since)
+            .GroupBy(h => h.Tag)
+            .Select(g => new TrendingHashtagDto
+            {
+                Tag = g.Key,
+                PostCount = g.Count()
+            })
+            .OrderByDescending(t => t.PostCount)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<FeedPageDto> GetPostsByHashtagAsync(string tag, int currentUserId, int? lastPostId = null, int pageSize = 20)
+    {
+        tag = tag.TrimStart('#').ToLowerInvariant();
+
+        var user = await _context.Users.FindAsync(currentUserId);
+        var vendorId = user?.VendorId ?? 0;
+
+        var postIds = _context.SocialPostHashtags
+            .Where(h => h.Tag == tag)
+            .Select(h => h.SocialPostId);
+
+        var query = _context.SocialPosts
+            .Include(p => p.Vendor)
+            .Include(p => p.Author)
+            .Include(p => p.Images)
+            .Include(p => p.Product)
+            .Where(p => postIds.Contains(p.Id))
+            .Where(p => p.StatusId == SocialPostStatuses.Ids.Published)
+            .AsQueryable();
+
+        return await BuildFeedPageAsync(query, currentUserId, vendorId, lastPostId, pageSize);
+    }
+
+    // ============================================
+    // SEARCH
+    // ============================================
+
+    public async Task<FeedPageDto> SearchPostsAsync(FeedSearchDto dto, int currentUserId)
+    {
+        var user = await _context.Users.FindAsync(currentUserId);
+        var vendorId = user?.VendorId ?? 0;
+
+        var query = _context.SocialPosts
+            .Include(p => p.Vendor)
+            .Include(p => p.Author)
+            .Include(p => p.Images)
+            .Include(p => p.Product)
+            .Where(p => p.StatusId == SocialPostStatuses.Ids.Published)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(dto.Query))
+        {
+            var q = dto.Query.Trim().ToLower();
+            query = query.Where(p => p.Content.ToLower().Contains(q) ||
+                                     (p.Title != null && p.Title.ToLower().Contains(q)));
+        }
+
+        if (dto.PostTypeId.HasValue)
+            query = query.Where(p => p.PostTypeId == dto.PostTypeId.Value);
+
+        if (dto.VendorId.HasValue)
+            query = query.Where(p => p.VendorId == dto.VendorId.Value);
+
+        if (dto.DateFrom.HasValue)
+            query = query.Where(p => p.PublishedAt >= dto.DateFrom.Value);
+
+        if (dto.DateTo.HasValue)
+            query = query.Where(p => p.PublishedAt <= dto.DateTo.Value);
+
+        var posts = await query
+            .OrderByDescending(p => p.Id)
+            .Take(21)
+            .ToListAsync();
+
+        var hasMore = posts.Count > 20;
+        if (hasMore)
+            posts = posts.Take(20).ToList();
+
+        var postDtos = new List<SocialPostDto>();
+        foreach (var post in posts)
+        {
+            postDtos.Add(await MapToPostDtoAsync(post, currentUserId, vendorId));
+        }
+
+        return new FeedPageDto
+        {
+            Posts = postDtos,
+            HasMore = hasMore,
+            NextCursor = posts.Any() ? posts.Last().Id : null
+        };
+    }
+
+    // ============================================
+    // REPORTS
+    // ============================================
+
+    public async Task<ServiceResult> ReportPostAsync(int postId, SocialPostReportCreateDto dto, int userId, int vendorId)
+    {
+        var post = await _context.SocialPosts.FindAsync(postId);
+        if (post == null)
+            return ServiceResult.Fail("Post bulunamadi");
+
+        // Ayni kullanici ayni postu tekrar sikayet etmesin
+        var existingReport = await _context.SocialPostReports
+            .AnyAsync(r => r.SocialPostId == postId && r.ReporterUserId == userId);
+        if (existingReport)
+            return ServiceResult.Fail("Bu paylasimi zaten sikayet ettiniz");
+
+        var report = new SocialPostReport
+        {
+            SocialPostId = postId,
+            ReporterUserId = userId,
+            ReporterVendorId = vendorId,
+            ReasonId = dto.ReasonId,
+            Description = dto.Description,
+            StatusId = SocialPostReportStatuses.Ids.Pending
+        };
+
+        _context.SocialPostReports.Add(report);
+        await _context.SaveChangesAsync();
+
+        return ServiceResult.Ok();
+    }
+
+    public async Task<List<SocialPostReportDto>> GetPendingReportsAsync(int pageSize = 20, int? lastId = null)
+    {
+        var query = _context.SocialPostReports
+            .Include(r => r.SocialPost)
+            .Include(r => r.ReporterUser)
+            .Include(r => r.ReporterVendor)
+            .AsQueryable();
+
+        if (lastId.HasValue)
+            query = query.Where(r => r.Id < lastId.Value);
+
+        var reports = await query
+            .OrderByDescending(r => r.Id)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return reports.Select(r =>
+        {
+            var reason = SocialPostReportReasons.GetById(r.ReasonId);
+            var status = SocialPostReportStatuses.GetById(r.StatusId);
+
+            return new SocialPostReportDto
+            {
+                Id = r.Id,
+                SocialPostId = r.SocialPostId,
+                PostTitle = r.SocialPost?.Title,
+                PostContentPreview = r.SocialPost?.Content?.Length > 100
+                    ? r.SocialPost.Content[..100] + "..."
+                    : r.SocialPost?.Content ?? "",
+                ReporterUserId = r.ReporterUserId,
+                ReporterUserName = r.ReporterUser != null ? $"{r.ReporterUser.FirstName} {r.ReporterUser.LastName}".Trim() : "",
+                ReporterVendorId = r.ReporterVendorId,
+                ReporterVendorName = r.ReporterVendor?.CompanyName ?? "",
+                ReasonId = r.ReasonId,
+                ReasonName = reason?.SystemName ?? "",
+                Description = r.Description,
+                StatusId = r.StatusId,
+                StatusName = status?.SystemName ?? "",
+                AdminNote = r.AdminNote,
+                ReviewedByUserId = r.ReviewedByUserId,
+                ReviewedAt = r.ReviewedAt,
+                CreatedAt = r.CreatedAt
+            };
+        }).ToList();
+    }
+
+    public async Task<ServiceResult> ReviewReportAsync(int reportId, SocialPostReportReviewDto dto, int adminUserId)
+    {
+        var report = await _context.SocialPostReports.FindAsync(reportId);
+        if (report == null)
+            return ServiceResult.Fail("Sikayet bulunamadi");
+
+        report.StatusId = dto.StatusId;
+        report.AdminNote = dto.AdminNote;
+        report.ReviewedByUserId = adminUserId;
+        report.ReviewedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return ServiceResult.Ok();
+    }
+
+    // ============================================
     // PRIVATE HELPERS
     // ============================================
+
+    private static List<string> ExtractHashtags(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return new();
+
+        return HashtagRegex()
+            .Matches(content)
+            .Select(m => m.Groups[1].Value.ToLowerInvariant())
+            .Distinct()
+            .ToList();
+    }
+
+    private async Task SaveHashtagsAsync(int postId, string content)
+    {
+        // Mevcut hashtag'leri sil
+        var existing = await _context.SocialPostHashtags
+            .Where(h => h.SocialPostId == postId)
+            .ToListAsync();
+
+        if (existing.Any())
+            _context.SocialPostHashtags.RemoveRange(existing);
+
+        // Yeni hashtag'leri ekle
+        var tags = ExtractHashtags(content);
+        foreach (var tag in tags)
+        {
+            _context.SocialPostHashtags.Add(new SocialPostHashtag
+            {
+                SocialPostId = postId,
+                Tag = tag
+            });
+        }
+
+        if (tags.Any())
+            await _context.SaveChangesAsync();
+    }
 
     private async Task<FeedPageDto> BuildFeedPageAsync(IQueryable<SocialPost> query, int currentUserId, int currentVendorId, int? lastPostId, int pageSize)
     {
@@ -468,6 +709,85 @@ public class SocialFeedService : ISocialFeedService
             Posts = postDtos,
             HasMore = hasMore,
             NextCursor = posts.Any() ? posts.Last().Id : null
+        };
+    }
+
+    /// <summary>
+    /// Feed algoritmasi ile skorlanmis siralama
+    /// </summary>
+    private async Task<FeedPageDto> BuildScoredFeedPageAsync(
+        IQueryable<SocialPost> query,
+        int currentUserId,
+        int currentVendorId,
+        List<int> followedVendorIds,
+        int? lastPostId,
+        int pageSize)
+    {
+        // Son 14 gunluk postlari cek
+        var since = DateTime.UtcNow.AddDays(-14);
+        query = query.Where(p => p.CreatedAt >= since);
+
+        if (lastPostId.HasValue)
+            query = query.Where(p => p.Id < lastPostId.Value);
+
+        // Yeterli post cek (skorlama icin fazladan)
+        var posts = await query
+            .OrderByDescending(p => p.Id)
+            .Take(pageSize * 3)
+            .ToListAsync();
+
+        // Mutual follow ID'lerini bul
+        var mutualFollowIds = new HashSet<int>();
+        if (followedVendorIds.Any())
+        {
+            var mutuals = await _context.VendorFollows
+                .Where(f => f.FollowedVendorId == currentVendorId && followedVendorIds.Contains(f.FollowerVendorId))
+                .Select(f => f.FollowerVendorId)
+                .ToListAsync();
+            mutualFollowIds = new HashSet<int>(mutuals);
+        }
+
+        var followedSet = new HashSet<int>(followedVendorIds);
+
+        // Skorla ve sirala
+        var scoredPosts = posts.Select(p =>
+        {
+            var hoursAge = (DateTime.UtcNow - p.CreatedAt).TotalHours;
+            var freshness = 100.0 * Math.Exp(-0.05 * hoursAge);
+            var engagement = Math.Min(50, p.LikeCount + p.CommentCount * 2);
+
+            double relationship = 0;
+            if (p.VendorId == currentVendorId)
+                relationship = 20;
+            else if (mutualFollowIds.Contains(p.VendorId))
+                relationship = 30;
+            else if (followedSet.Contains(p.VendorId))
+                relationship = 10;
+
+            var viewPenalty = Math.Min(10, p.ViewCount * 0.1);
+            var score = freshness + engagement + relationship - viewPenalty;
+
+            return new { Post = p, Score = score };
+        })
+        .OrderByDescending(x => x.Score)
+        .Take(pageSize + 1)
+        .ToList();
+
+        var hasMore = scoredPosts.Count > pageSize;
+        if (hasMore)
+            scoredPosts = scoredPosts.Take(pageSize).ToList();
+
+        var postDtos = new List<SocialPostDto>();
+        foreach (var item in scoredPosts)
+        {
+            postDtos.Add(await MapToPostDtoAsync(item.Post, currentUserId, currentVendorId));
+        }
+
+        return new FeedPageDto
+        {
+            Posts = postDtos,
+            HasMore = hasMore,
+            NextCursor = scoredPosts.Any() ? scoredPosts.Last().Post.Id : null
         };
     }
 
