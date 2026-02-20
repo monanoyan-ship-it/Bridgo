@@ -1403,3 +1403,57 @@ public static class SocialPostStatuses
         public const int Archived = 3;
     }
 }
+
+// ============================================================
+// AUCTION STATUSES
+// ============================================================
+public static class AuctionStatuses
+{
+    public static readonly TypeItem Draft = new(0, "Draft", "AuctionStatus.Draft", "Taslak", "bi-file-earmark", "bg-secondary", 0, isDefault: true);
+    public static readonly TypeItem Scheduled = new(1, "Scheduled", "AuctionStatus.Scheduled", "Planlanmis", "bi-calendar-event", "bg-info", 1);
+    public static readonly TypeItem Active = new(2, "Active", "AuctionStatus.Active", "Aktif", "bi-hammer", "bg-success", 2);
+    public static readonly TypeItem Ended = new(3, "Ended", "AuctionStatus.Ended", "Bitmis", "bi-clock-history", "bg-dark", 3);
+    public static readonly TypeItem Cancelled = new(4, "Cancelled", "AuctionStatus.Cancelled", "Iptal", "bi-x-circle", "bg-danger", 4);
+    public static readonly TypeItem Sold = new(5, "Sold", "AuctionStatus.Sold", "Satildi", "bi-check-circle", "bg-primary", 5);
+
+    public static IEnumerable<TypeItem> All => new[] { Draft, Scheduled, Active, Ended, Cancelled, Sold };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Draft = 0;
+        public const int Scheduled = 1;
+        public const int Active = 2;
+        public const int Ended = 3;
+        public const int Cancelled = 4;
+        public const int Sold = 5;
+    }
+}
+
+// ============================================================
+// BID STATUSES
+// ============================================================
+public static class BidStatuses
+{
+    public static readonly TypeItem Valid = new(1, "Valid", "BidStatus.Valid", "Gecerli", "bi-check", "bg-success", 1, isDefault: true);
+    public static readonly TypeItem Outbid = new(2, "Outbid", "BidStatus.Outbid", "Gecildi", "bi-arrow-down", "bg-warning text-dark", 2);
+    public static readonly TypeItem Rejected = new(3, "Rejected", "BidStatus.Rejected", "Reddedildi", "bi-x-circle", "bg-danger", 3);
+    public static readonly TypeItem Cancelled = new(4, "Cancelled", "BidStatus.Cancelled", "Iptal", "bi-slash-circle", "bg-secondary", 4);
+    public static readonly TypeItem Winning = new(5, "Winning", "BidStatus.Winning", "Kazanan", "bi-trophy", "bg-primary", 5);
+
+    public static IEnumerable<TypeItem> All => new[] { Valid, Outbid, Rejected, Cancelled, Winning };
+    public static TypeItem Default => All.First(x => x.IsDefault);
+    public static TypeItem? GetById(int id) => All.FirstOrDefault(x => x.Id == id);
+    public static TypeItem? GetBySystemName(string systemName) => All.FirstOrDefault(x => x.SystemName == systemName);
+
+    public static class Ids
+    {
+        public const int Valid = 1;
+        public const int Outbid = 2;
+        public const int Rejected = 3;
+        public const int Cancelled = 4;
+        public const int Winning = 5;
+    }
+}

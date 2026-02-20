@@ -284,7 +284,7 @@ public static class RbacSeeder
                 DisplayNameResourceKey = "Module.Auctions",
                 Description = "Acik artirmalar",
                 Icon = "bi-hammer",
-                Route = "/Dashboard/Auctions",
+                Route = "/Auctions",
                 DisplayOrder = 3,
                 IsMenuItem = true,
                 IsActive = true,
@@ -1044,6 +1044,22 @@ public static class RbacSeeder
                 {
                     CapabilityId = capId,
                     PlatformModuleId = feedModule.Id
+                });
+            }
+            await context.SaveChangesAsync();
+        }
+
+        // Auctions modulu Seller ve Buyer capability'lerine atansin
+        var auctionsModule = await context.PlatformModules.FirstOrDefaultAsync(m => m.DisplayNameResourceKey == "Module.Auctions");
+        if (auctionsModule != null)
+        {
+            var auctionCapabilityIds = new[] { Capabilities.Ids.Seller, Capabilities.Ids.Buyer };
+            foreach (var capId in auctionCapabilityIds)
+            {
+                context.CapabilityModuleMappings.Add(new CapabilityModuleMapping
+                {
+                    CapabilityId = capId,
+                    PlatformModuleId = auctionsModule.Id
                 });
             }
             await context.SaveChangesAsync();

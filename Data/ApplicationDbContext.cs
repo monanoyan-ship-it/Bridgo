@@ -146,6 +146,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<SocialPostComment> SocialPostComments => Set<SocialPostComment>();
     public DbSet<VendorFollow> VendorFollows => Set<VendorFollow>();
 
+    // Auctions - Acik Artirma Sistemi
+    public DbSet<Auction> Auctions => Set<Auction>();
+    public DbSet<AuctionBid> AuctionBids => Set<AuctionBid>();
+    public DbSet<AuctionWatcher> AuctionWatchers => Set<AuctionWatcher>();
+
     // Type Tables - Artik code-based (ITypeResolver.cs): AddressTypes, VendorStatuses, etc.
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -2069,6 +2074,81 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.HasOne(f => f.FollowedByUser)
                   .WithMany()
                   .HasForeignKey(f => f.FollowedByUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ========== AUCTION ==========
+        builder.Entity<Auction>(entity =>
+        {
+            entity.ToTable("Auctions");
+            entity.HasIndex(a => a.VendorId);
+            entity.HasIndex(a => a.AuctionStatusId);
+            entity.HasIndex(a => a.Slug);
+            entity.HasIndex(a => new { a.AuctionStatusId, a.EndAt });
+            entity.Property(a => a.Title).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.Description).HasMaxLength(4000);
+            entity.Property(a => a.Currency).HasMaxLength(10);
+            entity.Property(a => a.Slug).HasMaxLength(200);
+            entity.Property(a => a.StartingPrice).HasColumnType("decimal(18,2)");
+            entity.Property(a => a.ReservePrice).HasColumnType("decimal(18,2)");
+            entity.Property(a => a.CurrentHighestBid).HasColumnType("decimal(18,2)");
+            entity.Property(a => a.BuyNowPrice).HasColumnType("decimal(18,2)");
+            entity.HasQueryFilter(a => !a.IsDeleted);
+
+            entity.HasOne(a => a.Vendor)
+                  .WithMany()
+                  .HasForeignKey(a => a.VendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(a => a.Product)
+                  .WithMany()
+                  .HasForeignKey(a => a.ProductId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(a => a.Category)
+                  .WithMany()
+                  .HasForeignKey(a => a.CategoryId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // AuctionBid configuration
+        builder.Entity<AuctionBid>(entity =>
+        {
+            entity.ToTable("AuctionBids");
+            entity.HasIndex(b => b.AuctionId);
+            entity.HasIndex(b => new { b.AuctionId, b.BidAmount });
+            entity.HasIndex(b => b.BuyerVendorId);
+            entity.Property(b => b.BidAmount).HasColumnType("decimal(18,2)");
+            entity.Property(b => b.BidderMessage).HasMaxLength(500);
+            entity.HasQueryFilter(b => !b.IsDeleted);
+
+            entity.HasOne(b => b.Auction)
+                  .WithMany(a => a.Bids)
+                  .HasForeignKey(b => b.AuctionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(b => b.BuyerVendor)
+                  .WithMany()
+                  .HasForeignKey(b => b.BuyerVendorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // AuctionWatcher configuration
+        builder.Entity<AuctionWatcher>(entity =>
+        {
+            entity.ToTable("AuctionWatchers");
+            entity.HasIndex(w => new { w.AuctionId, w.WatcherVendorId }).IsUnique();
+            entity.HasIndex(w => w.WatcherVendorId);
+            entity.HasQueryFilter(w => !w.IsDeleted);
+
+            entity.HasOne(w => w.Auction)
+                  .WithMany(a => a.Watchers)
+                  .HasForeignKey(w => w.AuctionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(w => w.WatcherVendor)
+                  .WithMany()
+                  .HasForeignKey(w => w.WatcherVendorId)
                   .OnDelete(DeleteBehavior.Restrict);
         });
     }

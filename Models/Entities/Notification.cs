@@ -309,5 +309,29 @@ public enum NotificationType
     /// <summary>
     /// Yeni takipci
     /// </summary>
-    NewFollower = 63
+    NewFollower = 63,
+
+    // ============================================
+    // AUCTION NOTIFICATIONS
+    // ============================================
+
+    /// <summary>
+    /// Acik artirmaya yeni teklif geldi (saticiya)
+    /// </summary>
+    NewAuctionBid = 70,
+
+    /// <summary>
+    /// Teklifiniz gecildi (onceki en yuksek teklif verene)
+    /// </summary>
+    AuctionOutbid = 71,
+
+    /// <summary>
+    /// Acik artirma sona erdi
+    /// </summary>
+    AuctionEnded = 72,
+
+    /// <summary>
+    /// Acik artirmayi kazandiniz
+    /// </summary>
+    AuctionWon = 73
 }
