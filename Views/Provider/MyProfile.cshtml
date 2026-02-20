@@ -173,6 +173,175 @@
                         </div>
                     </div>
 
+                    <!-- ============================================ -->
+                    <!-- MINI WEBSITE SETTINGS -->
+                    <!-- ============================================ -->
+
+                    <!-- Social Media Links Card -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-share me-2"></i>@Html.T("ProviderProfile.SocialMedia", "Sosyal Medya")</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-linkedin text-primary me-1"></i> LinkedIn</label>
+                                    <input type="url" class="form-control" data-bind="value: form.socialLinkedin" placeholder="https://linkedin.com/company/...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-twitter-x me-1"></i> Twitter / X</label>
+                                    <input type="url" class="form-control" data-bind="value: form.socialTwitter" placeholder="https://x.com/...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-facebook text-primary me-1"></i> Facebook</label>
+                                    <input type="url" class="form-control" data-bind="value: form.socialFacebook" placeholder="https://facebook.com/...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-instagram text-danger me-1"></i> Instagram</label>
+                                    <input type="url" class="form-control" data-bind="value: form.socialInstagram" placeholder="https://instagram.com/...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-youtube text-danger me-1"></i> YouTube</label>
+                                    <input type="url" class="form-control" data-bind="value: form.socialYoutube" placeholder="https://youtube.com/...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Working Hours Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-clock me-2"></i>@Html.T("ProviderProfile.WorkingHours", "Calisma Saatleri")</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- ko foreach: form.workingHoursList -->
+                            <div class="row align-items-center mb-2">
+                                <div class="col-3 col-md-2">
+                                    <strong data-bind="text: dayLabel"></strong>
+                                </div>
+                                <div class="col-5 col-md-6">
+                                    <div class="input-group input-group-sm" data-bind="visible: !isClosed()">
+                                        <input type="time" class="form-control" data-bind="value: openTime">
+                                        <span class="input-group-text">-</span>
+                                        <input type="time" class="form-control" data-bind="value: closeTime">
+                                    </div>
+                                    <span class="text-muted" data-bind="visible: isClosed"><i class="bi bi-x-circle me-1"></i>@Html.T("ProviderProfile.Closed", "Kapali")</span>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" data-bind="checked: isClosed">
+                                        <label class="form-check-label small">@Html.T("ProviderProfile.Closed", "Kapali")</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+
+                    <!-- Highlights Card -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-star me-2"></i>@Html.T("ProviderProfile.Highlights", "One Cikan Bilgiler")</h5>
+                            <button class="btn btn-sm btn-outline-primary" data-bind="click: addHighlight, visible: form.highlightsList().length < 6">
+                                <i class="bi bi-plus-lg"></i> @Html.T("Common.Add", "Ekle")
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">@Html.T("ProviderProfile.HighlightsHint", "Firmanizi one cikaran rakamsal bilgileri ekleyin (orn: 50+ ulkeye ihracat, 1000+ urun cesidi)")</p>
+                            <!-- ko foreach: form.highlightsList -->
+                            <div class="row g-2 mb-2 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="form-label small" data-bind="visible: $index() === 0">@Html.T("ProviderProfile.Icon", "Ikon")</label>
+                                    <select class="form-select form-select-sm" data-bind="value: icon">
+                                        <option value="bi-globe">🌍 Globe</option>
+                                        <option value="bi-truck">🚚 Truck</option>
+                                        <option value="bi-box-seam">📦 Box</option>
+                                        <option value="bi-people">👥 People</option>
+                                        <option value="bi-award">🏆 Award</option>
+                                        <option value="bi-building">🏢 Building</option>
+                                        <option value="bi-graph-up-arrow">📈 Graph</option>
+                                        <option value="bi-calendar-check">📅 Calendar</option>
+                                        <option value="bi-shield-check">🛡 Shield</option>
+                                        <option value="bi-clock">⏰ Clock</option>
+                                        <option value="bi-star">⭐ Star</option>
+                                        <option value="bi-heart">❤ Heart</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small" data-bind="visible: $index() === 0">@Html.T("ProviderProfile.Value", "Deger")</label>
+                                    <input type="text" class="form-control form-control-sm" data-bind="value: value" placeholder="50+">
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small" data-bind="visible: $index() === 0">@Html.T("ProviderProfile.Label", "Etiket")</label>
+                                    <input type="text" class="form-control form-control-sm" data-bind="value: label" placeholder="Ulkeye Ihracat">
+                                </div>
+                                <div class="col-md-1 text-end">
+                                    <button class="btn btn-sm btn-outline-danger" data-bind="click: $parent.removeHighlight">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- /ko -->
+                            <!-- ko if: form.highlightsList().length === 0 -->
+                            <div class="text-muted text-center py-3">
+                                <i class="bi bi-info-circle me-1"></i>@Html.T("ProviderProfile.NoHighlights", "Henuz one cikan bilgi eklenmemis")
+                            </div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+
+                    <!-- Featured Products Card (Seller only) -->
+                    <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 2">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-grid me-2"></i>@Html.T("ProviderProfile.FeaturedProducts", "One Cikan Urunler")</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">@Html.T("ProviderProfile.FeaturedProductsHint", "Profil sayfanizda one cikarilacak urunleri secin (maks. 8)")</p>
+                            <!-- Search -->
+                            <div class="input-group mb-3">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" data-bind="value: featuredProductSearch, valueUpdate: 'afterkeydown'"
+                                       placeholder="@Html.T("ProviderProfile.SearchProducts", "Urun ara...")">
+                            </div>
+                            <!-- Loading -->
+                            <div data-bind="visible: featuredProductsLoading" class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                            </div>
+                            <!-- Selected products -->
+                            <div data-bind="visible: form.selectedFeaturedProducts().length > 0" class="mb-3">
+                                <label class="form-label fw-bold small">@Html.T("ProviderProfile.SelectedProducts", "Secili Urunler")</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <!-- ko foreach: form.selectedFeaturedProducts -->
+                                    <span class="badge bg-primary d-flex align-items-center gap-1 py-2 px-3" style="font-size: 0.85rem;">
+                                        <span data-bind="text: name"></span>
+                                        <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem;" data-bind="click: $parent.removeFeaturedProduct"></button>
+                                    </span>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                            <!-- Available products -->
+                            <div data-bind="visible: availableProducts().length > 0">
+                                <label class="form-label fw-bold small">@Html.T("ProviderProfile.AvailableProducts", "Mevcut Urunler")</label>
+                                <div class="list-group" style="max-height: 250px; overflow-y: auto;">
+                                    <!-- ko foreach: availableProducts -->
+                                    <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2"
+                                            data-bind="click: $parent.addFeaturedProduct, disable: $parent.form.selectedFeaturedProducts().length >= 8">
+                                        <span>
+                                            <span data-bind="text: name"></span>
+                                            <small class="text-muted ms-2" data-bind="text: sku ? '(' + sku + ')' : ''"></small>
+                                        </span>
+                                        <i class="bi bi-plus-circle text-primary"></i>
+                                    </button>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- CAPABILITY-SPECIFIC FIELDS -->
+                    <!-- ============================================ -->
+
                     <!-- Capability-Specific Fields -->
                     <!-- Satici (2) -->
                     <div class="card mb-4" data-bind="visible: selectedCapabilityId() === 2">

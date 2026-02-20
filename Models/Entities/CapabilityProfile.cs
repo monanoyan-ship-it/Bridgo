@@ -174,6 +174,19 @@ public class CapabilityProfile : BaseEntity
     [MaxLength(500)]
     public string? RejectionReason { get; set; }  // Red sebebi
 
+    // === MINI WEBSITE ===
+    [MaxLength(2000)]
+    public string? SocialLinks { get; set; }  // JSON - {"linkedin":"url","twitter":"url","facebook":"url","instagram":"url","youtube":"url"}
+
+    [MaxLength(1000)]
+    public string? WorkingHours { get; set; }  // JSON - {"mon":"09:00-18:00","tue":"09:00-18:00",...,"sat":"closed","sun":"closed"}
+
+    [MaxLength(2000)]
+    public string? Highlights { get; set; }  // JSON - [{"icon":"bi-truck","value":"50+","label":"Ulkeye Ihracat"}]
+
+    [MaxLength(200)]
+    public string? FeaturedProductIds { get; set; }  // Virgul ile ayrilmis urun ID'leri: "12,45,78"
+
     // === ISTATISTIKLER ===
     public int ViewCount { get; set; } = 0;
     public int ContactRequestCount { get; set; } = 0;

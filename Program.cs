@@ -231,6 +231,12 @@ builder.Services.AddHttpClient("ExternalApi", client =>
 
 builder.Services.AddHttpClient();
 
+// Route Constraints
+builder.Services.AddRouting(options =>
+{
+    options.ConstraintMap.Add("companySlug", typeof(Bridgo.Middleware.CompanySlugRouteConstraint));
+});
+
 // MVC
 builder.Services.AddControllersWithViews();
 

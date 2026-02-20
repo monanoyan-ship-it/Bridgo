@@ -129,6 +129,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     // Capability Profile - Her capability icin profil
     public DbSet<CapabilityProfile> CapabilityProfiles => Set<CapabilityProfile>();
 
+    // Profile Contact Requests - Firma profil sayfasindan gelen mesajlar
+    public DbSet<ProfileContactRequest> ProfileContactRequests => Set<ProfileContactRequest>();
+
     // Document Management - Belge Yonetimi
     public DbSet<DocumentTemplate> DocumentTemplates => Set<DocumentTemplate>();
     public DbSet<GeneratedDocument> GeneratedDocuments => Set<GeneratedDocument>();

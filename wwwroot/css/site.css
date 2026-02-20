@@ -490,3 +490,155 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* ========================================
+   Public Profile Mini Website
+   ======================================== */
+
+/* Hero Section */
+.profile-hero {
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-hero-cover {
+    height: 300px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-hero-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+    padding-top: 80px;
+}
+
+.profile-hero-logo {
+    width: 90px;
+    height: 90px;
+    border: 4px solid white;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    background: white;
+}
+
+.text-shadow {
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* Tab Navigation */
+.profile-nav {
+    z-index: 100;
+}
+
+.profile-nav-pills {
+    padding: 0;
+    gap: 0;
+}
+
+.profile-nav-pills .nav-link {
+    border-radius: 0;
+    padding: 14px 20px;
+    color: #6c757d;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.profile-nav-pills .nav-link:hover {
+    color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.profile-nav-pills .nav-link.active {
+    color: var(--bs-primary);
+    background-color: transparent;
+    border-bottom-color: var(--bs-primary);
+}
+
+/* Product Cards */
+.profile-product-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.profile-product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Social Links */
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(var(--bs-primary-rgb), 0.1);
+    color: var(--bs-primary);
+    font-size: 1.2rem;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.social-link:hover {
+    background: var(--bs-primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Working Hours */
+.working-hours td {
+    padding: 6px 0;
+}
+
+/* Gallery */
+.profile-gallery-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.profile-gallery-thumb:hover {
+    transform: scale(1.03);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-hero-cover {
+        height: 180px;
+    }
+
+    .profile-hero-logo {
+        width: 65px;
+        height: 65px;
+    }
+
+    .profile-hero-overlay h1 {
+        font-size: 1.3rem;
+    }
+
+    .profile-nav-pills {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .profile-nav-pills .nav-link {
+        white-space: nowrap;
+        font-size: 0.9rem;
+        padding: 12px 14px;
+    }
+
+    .profile-product-card .card-img-top {
+        height: 140px !important;
+    }
+}

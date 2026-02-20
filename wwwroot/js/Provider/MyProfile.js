@@ -2,6 +2,32 @@
 (function () {
     'use strict';
 
+    // Gunlerin label'lari
+    var DAY_LABELS = {
+        'mon': 'Pzt', 'tue': 'Sal', 'wed': 'Car',
+        'thu': 'Per', 'fri': 'Cum', 'sat': 'Cmt', 'sun': 'Paz'
+    };
+    var DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+    function createWorkingHourItem(day, hours, isClosed) {
+        var parts = (hours || '09:00-18:00').split('-');
+        return {
+            day: day,
+            dayLabel: DAY_LABELS[day] || day,
+            openTime: ko.observable(parts[0] || '09:00'),
+            closeTime: ko.observable(parts[1] || '18:00'),
+            isClosed: ko.observable(isClosed || false)
+        };
+    }
+
+    function createHighlightItem(icon, value, label) {
+        return {
+            icon: ko.observable(icon || 'bi-globe'),
+            value: ko.observable(value || ''),
+            label: ko.observable(label || '')
+        };
+    }
+
     function ProviderProfileViewModel() {
         var self = this;
 
@@ -16,6 +42,12 @@
         self.selectedCapabilityId = ko.observable(null);
         self.profile = ko.observable(null);
 
+        // Featured Products
+        self.featuredProductSearch = ko.observable('');
+        self.featuredProductsLoading = ko.observable(false);
+        self.availableProducts = ko.observableArray([]);
+        self.allVendorProducts = []; // Cache
+
         // Form
         self.form = {
             displayName: ko.observable(''),
@@ -27,6 +59,18 @@
             serviceRegions: ko.observable(''),
             isPubliclyVisible: ko.observable(false),
             acceptingNewRequests: ko.observable(true),
+            // Mini Website - Social Media
+            socialLinkedin: ko.observable(''),
+            socialTwitter: ko.observable(''),
+            socialFacebook: ko.observable(''),
+            socialInstagram: ko.observable(''),
+            socialYoutube: ko.observable(''),
+            // Mini Website - Working Hours
+            workingHoursList: ko.observableArray([]),
+            // Mini Website - Highlights
+            highlightsList: ko.observableArray([]),
+            // Mini Website - Featured Products
+            selectedFeaturedProducts: ko.observableArray([]),
             // Satici (2)
             categoryIds: ko.observable(''),
             productionCapacity: ko.observable(''),
@@ -71,13 +115,11 @@
             return fetch('/api/capability-profile/my-capabilities')
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    // Profil olusturulabilecek capability'ler: Satici(2), Alici(3), Tasimaci(4), Sigorta(5), Gumruk(6), Gozetim(7), Yatirimci(8)
                     var profileCaps = (data || []).filter(function (c) {
                         return c.id >= 2 && c.id <= 8;
                     });
                     self.capabilities(profileCaps);
 
-                    // Ilk capability'yi sec
                     if (profileCaps.length > 0) {
                         self.selectedCapabilityId(profileCaps[0].id);
                         return self.loadProfile(profileCaps[0].id);
@@ -117,6 +159,57 @@
             self.form.serviceRegions(data.serviceRegions || '');
             self.form.isPubliclyVisible(data.isPubliclyVisible || false);
             self.form.acceptingNewRequests(data.acceptingNewRequests !== false);
+
+            // ---- Mini Website: Social Media ----
+            self.form.socialLinkedin('');
+            self.form.socialTwitter('');
+            self.form.socialFacebook('');
+            self.form.socialInstagram('');
+            self.form.socialYoutube('');
+            if (data.socialLinkList && data.socialLinkList.length > 0) {
+                data.socialLinkList.forEach(function (link) {
+                    var platform = (link.platform || '').toLowerCase();
+                    if (platform === 'linkedin') self.form.socialLinkedin(link.url || '');
+                    else if (platform === 'twitter') self.form.socialTwitter(link.url || '');
+                    else if (platform === 'facebook') self.form.socialFacebook(link.url || '');
+                    else if (platform === 'instagram') self.form.socialInstagram(link.url || '');
+                    else if (platform === 'youtube') self.form.socialYoutube(link.url || '');
+                });
+            }
+
+            // ---- Mini Website: Working Hours ----
+            var hoursMap = {};
+            if (data.workingHourList && data.workingHourList.length > 0) {
+                data.workingHourList.forEach(function (wh) {
+                    hoursMap[wh.day] = wh;
+                });
+            }
+            var hourItems = DAY_ORDER.map(function (day) {
+                var existing = hoursMap[day];
+                if (existing) {
+                    return createWorkingHourItem(day, existing.hours, existing.isClosed);
+                }
+                return createWorkingHourItem(day, '09:00-18:00', (day === 'sat' || day === 'sun'));
+            });
+            self.form.workingHoursList(hourItems);
+
+            // ---- Mini Website: Highlights ----
+            var highlightItems = [];
+            if (data.highlightList && data.highlightList.length > 0) {
+                highlightItems = data.highlightList.map(function (h) {
+                    return createHighlightItem(h.icon, h.value, h.label);
+                });
+            }
+            self.form.highlightsList(highlightItems);
+
+            // ---- Mini Website: Featured Products ----
+            self.form.selectedFeaturedProducts([]);
+            if (data.featuredProductIds) {
+                var ids = data.featuredProductIds.split(',').map(function (id) { return parseInt(id.trim()); }).filter(function (id) { return !isNaN(id); });
+                if (ids.length > 0) {
+                    self.loadFeaturedProductDetails(ids);
+                }
+            }
 
             // Satici
             self.form.categoryIds(data.categoryIds || '');
@@ -176,8 +269,142 @@
         };
 
         // ============================================
+        // HIGHLIGHTS MANAGEMENT
+        // ============================================
+
+        self.addHighlight = function () {
+            if (self.form.highlightsList().length >= 6) return;
+            self.form.highlightsList.push(createHighlightItem('bi-globe', '', ''));
+        };
+
+        self.removeHighlight = function (item) {
+            self.form.highlightsList.remove(item);
+        };
+
+        // ============================================
+        // FEATURED PRODUCTS MANAGEMENT
+        // ============================================
+
+        self.loadFeaturedProductDetails = function (ids) {
+            // Urun detaylarini yukle
+            fetch('/api/catalog/products?pageSize=100')
+                .then(function (r) { return r.json(); })
+                .then(function (result) {
+                    var products = result.items || result.data || result || [];
+                    self.allVendorProducts = products;
+
+                    // Secili urunleri bul
+                    var selected = [];
+                    ids.forEach(function (id) {
+                        var found = products.find(function (p) { return p.id === id; });
+                        if (found) {
+                            selected.push({ id: found.id, name: found.name, sku: found.sku || '' });
+                        }
+                    });
+                    self.form.selectedFeaturedProducts(selected);
+                    self.filterAvailableProducts();
+                })
+                .catch(function (err) {
+                    console.error('Error loading products:', err);
+                });
+        };
+
+        self.loadAllProducts = function () {
+            if (self.allVendorProducts.length > 0) {
+                self.filterAvailableProducts();
+                return;
+            }
+            self.featuredProductsLoading(true);
+            fetch('/api/catalog/products?pageSize=100')
+                .then(function (r) { return r.json(); })
+                .then(function (result) {
+                    self.allVendorProducts = result.items || result.data || result || [];
+                    self.filterAvailableProducts();
+                })
+                .catch(function (err) {
+                    console.error('Error loading products:', err);
+                })
+                .finally(function () {
+                    self.featuredProductsLoading(false);
+                });
+        };
+
+        self.filterAvailableProducts = function () {
+            var search = (self.featuredProductSearch() || '').toLowerCase().trim();
+            var selectedIds = self.form.selectedFeaturedProducts().map(function (p) { return p.id; });
+
+            var filtered = self.allVendorProducts.filter(function (p) {
+                if (selectedIds.indexOf(p.id) >= 0) return false;
+                if (search && (p.name || '').toLowerCase().indexOf(search) < 0 &&
+                    (p.sku || '').toLowerCase().indexOf(search) < 0) return false;
+                return true;
+            });
+            self.availableProducts(filtered.slice(0, 20));
+        };
+
+        self.addFeaturedProduct = function (product) {
+            if (self.form.selectedFeaturedProducts().length >= 8) return;
+            self.form.selectedFeaturedProducts.push({
+                id: product.id,
+                name: product.name,
+                sku: product.sku || ''
+            });
+            self.filterAvailableProducts();
+        };
+
+        self.removeFeaturedProduct = function (product) {
+            self.form.selectedFeaturedProducts.remove(product);
+            self.filterAvailableProducts();
+        };
+
+        // Urun arama debounce
+        var searchTimeout = null;
+        self.featuredProductSearch.subscribe(function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function () {
+                if (self.allVendorProducts.length === 0) {
+                    self.loadAllProducts();
+                } else {
+                    self.filterAvailableProducts();
+                }
+            }, 300);
+        });
+
+        // ============================================
         // SAVE
         // ============================================
+
+        self.buildSocialLinkList = function () {
+            var links = [];
+            if (self.form.socialLinkedin()) links.push({ platform: 'linkedin', url: self.form.socialLinkedin() });
+            if (self.form.socialTwitter()) links.push({ platform: 'twitter', url: self.form.socialTwitter() });
+            if (self.form.socialFacebook()) links.push({ platform: 'facebook', url: self.form.socialFacebook() });
+            if (self.form.socialInstagram()) links.push({ platform: 'instagram', url: self.form.socialInstagram() });
+            if (self.form.socialYoutube()) links.push({ platform: 'youtube', url: self.form.socialYoutube() });
+            return links;
+        };
+
+        self.buildWorkingHourList = function () {
+            return self.form.workingHoursList().map(function (wh) {
+                return {
+                    day: wh.day,
+                    hours: wh.isClosed() ? null : (wh.openTime() + '-' + wh.closeTime()),
+                    isClosed: wh.isClosed()
+                };
+            });
+        };
+
+        self.buildHighlightList = function () {
+            return self.form.highlightsList().filter(function (h) {
+                return h.value() && h.label();
+            }).map(function (h) {
+                return {
+                    icon: h.icon(),
+                    value: h.value(),
+                    label: h.label()
+                };
+            });
+        };
 
         self.saveProfile = function () {
             var capabilityId = self.selectedCapabilityId();
@@ -196,6 +423,11 @@
                 serviceRegions: self.form.serviceRegions(),
                 isPubliclyVisible: self.form.isPubliclyVisible(),
                 acceptingNewRequests: self.form.acceptingNewRequests(),
+                // Mini Website
+                socialLinkList: self.buildSocialLinkList(),
+                workingHourList: self.buildWorkingHourList(),
+                highlightList: self.buildHighlightList(),
+                featuredProductIds: self.form.selectedFeaturedProducts().map(function (p) { return p.id; }).join(','),
                 // Satici (2)
                 categoryIds: self.form.categoryIds(),
                 productionCapacity: self.form.productionCapacity(),
@@ -243,7 +475,7 @@
             })
             .then(function (result) {
                 self.profile(result);
-                self.successMessage('Profil basariyla kaydedildi');
+                self.populateForm(result);
                 if (typeof toastr !== 'undefined') {
                     toastr.success('Profil kaydedildi');
                 }
@@ -266,6 +498,12 @@
 
         self.init = function () {
             self.loadCapabilities()
+                .then(function () {
+                    // Satici ise urunleri on-yukle
+                    if (self.selectedCapabilityId() === 2) {
+                        self.loadAllProducts();
+                    }
+                })
                 .finally(function () {
                     self.isLoading(false);
                 });

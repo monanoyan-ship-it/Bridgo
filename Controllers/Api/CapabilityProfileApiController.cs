@@ -257,6 +257,35 @@ public class CapabilityProfileApiController : ControllerBase
         }
         return Ok(profile);
     }
+
+    /// <summary>
+    /// Firma profil sayfasindan iletisim mesaji gonder
+    /// </summary>
+    [HttpPost("public/{slug}/contact")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SubmitContactRequest(string slug, [FromBody] ProfileContactRequestDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.SenderName) || string.IsNullOrWhiteSpace(dto.SenderEmail)
+            || string.IsNullOrWhiteSpace(dto.Subject) || string.IsNullOrWhiteSpace(dto.Message))
+        {
+            return BadRequest(new { message = "Tum zorunlu alanlar doldurulmalidir." });
+        }
+
+        // Giris yapmis kullanicinin vendor ID'sini al
+        int? senderVendorId = null;
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            senderVendorId = (await GetCurrentUserAsync())?.VendorId;
+        }
+
+        var success = await _profileService.SubmitContactRequestAsync(slug, dto, senderVendorId);
+        if (!success)
+        {
+            return NotFound(new { message = "Profil bulunamadi." });
+        }
+
+        return Ok(new { message = "Mesajiniz basariyla iletildi." });
+    }
 }
 
 // ============================================

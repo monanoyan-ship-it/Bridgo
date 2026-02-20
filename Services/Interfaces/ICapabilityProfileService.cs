@@ -39,6 +39,11 @@ public interface ICapabilityProfileService
     /// </summary>
     Task<List<CapabilityProfileDto>> GetVendorProfilesAsync(int vendorId);
 
+    /// <summary>
+    /// Profil iletisim formu gonder
+    /// </summary>
+    Task<bool> SubmitContactRequestAsync(string slug, ProfileContactRequestDto dto, int? senderVendorId);
+
     // === ADMIN METODLARI ===
 
     /// <summary>

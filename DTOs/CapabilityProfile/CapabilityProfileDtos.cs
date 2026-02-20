@@ -59,6 +59,16 @@ public class CapabilityProfileDto
     // Onay bekliyor mu?
     public bool IsPendingApproval => IsPubliclyVisible && !IsVerified && RejectionReason == null;
 
+    // Mini Website
+    public string? SocialLinks { get; set; }
+    public List<SocialLinkItemDto>? SocialLinkList { get; set; }
+    public string? WorkingHours { get; set; }
+    public List<WorkingHourItemDto>? WorkingHourList { get; set; }
+    public string? Highlights { get; set; }
+    public List<HighlightItemDto>? HighlightList { get; set; }
+    public string? FeaturedProductIds { get; set; }
+    public int ProductCount { get; set; }  // Vendor'in toplam aktif urun sayisi
+
     // Istatistikler
     public int ViewCount { get; set; }
     public int ContactRequestCount { get; set; }
@@ -150,6 +160,15 @@ public class CapabilityProfileCreateUpdateDto
     public string? MetaTitle { get; set; }
     public string? MetaDescription { get; set; }
     public string? Slug { get; set; }
+
+    // Mini Website
+    public string? SocialLinks { get; set; }
+    public List<SocialLinkItemDto>? SocialLinkList { get; set; }
+    public string? WorkingHours { get; set; }
+    public List<WorkingHourItemDto>? WorkingHourList { get; set; }
+    public string? Highlights { get; set; }
+    public List<HighlightItemDto>? HighlightList { get; set; }
+    public string? FeaturedProductIds { get; set; }
 
     // Durum
     public bool IsPubliclyVisible { get; set; }
@@ -257,4 +276,45 @@ public class ProfileApprovalActionDto
 {
     public bool Approve { get; set; }
     public string? RejectionReason { get; set; }
+}
+
+/// <summary>
+/// Sosyal medya linki
+/// </summary>
+public class SocialLinkItemDto
+{
+    public string Platform { get; set; } = string.Empty;  // linkedin, twitter, facebook, instagram, youtube
+    public string Url { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Calisma saati
+/// </summary>
+public class WorkingHourItemDto
+{
+    public string Day { get; set; } = string.Empty;  // mon, tue, wed, thu, fri, sat, sun
+    public string? Hours { get; set; }  // "09:00-18:00" veya null
+    public bool IsClosed { get; set; }
+}
+
+/// <summary>
+/// One cikan bilgi (rakamsal highlight)
+/// </summary>
+public class HighlightItemDto
+{
+    public string? Icon { get; set; }  // Bootstrap icon class: bi-truck, bi-globe, etc.
+    public string Value { get; set; } = string.Empty;  // "50+", "1000+", "24/7"
+    public string Label { get; set; } = string.Empty;  // "Ulkeye Ihracat", "Urun Cesidi"
+}
+
+/// <summary>
+/// Profil iletisim formu DTO
+/// </summary>
+public class ProfileContactRequestDto
+{
+    public string SenderName { get; set; } = string.Empty;
+    public string SenderEmail { get; set; } = string.Empty;
+    public string? SenderPhone { get; set; }
+    public string Subject { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
 }

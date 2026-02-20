@@ -6,16 +6,19 @@ using Bridgo.DTOs.CapabilityProfile;
 using Bridgo.Models.Entities;
 using Bridgo.Models.Enums;
 using Bridgo.Services.Interfaces;
+using Bridgo.Middleware;
 
 namespace Bridgo.Services;
 
 public class CapabilityProfileService : ICapabilityProfileService
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public CapabilityProfileService(ApplicationDbContext context)
+    public CapabilityProfileService(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<CapabilityProfileDto?> GetProfileAsync(int vendorId, int capabilityId)
@@ -138,6 +141,33 @@ public class CapabilityProfileService : ICapabilityProfileService
         // SEO
         profile.MetaTitle = dto.MetaTitle;
         profile.MetaDescription = dto.MetaDescription;
+
+        // Mini Website
+        if (dto.SocialLinkList != null && dto.SocialLinkList.Any())
+        {
+            profile.SocialLinks = JsonSerializer.Serialize(dto.SocialLinkList);
+        }
+        else if (!string.IsNullOrEmpty(dto.SocialLinks))
+        {
+            profile.SocialLinks = dto.SocialLinks;
+        }
+        if (dto.WorkingHourList != null && dto.WorkingHourList.Any())
+        {
+            profile.WorkingHours = JsonSerializer.Serialize(dto.WorkingHourList);
+        }
+        else if (!string.IsNullOrEmpty(dto.WorkingHours))
+        {
+            profile.WorkingHours = dto.WorkingHours;
+        }
+        if (dto.HighlightList != null && dto.HighlightList.Any())
+        {
+            profile.Highlights = JsonSerializer.Serialize(dto.HighlightList);
+        }
+        else if (!string.IsNullOrEmpty(dto.Highlights))
+        {
+            profile.Highlights = dto.Highlights;
+        }
+        profile.FeaturedProductIds = dto.FeaturedProductIds;
 
         // Durum
         profile.IsPubliclyVisible = dto.IsPubliclyVisible || dto.IsPublic;
@@ -269,7 +299,16 @@ public class CapabilityProfileService : ICapabilityProfileService
             await _context.SaveChangesAsync();
         }
 
-        return MapToDto(profile);
+        var dto = MapToDto(profile);
+
+        // Vendor'in aktif urun sayisini ekle
+        var activeStatusId = ProductStatuses.Active.Id;
+        dto.ProductCount = await _context.Products
+            .CountAsync(p => p.VendorId == profile.VendorId
+                && p.ProductStatusId == activeStatusId
+                && !p.IsDeleted);
+
+        return dto;
     }
 
     public async Task<List<CapabilityProfileDto>> GetVendorProfilesAsync(int vendorId)
@@ -354,6 +393,66 @@ public class CapabilityProfileService : ICapabilityProfileService
     }
 
     // ============================================
+    // CONTACT REQUEST
+    // ============================================
+
+    public async Task<bool> SubmitContactRequestAsync(string slug, ProfileContactRequestDto dto, int? senderVendorId)
+    {
+        var profile = await _context.CapabilityProfiles
+            .Include(p => p.Vendor)
+            .FirstOrDefaultAsync(p => p.Slug == slug && p.IsPubliclyVisible && p.IsVerified);
+
+        if (profile == null) return false;
+
+        var contactRequest = new ProfileContactRequest
+        {
+            CapabilityProfileId = profile.Id,
+            SenderVendorId = senderVendorId,
+            SenderName = dto.SenderName,
+            SenderEmail = dto.SenderEmail,
+            SenderPhone = dto.SenderPhone,
+            Subject = dto.Subject,
+            Message = dto.Message
+        };
+
+        _context.ProfileContactRequests.Add(contactRequest);
+
+        // Istatistik guncelle
+        profile.ContactRequestCount++;
+
+        await _context.SaveChangesAsync();
+
+        // Firma sahibine bildirim gonder
+        try
+        {
+            var vendorUsers = await _context.Users
+                .Where(u => u.VendorId == profile.VendorId && u.IsActive)
+                .Select(u => u.Id)
+                .Take(5) // En fazla 5 kullaniciya bildirim
+                .ToListAsync();
+
+            foreach (var userId in vendorUsers)
+            {
+                await _notificationService.CreateAsync(new DTOs.Notification.NotificationCreateDto
+                {
+                    VendorId = profile.VendorId,
+                    UserId = userId,
+                    Type = NotificationType.Info,
+                    Title = $"Yeni iletisim mesaji: {dto.Subject}",
+                    Message = $"{dto.SenderName} ({dto.SenderEmail}) firmaniza mesaj gonderdi.",
+                    ActionUrl = "/Dashboard"
+                });
+            }
+        }
+        catch
+        {
+            // Bildirim gonderilemese de mesaj kaydedildi
+        }
+
+        return true;
+    }
+
+    // ============================================
     // PRIVATE HELPERS
     // ============================================
 
@@ -364,11 +463,19 @@ public class CapabilityProfileService : ICapabilityProfileService
 
         var slug = GenerateSlugFromName(baseName) + "-" + capabilitySlug;
 
-        // Unique kontrolu
-        var exists = await _context.CapabilityProfiles.AnyAsync(p => p.Slug == slug);
-        if (exists)
+        // Reserved word kontrolu (root-level route cakismasi onleme)
+        if (CompanySlugRouteConstraint.IsReservedWord(slug))
         {
-            slug = $"{slug}-{DateTime.UtcNow.Ticks % 10000}";
+            slug = $"{slug}-co";
+        }
+
+        // Unique kontrolu
+        var baseSlug = slug;
+        var counter = 1;
+        while (await _context.CapabilityProfiles.AnyAsync(p => p.Slug == slug))
+        {
+            slug = $"{baseSlug}-{counter}";
+            counter++;
         }
 
         return slug;
@@ -441,6 +548,12 @@ public class CapabilityProfileService : ICapabilityProfileService
             VerifiedAt = profile.VerifiedAt,
             RejectionReason = profile.RejectionReason,
 
+            // Mini Website
+            SocialLinks = profile.SocialLinks,
+            WorkingHours = profile.WorkingHours,
+            Highlights = profile.Highlights,
+            FeaturedProductIds = profile.FeaturedProductIds,
+
             ViewCount = profile.ViewCount,
             ContactRequestCount = profile.ContactRequestCount,
             ResponseCount = profile.ResponseCount,
@@ -502,6 +615,39 @@ public class CapabilityProfileService : ICapabilityProfileService
             {
                 dto.GalleryImageList = new List<GalleryImageItemDto>();
             }
+        }
+
+        // SocialLinks parse
+        if (!string.IsNullOrEmpty(profile.SocialLinks))
+        {
+            try
+            {
+                dto.SocialLinkList = JsonSerializer.Deserialize<List<SocialLinkItemDto>>(profile.SocialLinks,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch { dto.SocialLinkList = new List<SocialLinkItemDto>(); }
+        }
+
+        // WorkingHours parse
+        if (!string.IsNullOrEmpty(profile.WorkingHours))
+        {
+            try
+            {
+                dto.WorkingHourList = JsonSerializer.Deserialize<List<WorkingHourItemDto>>(profile.WorkingHours,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch { dto.WorkingHourList = new List<WorkingHourItemDto>(); }
+        }
+
+        // Highlights parse
+        if (!string.IsNullOrEmpty(profile.Highlights))
+        {
+            try
+            {
+                dto.HighlightList = JsonSerializer.Deserialize<List<HighlightItemDto>>(profile.Highlights,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch { dto.HighlightList = new List<HighlightItemDto>(); }
         }
 
         // Categories parse (for Satici)
