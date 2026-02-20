@@ -302,8 +302,6 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("LandingPage");
 
-// Landing-only mod: production'da sadece landing + waitlist API
-app.UseMiddleware<Bridgo.Middleware.LandingOnlyMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

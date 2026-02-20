@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Corplynk — B2B Trade, Reimagined</title>
+    <meta name="description" content="The next-generation B2B trading platform. Connect with verified suppliers, discover products, and grow your business." />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://corplynk.com/" />
+    <meta property="og:title" content="Corplynk — B2B Trade, Reimagined" />
+    <meta property="og:description" content="Connect with verified suppliers, discover products at scale, and grow your business on the next-generation B2B platform." />
+    <meta property="og:image" content="https://corplynk.com/og-image.jpg" />
+    <meta property="og:site_name" content="Corplynk" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@@corplynkcmon" />
+    <meta name="twitter:title" content="Corplynk — B2B Trade, Reimagined" />
+    <meta name="twitter:description" content="Connect with verified suppliers, discover products at scale, and grow your business on the next-generation B2B platform." />
+    <meta name="twitter:image" content="https://corplynk.com/og-image.jpg" />
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="~/favicon-192.png" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    @RenderBody()
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,8 +1,9 @@
 """
 Corplynk Twitter Bot - Automated Tweet Poster
-Posts chronological development milestones at random times during UTC+0 business hours.
-Task Scheduler runs every hour (12:00-21:00 TR / 09:00-18:00 UTC).
-Bot decides randomly whether to tweet, targeting ~2 tweets/day.
+Posts chronological development milestones during business hours.
+Task Scheduler runs hourly with RandomDelay for natural timing.
+Bot decides whether to tweet based on remaining quota and time.
+NO SLEEPING - posts immediately when decided.
 """
 
 import json
@@ -10,8 +11,7 @@ import os
 import sys
 import random
 import logging
-import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from pathlib import Path
 
 import tweepy
@@ -30,18 +30,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# State file - tracks which tweets have been posted
+# Also log to console
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+console.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+logger.addHandler(console)
+
+# Files
 STATE_FILE = BASE_DIR / "tweets_posted.json"
 TWEETS_FILE = BASE_DIR / "tweets.json"
 
 # Config
 MAX_TWEETS_PER_DAY = 2
 MIN_HOURS_BETWEEN_TWEETS = 2
-BUSINESS_HOURS_UTC = (9, 18)  # 09:00-18:00 UTC = 12:00-21:00 TR
+BUSINESS_HOURS_UTC = (8, 19)  # 08:00-19:00 UTC = 11:00-22:00 TR
 
 
 def load_state():
-    """Load posted tweet IDs from state file."""
     if STATE_FILE.exists():
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -49,28 +54,24 @@ def load_state():
 
 
 def save_state(state):
-    """Save posted tweet IDs to state file."""
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
 
 
 def load_tweets():
-    """Load tweets from JSON file."""
     with open(TWEETS_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def get_next_tweet(tweets, state):
-    """Get the next unposted tweet in chronological order."""
     posted_ids = set(state["posted_ids"])
     for tweet in tweets:
         if tweet["id"] not in posted_ids:
             return tweet
-    return None  # All tweets posted
+    return None
 
 
 def post_tweet(text):
-    """Post a tweet using Twitter API v2 via tweepy."""
     api_key = os.getenv("API_KEY")
     api_secret = os.getenv("API_SECRET")
     access_token = os.getenv("ACCESS_TOKEN")
@@ -90,101 +91,105 @@ def post_tweet(text):
     return response
 
 
-def should_tweet_now(state):
-    """Randomly decide whether to tweet this hour, considering daily limits and spacing."""
-    now_utc = datetime.now(timezone.utc)
+def should_tweet_now(state, now_utc):
     today = now_utc.strftime("%Y-%m-%d")
 
     # Reset daily count if new day
     if state.get("last_date") != today:
         state["daily_count"] = 0
         state["last_date"] = today
+        logger.info(f"New day: {today}, daily count reset.")
 
     # Already hit daily max
-    if state.get("daily_count", 0) >= MAX_TWEETS_PER_DAY:
-        logger.info(f"Daily limit reached ({MAX_TWEETS_PER_DAY} tweets today). Skipping.")
+    daily_count = state.get("daily_count", 0)
+    if daily_count >= MAX_TWEETS_PER_DAY:
+        logger.info(f"Daily limit reached ({daily_count}/{MAX_TWEETS_PER_DAY}). Skipping.")
         return False
 
     # Check minimum time between tweets
-    if state.get("last_posted_at"):
+    last_posted = state.get("last_posted_at")
+    if last_posted:
         try:
-            last_posted = datetime.fromisoformat(state["last_posted_at"])
-            hours_since = (now_utc - last_posted).total_seconds() / 3600
+            last_dt = datetime.fromisoformat(last_posted)
+            hours_since = (now_utc - last_dt).total_seconds() / 3600
             if hours_since < MIN_HOURS_BETWEEN_TWEETS:
                 logger.info(f"Only {hours_since:.1f}h since last tweet (min {MIN_HOURS_BETWEEN_TWEETS}h). Skipping.")
                 return False
         except (ValueError, TypeError):
             pass
 
-    # Calculate probability based on remaining tweets and remaining hours
+    # Calculate probability
     current_hour = now_utc.hour
     remaining_hours = BUSINESS_HOURS_UTC[1] - current_hour
-    remaining_tweets = MAX_TWEETS_PER_DAY - state.get("daily_count", 0)
+    remaining_tweets = MAX_TWEETS_PER_DAY - daily_count
 
     if remaining_hours <= 0:
+        logger.info("No business hours remaining today.")
         return False
 
+    # Must tweet now if running out of time
     if remaining_hours <= remaining_tweets:
-        # Running out of time, must tweet now
-        logger.info(f"Only {remaining_hours}h left, {remaining_tweets} tweets remaining. Tweeting now.")
+        logger.info(f"Must tweet: {remaining_hours}h left, {remaining_tweets} tweets remaining.")
         return True
 
-    # Random probability: spread tweets across remaining hours
+    # Random probability
     probability = remaining_tweets / remaining_hours
     roll = random.random()
-    logger.info(f"Tweet probability: {probability:.2f}, rolled: {roll:.2f} (remaining: {remaining_tweets} tweets in {remaining_hours}h)")
-
-    return roll < probability
+    decision = roll < probability
+    logger.info(f"Probability: {probability:.2f}, roll: {roll:.2f} -> {'TWEET' if decision else 'SKIP'}")
+    return decision
 
 
 def main():
-    """Main entry point."""
+    logger.info("=" * 40)
     logger.info("Bot started")
 
     now_utc = datetime.now(timezone.utc)
+    logger.info(f"UTC time: {now_utc.strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Check business hours
     if not (BUSINESS_HOURS_UTC[0] <= now_utc.hour < BUSINESS_HOURS_UTC[1]):
-        logger.info(f"Outside business hours (UTC {BUSINESS_HOURS_UTC[0]}:00-{BUSINESS_HOURS_UTC[1]}:00). Skipping.")
+        logger.info(f"Outside business hours (UTC {BUSINESS_HOURS_UTC[0]}:00-{BUSINESS_HOURS_UTC[1]}:00). Current: {now_utc.hour}:00 UTC.")
         return
 
     # Load data
     tweets = load_tweets()
     state = load_state()
 
+    logger.info(f"State: posted={len(state['posted_ids'])}/{len(tweets)}, daily={state.get('daily_count', 0)}/{MAX_TWEETS_PER_DAY}")
+
     # Get next tweet
     tweet = get_next_tweet(tweets, state)
     if tweet is None:
-        logger.info("All tweets have been posted! Add more tweets to tweets.json")
+        logger.info("All tweets posted! Add more to tweets.json.")
         return
 
-    # Random decision: should we tweet now?
-    if not should_tweet_now(state):
-        save_state(state)  # Save updated daily_count/last_date
+    # Decide
+    if not should_tweet_now(state, now_utc):
+        save_state(state)
         return
 
-    # Post (random delay handled by Task Scheduler's RandomDelay setting)
+    # POST IMMEDIATELY - no sleeping, no waiting
+    logger.info(f"Posting tweet #{tweet['id']}: {tweet['text'][:60]}...")
+
     try:
-        logger.info(f"Posting tweet #{tweet['id']}: {tweet['text'][:50]}...")
         response = post_tweet(tweet["text"])
 
-        # Update state
         state["posted_ids"].append(tweet["id"])
         state["last_posted_at"] = now_utc.isoformat()
         state["daily_count"] = state.get("daily_count", 0) + 1
         state["last_date"] = now_utc.strftime("%Y-%m-%d")
         save_state(state)
 
-        logger.info(f"Tweet #{tweet['id']} posted successfully! Response: {response.data}")
-        print(f"OK - Tweet #{tweet['id']} posted: {tweet['text'][:80]}...")
+        logger.info(f"SUCCESS! Tweet #{tweet['id']} posted. Response: {response.data}")
 
     except tweepy.TweepyException as e:
         logger.error(f"Twitter API error: {e}")
-        print(f"ERROR - Twitter API: {e}", file=sys.stderr)
+        save_state(state)
         sys.exit(1)
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        print(f"ERROR - {e}", file=sys.stderr)
+        save_state(state)
         sys.exit(1)
 
 

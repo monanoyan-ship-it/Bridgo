@@ -1,0 +1,175 @@
+@page
+@model IndexModel
+
+<!-- Background -->
+<div class="landing-bg">
+    <div class="grid-overlay"></div>
+</div>
+
+<div class="landing-wrapper">
+    <!-- Nav -->
+    <nav class="landing-nav">
+        <a href="/" class="landing-brand">
+            <i class="bi bi-hexagon-fill"></i> Corplynk
+        </a>
+        <div class="landing-nav-links">
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <main class="landing-main">
+        <div class="landing-badge">
+            <span class="dot"></span>
+            Coming soon — 2026
+        </div>
+
+        <h1 class="landing-title">
+            B2B Trade,<br />
+            <span class="gradient-text">Reimagined.</span>
+        </h1>
+
+        <p class="landing-subtitle">
+            Connect with verified suppliers, discover products at scale,
+            and grow your business on the next-generation B2B platform.
+        </p>
+
+        <!-- Waitlist Card -->
+        <div class="waitlist-card" id="waitlistForm">
+            <form id="waitlistFormInner" class="waitlist-form" autocomplete="off">
+                <input
+                    type="email"
+                    id="waitlistEmail"
+                    class="waitlist-input"
+                    placeholder="Enter your email"
+                    required
+                />
+                <button type="submit" id="waitlistBtn" class="waitlist-btn">
+                    <span id="waitlistBtnText">Join Waitlist</span>
+                    <span id="waitlistSpinner" class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+            <div id="waitlistError" class="waitlist-error"></div>
+            <div id="waitlistSuccess" class="waitlist-success">
+                <div class="check-icon"><i class="bi bi-check-lg"></i></div>
+                <h4>You're on the list!</h4>
+                <p>We'll notify you as soon as Corplynk launches.</p>
+            </div>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="social-proof" id="socialProof" style="display: none;">
+            <div class="avatar-stack">
+                <div class="avatar">A</div>
+                <div class="avatar">M</div>
+                <div class="avatar">S</div>
+                <div class="avatar">+</div>
+            </div>
+            <span>Join <span class="count" id="waitlistCount">0</span> others on the waitlist</span>
+        </div>
+    </main>
+
+    <!-- Features -->
+    <section class="features-section">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="bi bi-globe2"></i></div>
+                <h3 class="feature-title">Global Network</h3>
+                <p class="feature-desc">Access thousands of verified suppliers and buyers across industries worldwide.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+                <h3 class="feature-title">Verified & Trusted</h3>
+                <p class="feature-desc">Every business is verified. Trade with confidence through our trust system.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="bi bi-lightning-charge"></i></div>
+                <h3 class="feature-title">All-in-One Platform</h3>
+                <p class="feature-desc">Products, orders, logistics, customs, and payments — all in one place.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Support Section -->
+    <section class="support-section" id="support">
+        <div class="support-header">
+            <div class="support-badge">
+                <i class="bi bi-heart-fill"></i>
+                Early Supporter Program
+            </div>
+            <h2 class="support-title">Back the Vision</h2>
+            <p class="support-desc">
+                We're not asking for big amounts — even <strong>$1</strong> makes a difference.
+                Support Corplynk's development and become an early partner.
+                Every contributor earns equity shares when we launch.
+            </p>
+        </div>
+
+        <div class="wallet-cards">
+            <!-- WAX -->
+            <div class="wallet-card">
+                <div class="wallet-icon wax-icon">
+                    <span class="wallet-icon-fallback">W</span>
+                </div>
+                <div class="wallet-info">
+                    <h4>WAX</h4>
+                    <div class="wallet-address" id="waxAddress">
+                        <code>corplynkfund</code>
+                        <button class="copy-btn" onclick="copyAddress('corplynkfund', this)" title="Copy">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SOL -->
+            <div class="wallet-card">
+                <div class="wallet-icon sol-icon">
+                    <span class="wallet-icon-fallback">S</span>
+                </div>
+                <div class="wallet-info">
+                    <h4>Solana</h4>
+                    <div class="wallet-address" id="solAddress">
+                        <code>HkZ9hmn...qEVy</code>
+                        <button class="copy-btn" onclick="copyAddress('HkZ9hmnDtnvSK3gnZcmznW2zvscRF9hHMzoWs3iwqEVy', this)" title="Copy">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="memo-notice">
+            <i class="bi bi-info-circle"></i>
+            <span>Include your <strong>email address</strong> in the transaction memo — we'll reach out with your partnership details.</span>
+        </div>
+
+        <div class="spread-notice">
+            <p>Can't contribute? <strong>Sharing is just as powerful.</strong> Help us reach more people and grow this movement.</p>
+            <div class="share-buttons">
+                <a href="https://twitter.com/intent/tweet?text=Check%20out%20%40corplynkcmon%20%E2%80%94%20the%20next-gen%20B2B%20trade%20platform.%20Back%20the%20vision%20and%20earn%20equity%20shares!&url=https://corplynk.com" target="_blank" rel="noopener" class="share-btn">
+                    <i class="bi bi-twitter-x"></i>
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://corplynk.com" target="_blank" rel="noopener" class="share-btn">
+                    <i class="bi bi-linkedin"></i>
+                </a>
+                <button class="share-btn" onclick="copyAddress('https://corplynk.com', this)" title="Copy link">
+                    <i class="bi bi-link-45deg"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="footer-links">
+            <a href="https://x.com/corplynkcmon" target="_blank" rel="noopener"><i class="bi bi-twitter-x"></i></a>
+            <a href="mailto:info@corplynk.com"><i class="bi bi-envelope"></i></a>
+        </div>
+        <p>&copy; 2026 Corplynk. All rights reserved.</p>
+    </footer>
+</div>
+
+@section Scripts {
+    <script src="~/js/landing.js" asp-append-version="true"></script>
+}

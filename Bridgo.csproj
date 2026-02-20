@@ -17,6 +17,10 @@
     <Content Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
+    <Compile Remove="Bridgo.Landing\**" />
+    <Content Remove="Bridgo.Landing\**" />
+    <EmbeddedResource Remove="Bridgo.Landing\**" />
+    <None Remove="Bridgo.Landing\**" />
   </ItemGroup>
 
   <ItemGroup>
