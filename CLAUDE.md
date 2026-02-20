@@ -89,6 +89,18 @@ curl -s "http://127.0.0.1:41847/api/guide?cwd=$(pwd)"
 | **Notes** | SADECE hassas bilgiler (API key, sifre, TC, wallet key, credential) |
 | **Pattern** | Kod kurallari (rule), tercihler (preference), hatalar (mistake) |
 
+## KRITIK: Node.js JSON Parse (Windows Bash)
+**ASLA `node -e` ile `!=` veya `!==` kullanma.** Bash `!` karakterini escape eder.
+**Dogru yontem:** Heredoc ile JS dosyasi olustur, sonra `node dosya.js` calistir:
+```bash
+curl -s "http://127.0.0.1:41847/api/..." > C:/Users/Ahmet/source/repos/monanoyan-ship-it/Bridgo/tmp_data.json
+cat > /tmp/parse.js << 'ENDSCRIPT'
+const r = require("C:/Users/Ahmet/source/repos/monanoyan-ship-it/Bridgo/tmp_data.json");
+// burada != kullanabilirsin, heredoc icinde escape sorunu yok
+ENDSCRIPT
+node /tmp/parse.js
+```
+
 ## Teknik Referanslar
 
 ### PostgreSQL Baglantisi
