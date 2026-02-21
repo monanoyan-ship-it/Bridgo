@@ -21,6 +21,10 @@
     <Content Remove="Bridgo.Landing\**" />
     <EmbeddedResource Remove="Bridgo.Landing\**" />
     <None Remove="Bridgo.Landing\**" />
+    <Compile Remove="Bridgo.TwitterBot\**" />
+    <Content Remove="Bridgo.TwitterBot\**" />
+    <EmbeddedResource Remove="Bridgo.TwitterBot\**" />
+    <None Remove="Bridgo.TwitterBot\**" />
   </ItemGroup>
 
   <ItemGroup>

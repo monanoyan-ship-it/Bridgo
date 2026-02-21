@@ -1,9 +1,7 @@
 """
-Corplynk Twitter Bot - Automated Tweet Poster
-Posts chronological development milestones during business hours.
-Task Scheduler runs hourly with RandomDelay for natural timing.
-Bot decides whether to tweet based on remaining quota and time.
-NO SLEEPING - posts immediately when decided.
+Corplynk Twitter Bot
+Gunde 2 tweet. Gun basinda rastgele 2 zaman secer (saat+dakika), vakti gelince atar.
+Yari kalmissa kaldigindan devam eder.
 """
 
 import json
@@ -17,11 +15,9 @@ from pathlib import Path
 import tweepy
 from dotenv import load_dotenv
 
-# Setup
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
-# Logging
 logging.basicConfig(
     filename=BASE_DIR / "bot.log",
     level=logging.INFO,
@@ -29,28 +25,26 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 logger = logging.getLogger(__name__)
-
-# Also log to console
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 console.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
 logger.addHandler(console)
 
-# Files
 STATE_FILE = BASE_DIR / "tweets_posted.json"
 TWEETS_FILE = BASE_DIR / "tweets.json"
 
-# Config
-MAX_TWEETS_PER_DAY = 2
-MIN_HOURS_BETWEEN_TWEETS = 2
-BUSINESS_HOURS_UTC = (8, 19)  # 08:00-19:00 UTC = 11:00-22:00 TR
+# TR is saatleri (UTC+3). Bot TR saatiyle dusunur.
+BUSINESS_START = 10  # TR 10:00
+BUSINESS_END = 20    # TR 20:00
+TWEETS_PER_DAY = 2
+MIN_GAP_HOURS = 3    # 2 tweet arasi en az 3 saat
 
 
 def load_state():
     if STATE_FILE.exists():
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    return {"posted_ids": [], "last_posted_at": None, "daily_count": 0, "last_date": None}
+    return {"posted_ids": [], "today": None, "plan": []}
 
 
 def save_state(state):
@@ -64,133 +58,112 @@ def load_tweets():
 
 
 def get_next_tweet(tweets, state):
-    posted_ids = set(state["posted_ids"])
-    for tweet in tweets:
-        if tweet["id"] not in posted_ids:
-            return tweet
+    posted = set(state["posted_ids"])
+    for t in tweets:
+        if t["id"] not in posted:
+            return t
     return None
 
 
 def post_tweet(text):
-    api_key = os.getenv("API_KEY")
-    api_secret = os.getenv("API_SECRET")
-    access_token = os.getenv("ACCESS_TOKEN")
-    access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
-
-    if not all([api_key, api_secret, access_token, access_token_secret]):
-        raise ValueError("Missing Twitter API credentials in .env file")
-
     client = tweepy.Client(
-        consumer_key=api_key,
-        consumer_secret=api_secret,
-        access_token=access_token,
-        access_token_secret=access_token_secret
+        consumer_key=os.getenv("API_KEY"),
+        consumer_secret=os.getenv("API_SECRET"),
+        access_token=os.getenv("ACCESS_TOKEN"),
+        access_token_secret=os.getenv("ACCESS_TOKEN_SECRET")
     )
-
-    response = client.create_tweet(text=text)
-    return response
+    return client.create_tweet(text=text)
 
 
-def should_tweet_now(state, now_utc):
-    today = now_utc.strftime("%Y-%m-%d")
+def make_daily_plan(tr_hour_now, tr_minute_now=0):
+    """Bugunun tweet saatlerini rastgele sec (saat + dakika)."""
+    # Dakika cinsinden calis (orn: 10:00 = 600, 19:59 = 1199)
+    now_minutes = tr_hour_now * 60 + tr_minute_now
+    start_minutes = max(BUSINESS_START * 60, now_minutes + 5)  # en erken 5dk sonra
+    end_minutes = BUSINESS_END * 60  # 20:00 = 1200
 
-    # Reset daily count if new day
-    if state.get("last_date") != today:
-        state["daily_count"] = 0
-        state["last_date"] = today
-        logger.info(f"New day: {today}, daily count reset.")
+    if start_minutes >= end_minutes:
+        return []
 
-    # Already hit daily max
-    daily_count = state.get("daily_count", 0)
-    if daily_count >= MAX_TWEETS_PER_DAY:
-        logger.info(f"Daily limit reached ({daily_count}/{MAX_TWEETS_PER_DAY}). Skipping.")
-        return False
+    gap_minutes = MIN_GAP_HOURS * 60  # 3 saat = 180dk
 
-    # Check minimum time between tweets
-    last_posted = state.get("last_posted_at")
-    if last_posted:
-        try:
-            last_dt = datetime.fromisoformat(last_posted)
-            hours_since = (now_utc - last_dt).total_seconds() / 3600
-            if hours_since < MIN_HOURS_BETWEEN_TWEETS:
-                logger.info(f"Only {hours_since:.1f}h since last tweet (min {MIN_HOURS_BETWEEN_TWEETS}h). Skipping.")
-                return False
-        except (ValueError, TypeError):
-            pass
+    # 2 rastgele zaman sec, aralarinda en az gap_minutes olsun
+    for _ in range(200):
+        t1 = random.randint(start_minutes, end_minutes - 1)
+        t2 = random.randint(start_minutes, end_minutes - 1)
+        picks = sorted([t1, t2])
+        if picks[1] - picks[0] >= gap_minutes:
+            return picks
 
-    # Calculate probability
-    current_hour = now_utc.hour
-    remaining_hours = BUSINESS_HOURS_UTC[1] - current_hour
-    remaining_tweets = MAX_TWEETS_PER_DAY - daily_count
-
-    if remaining_hours <= 0:
-        logger.info("No business hours remaining today.")
-        return False
-
-    # Must tweet now if running out of time
-    if remaining_hours <= remaining_tweets:
-        logger.info(f"Must tweet: {remaining_hours}h left, {remaining_tweets} tweets remaining.")
-        return True
-
-    # Random probability
-    probability = remaining_tweets / remaining_hours
-    roll = random.random()
-    decision = roll < probability
-    logger.info(f"Probability: {probability:.2f}, roll: {roll:.2f} -> {'TWEET' if decision else 'SKIP'}")
-    return decision
+    # Bulamazsa basit dagitim
+    mid = (start_minutes + end_minutes) // 2
+    return [random.randint(start_minutes, mid - gap_minutes // 2),
+            random.randint(mid + gap_minutes // 2, end_minutes - 1)]
 
 
 def main():
-    logger.info("=" * 40)
-    logger.info("Bot started")
-
     now_utc = datetime.now(timezone.utc)
-    logger.info(f"UTC time: {now_utc.strftime('%Y-%m-%d %H:%M:%S')}")
+    tr_hour = (now_utc.hour + 3) % 24
+    tr_minute = now_utc.minute
+    today = now_utc.strftime("%Y-%m-%d")
 
-    # Check business hours
-    if not (BUSINESS_HOURS_UTC[0] <= now_utc.hour < BUSINESS_HOURS_UTC[1]):
-        logger.info(f"Outside business hours (UTC {BUSINESS_HOURS_UTC[0]}:00-{BUSINESS_HOURS_UTC[1]}:00). Current: {now_utc.hour}:00 UTC.")
-        return
+    logger.info(f"Bot calistirildi. TR saat: {tr_hour:02d}:{tr_minute:02d}")
 
-    # Load data
-    tweets = load_tweets()
     state = load_state()
+    tweets = load_tweets()
 
-    logger.info(f"State: posted={len(state['posted_ids'])}/{len(tweets)}, daily={state.get('daily_count', 0)}/{MAX_TWEETS_PER_DAY}")
+    now_total_minutes = tr_hour * 60 + tr_minute
 
-    # Get next tweet
-    tweet = get_next_tweet(tweets, state)
-    if tweet is None:
-        logger.info("All tweets posted! Add more to tweets.json.")
+    # Eski format (hour) varsa yeni gune zorla
+    if state.get("plan") and state["plan"] and "hour" in state["plan"][0]:
+        state["today"] = None
+
+    # Yeni gun mu? Plan yap.
+    if state.get("today") != today:
+        plan = make_daily_plan(tr_hour, tr_minute)
+        state["today"] = today
+        state["plan"] = [{"minute": m, "done": False} for m in plan]
+        plan_str = [f"{m//60:02d}:{m%60:02d}" for m in plan]
+        logger.info(f"Yeni gun plani: TR {plan_str}")
+        save_state(state)
+
+    # Planı kontrol et
+    plan = state.get("plan", [])
+    if not plan:
+        logger.info("Bugun icin plan yok veya is saatleri bitti.")
         return
 
-    # Decide
-    if not should_tweet_now(state, now_utc):
-        save_state(state)
-        return
+    # Saati gelmis ve atilmamis tweet var mi?
+    for slot in plan:
+        if slot["done"]:
+            continue
+        if now_total_minutes >= slot["minute"]:
+            tweet = get_next_tweet(tweets, state)
+            if tweet is None:
+                logger.info(f"Tum tweetler atildi ({len(state['posted_ids'])}/{len(tweets)})")
+                return
 
-    # POST IMMEDIATELY - no sleeping, no waiting
-    logger.info(f"Posting tweet #{tweet['id']}: {tweet['text'][:60]}...")
+            planned_str = f"{slot['minute']//60:02d}:{slot['minute']%60:02d}"
+            logger.info(f"TR {planned_str} planliydi, simdi {tr_hour:02d}:{tr_minute:02d}. Tweet atiliyor #{tweet['id']}")
+            try:
+                response = post_tweet(tweet["text"])
+                state["posted_ids"].append(tweet["id"])
+                slot["done"] = True
+                save_state(state)
+                logger.info(f"BASARILI! #{tweet['id']}: {tweet['text'][:60]}... | Twitter ID: {response.data['id']}")
+                return  # Bir calismada 1 tweet at, diger saatine kalsin
+            except Exception as e:
+                logger.error(f"HATA: {e}")
+                save_state(state)
+                sys.exit(1)
 
-    try:
-        response = post_tweet(tweet["text"])
-
-        state["posted_ids"].append(tweet["id"])
-        state["last_posted_at"] = now_utc.isoformat()
-        state["daily_count"] = state.get("daily_count", 0) + 1
-        state["last_date"] = now_utc.strftime("%Y-%m-%d")
-        save_state(state)
-
-        logger.info(f"SUCCESS! Tweet #{tweet['id']} posted. Response: {response.data}")
-
-    except tweepy.TweepyException as e:
-        logger.error(f"Twitter API error: {e}")
-        save_state(state)
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        save_state(state)
-        sys.exit(1)
+    # Hepsi ya atildi ya da saati gelmedi
+    pending = [s for s in plan if not s["done"]]
+    if pending:
+        pending_str = [f"{s['minute']//60:02d}:{s['minute']%60:02d}" for s in pending]
+        logger.info(f"Bekleyen: TR {pending_str}")
+    else:
+        logger.info("Bugunun tweetleri tamamlandi.")
 
 
 if __name__ == "__main__":
